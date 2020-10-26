@@ -1,22 +1,26 @@
-<header>
-  <div class="container">
-    <div class="row">
-      <div class="col-md-1 col-sm-2 col-xs-2 logo">
-        <a href="<%= rootPath() %>"><img src="<%= rootPath() %>assets/images/logo.svg" alt=""></a>
-      </div>
-      <div class="col-md-9 col-sm-9 col-xs-10 titles">
-        <h1><%= t("welcome_greeting") %></h1>
-        <h2>
-          <a href="https://github.com/gobuffalo/buffalo"><i class="fab fa-github" aria-hidden="true"></i> https://github.com/gobuffalo/buffalo</a>
-        </h2>
-        <h2 class="documentation">
-          <a href="http://gobuffalo.io/"><i class="fa fa-book" aria-hidden="true"></i> Documentation</a>
-        </h2>
+
+<div class="container">
+  <div class="row">
+    <div class="col">
+      <div class="auth-center">
+        <%= if (current_user) { %>
+          <h1><%= current_user.Name %></h1>
+          <h4><%= current_user.Email %></h4>
+        <% } else { %>
+          <div class="login-form">
+              <form action="/examples/actions/confirmation.php" method="post">
+                  <h2 class="text-center">Log ind</h2>
+                  <div class="text-center social-btn">
+                      <a href="/auth/facebook" class="btn btn-secondary"><i class="fab fa-facebook"></i>&nbsp; Facebook</a>
+                  </div>
+              </form>
+          </div>
+        <% } %>
+        </div>
       </div>
     </div>
   </div>
 
-</header>
 
 <div class="row">
   <div class="col-md-12">
@@ -61,4 +65,4 @@
     </div>
   </div>
 </div>
-<div class="foot"> <span> Powered by <a href="http://gobuffalo.io/">gobuffalo.io</a></span> </div>
+
