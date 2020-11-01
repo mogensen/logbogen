@@ -19,6 +19,41 @@ SET row_security = off;
 SET default_tablespace = '';
 
 --
+-- Name: climbingactivities; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.climbingactivities (
+    id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    date timestamp without time zone NOT NULL,
+    lat numeric NOT NULL,
+    lng numeric NOT NULL,
+    type character varying(255) NOT NULL,
+    role character varying(255) NOT NULL,
+    comment text NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.climbingactivities OWNER TO postgres;
+
+--
+-- Name: participants_climbingactivities; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.participants_climbingactivities (
+    id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    climbingactivity_id uuid NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.participants_climbingactivities OWNER TO postgres;
+
+--
 -- Name: schema_migration; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -40,12 +75,29 @@ CREATE TABLE public.users (
     provider character varying(255) NOT NULL,
     provider_id character varying(255) NOT NULL,
     avatar_url character varying(255) NOT NULL,
+    password_hash character varying(255) NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL
 );
 
 
 ALTER TABLE public.users OWNER TO postgres;
+
+--
+-- Name: climbingactivities climbingactivities_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.climbingactivities
+    ADD CONSTRAINT climbingactivities_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: participants_climbingactivities participants_climbingactivities_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.participants_climbingactivities
+    ADD CONSTRAINT participants_climbingactivities_pkey PRIMARY KEY (id);
+
 
 --
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres

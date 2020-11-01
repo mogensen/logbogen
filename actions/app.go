@@ -5,6 +5,7 @@ import (
 	"github.com/gobuffalo/envy"
 	forcessl "github.com/gobuffalo/mw-forcessl"
 	paramlogger "github.com/gobuffalo/mw-paramlogger"
+	"github.com/gobuffalo/plush"
 	"github.com/unrolled/secure"
 
 	"logbogen/models"
@@ -66,14 +67,21 @@ func App() *buffalo.App {
 		auth := app.Group("/auth")
 		app.Use(SetCurrentUser)
 		app.Use(Authorize)
-		app.Middleware.Skip(Authorize, HomeHandler)
+
+		app.Middleware.Skip(Authorize, HomeHandler, UsersNew, UsersCreate, AuthCreate)
+
+		app.POST("/users", UsersCreate)
+		app.POST("/signin", AuthCreate)
+
 		bah := buffalo.WrapHandlerFunc(gothic.BeginAuthHandler)
 		auth.GET("/{provider}", bah)
 		auth.DELETE("", AuthDestroy)
 		auth.Middleware.Skip(Authorize, bah, AuthCallback)
 		auth.GET("/{provider}/callback", AuthCallback)
+		app.Resource("/climbingactivities", ClimbingactivitiesResource{})
 		app.ServeFiles("/", assetsBox) // serve files from the public directory
 	}
+	plush.DefaultTimeFormat = "02 Jan 2006"
 
 	return app
 }

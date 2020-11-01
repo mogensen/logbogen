@@ -1,0 +1,6 @@
+- id: "climbingactivity.created.success"
+  translation: "Climbingactivity was successfully created."
+- id: "climbingactivity.updated.success"
+  translation: "Climbingactivity was successfully updated."
+- id: "climbingactivity.destroyed.success"
+  translation: "Climbingactivity was successfully destroyed."

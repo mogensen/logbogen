@@ -1,0 +1,8 @@
+<div class="py-4 mb-2">
+  <h3 class="d-inline-block">Edit Climbingactivity</h3>
+</div>
+
+<%= formFor(climbingactivity, {action: climbingactivityPath({ climbingactivity_id: climbingactivity.ID }), method: "PUT"}) { %>
+  <%= partial("climbingactivities/form.html") %>
+  <%= linkTo(climbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-warning", "data-confirm": "Are you sure?", body: "Cancel"}) %>
+<% } %>

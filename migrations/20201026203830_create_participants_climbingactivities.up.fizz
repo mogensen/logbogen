@@ -1,0 +1,6 @@
+create_table("participants_climbingactivities") {
+	t.Column("id", "uuid", {primary: true})
+	t.Column("user_id", "uuid", {})
+	t.Column("climbingactivity_id", "uuid", {})
+	t.Timestamps()
+}

@@ -1,12 +1,14 @@
 package actions
 
 import (
+	"logbogen/models"
 	"strings"
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/render"
 	"github.com/gobuffalo/helpers/hctx"
 	"github.com/gobuffalo/packr/v2"
+	"github.com/gofrs/uuid"
 )
 
 var r *render.Engine
@@ -30,6 +32,14 @@ func init() {
 					}
 				}
 				return "inactive"
+			},
+			"checkboxChecked": func(id uuid.UUID, slice models.Users) string {
+				for _, c := range slice {
+					if id == c.ID {
+						return "checked"
+					}
+				}
+				return ""
 			},
 			// for non-bootstrap form helpers uncomment the lines
 			// below and import "github.com/gobuffalo/helpers/forms"

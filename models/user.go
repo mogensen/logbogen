@@ -2,25 +2,45 @@ package models
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
+	"emperror.dev/errors"
 	"github.com/gobuffalo/nulls"
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/validate/v3"
 	"github.com/gobuffalo/validate/v3/validators"
 	"github.com/gofrs/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // User is used by pop to map your users database table to your go code.
 type User struct {
-	ID         uuid.UUID    `json:"id" db:"id"`
-	Name       string       `json:"name" db:"name"`
-	Email      nulls.String `json:"email" db:"email"`
-	Provider   string       `json:"provider" db:"provider"`
-	ProviderID string       `json:"provider_id" db:"provider_id"`
-	CreatedAt  time.Time    `json:"created_at" db:"created_at"`
-	UpdatedAt  time.Time    `json:"updated_at" db:"updated_at"`
-	AvatarURL  string       `json:"avatar_url" db:"avatar_url"`
+	ID           uuid.UUID    `json:"id" db:"id"`
+	Name         string       `json:"name" db:"name"`
+	Email        nulls.String `json:"email" db:"email"`
+	Provider     string       `json:"provider" db:"provider"`
+	ProviderID   string       `json:"provider_id" db:"provider_id"`
+	CreatedAt    time.Time    `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time    `json:"updated_at" db:"updated_at"`
+	AvatarURL    string       `json:"avatar_url" db:"avatar_url"`
+	PasswordHash string       `json:"password_hash" db:"password_hash"`
+
+	Password             string `json:"-" db:"-"`
+	PasswordConfirmation string `json:"-" db:"-"`
+}
+
+// Create wraps up the pattern of encrypting the password and
+// running validations. Useful when writing tests.
+func (u *User) Create(tx *pop.Connection) (*validate.Errors, error) {
+	u.ProviderID = strings.ToLower(u.ProviderID)
+	u.Provider = "localuser"
+	ph, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return validate.NewErrors(), errors.WithStack(err)
+	}
+	u.PasswordHash = string(ph)
+	return tx.ValidateAndCreate(u)
 }
 
 // String is not required by pop and may be deleted

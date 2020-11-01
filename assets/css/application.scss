@@ -1,5 +1,12 @@
 @import "~bootstrap/scss/bootstrap.scss";
 @import "~@fortawesome/fontawesome-free/css/all.min.css";
+@import "~leaflet/dist/leaflet.css";
+@import "~leaflet-easybutton/src/easy-button.css";
 
 @import "buffalo";
 @import "facebook";
+
+
+#activity-show-map, #activity-form-map {
+    height: 250px;
+}

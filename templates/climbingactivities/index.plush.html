@@ -1,0 +1,38 @@
+<div class="py-4 mb-2">
+  <h3 class="d-inline-block">Climbingactivities</h3>
+  <div class="float-right">
+    <%= linkTo(newClimbingactivitiesPath(), {class: "btn btn-primary"}) { %>
+      Create New Climbingactivity
+    <% } %>
+  </div>
+</div>
+
+<table class="table table-hover table-bordered">
+  <thead class="thead-light">
+    <th>Date</th><th>Lat</th><th>Lng</th><th>Type</th><th>Role</th><th>Participants</th>
+    <th>&nbsp;</th>
+  </thead>
+  <tbody>
+    <%= for (climbingactivity) in climbingactivities { %>
+      <tr>
+        <td class="align-middle"><%= climbingactivity.Date %></td>
+        <td class="align-middle"><%= climbingactivity.Lat %></td>
+        <td class="align-middle"><%= climbingactivity.Lng %></td>
+        <td class="align-middle"><%= climbingactivity.Type %></td>
+        <td class="align-middle"><%= climbingactivity.Role %></td>
+        <td class="align-middle"><%= climbingactivity.Participants %></td>
+        <td>
+          <div class="float-right">
+            <%= linkTo(climbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-info", body: "View"}) %>
+            <%= linkTo(editClimbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-warning", body: "Edit"}) %>
+            <%= linkTo(climbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-danger", "data-method": "DELETE", "data-confirm": "Are you sure?", body: "Destroy"}) %>
+          </div>
+        </td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
+
+<div class="text-center">
+  <%= paginator(pagination) %>
+</div>

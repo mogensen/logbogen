@@ -1,0 +1,35 @@
+<%= f.InputTag("Date", {type:"date"}) %>
+
+<div id="activity-form-map" data-lat="<%= climbingactivity.Lat %>" data-lng="<%= climbingactivity.Lng %>"></div>
+
+<%= f.InputTag("Lat", {type:"hidden"}) %>
+<%= f.InputTag("Lng", {type:"hidden"}) %>
+<%= f.InputTag("Type") %>
+<%= f.InputTag("Role") %>
+<%= f.TextAreaTag("Comment", {rows: 10}) %>
+
+
+<table class="table table-striped">
+    <thead>
+        <th>&nbsp;</th>
+        <th>&nbsp;</th>
+        <th width="85%"></th>
+    </thead>
+    <tbody>
+        <tr><td colspan=3><b>Klatrer</b></td></tr>
+        <%= for (participant) in users { %>
+        <tr>
+            <td colspan=3>
+                <span class="custom-control custom-checkbox checkbox-lg">
+                    <input type="checkbox" class="custom-control-input" name="participants" id="<%= participant.ID %>"  value="<%= participant.ID %>" <%= checkboxChecked(participant.ID, climbingactivity.Participants) %> >
+                    <label class="custom-control-label" for="<%= participant.ID %>" >
+                        <%= participant.Name %>
+                    </label>
+                </span>
+            </td>
+        </tr>
+        <% } %>
+    </tbody>
+</table>
+
+<button class="btn btn-success" role="submit">Save</button>

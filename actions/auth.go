@@ -1,18 +1,22 @@
 package actions
 
 import (
+	"database/sql"
 	"fmt"
 	"logbogen/models"
 	"os"
+	"strings"
 
 	"emperror.dev/errors"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/nulls"
 	"github.com/gobuffalo/pop/v5"
+	"github.com/gobuffalo/validate"
 	"github.com/gobuffalo/x/defaults"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/facebook"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func init() {
@@ -56,6 +60,56 @@ func AuthCallback(c buffalo.Context) error {
 
 	c.Flash().Add("success", "You have been logged in")
 	return c.Redirect(302, "/")
+}
+
+// AuthCreate attempts to log the user in with an existing account.
+func AuthCreate(c buffalo.Context) error {
+	username := strings.ToLower(strings.TrimSpace(c.Request().Form["username"][0]))
+	u := &models.User{
+		ProviderID: username,
+		Password:   c.Request().Form["password"][0],
+	}
+	if err := c.Bind(u); err != nil {
+		return errors.WithStack(err)
+	}
+
+	tx := c.Value("tx").(*pop.Connection)
+
+	// find a user with the username
+	err := tx.Where("provider = ? and provider_id = ?", "localuser", u.ProviderID).First(u)
+
+	// helper function to handle bad attempts
+	bad := func() error {
+		c.Set("user", u)
+		verrs := validate.NewErrors()
+		verrs.Add("username", "invalid username/password")
+		c.Set("errors", verrs)
+		return c.Render(422, r.HTML("auth/new.html"))
+	}
+
+	if err != nil {
+		if errors.Cause(err) == sql.ErrNoRows {
+			// couldn't find an user with the supplied username address.
+			return bad()
+		}
+		fmt.Println("teste")
+		return errors.WithStack(err)
+	}
+
+	// confirm that the given password matches the hashed password from the db
+	err = bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(u.Password))
+	if err != nil {
+		return bad()
+	}
+	c.Session().Set("current_user_id", u.ID)
+	c.Flash().Add("success", T.Translate(c, "auth.login.success"))
+
+	redirectURL := "/"
+	if redir, ok := c.Session().Get("redirectURL").(string); ok {
+		redirectURL = redir
+	}
+
+	return c.Redirect(302, redirectURL)
 }
 
 func AuthDestroy(c buffalo.Context) error {

@@ -1,0 +1,34 @@
+<div class="py-4 mb-2">
+  <h3 class="d-inline-block"><%= climbingactivity.Type %> - <%= climbingactivity.Role %></h3>
+
+  <div class="float-right">
+    <%= linkTo(climbingactivitiesPath(), {class: "btn btn-info"}) { %>
+      Back to all Climbingactivities
+    <% } %>
+    <%= linkTo(editClimbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-warning", body: "Edit"}) %>
+    <%= linkTo(climbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-danger", "data-method": "DELETE", "data-confirm": "Are you sure?", body: "Destroy"}) %>
+  </div>
+</div>
+
+
+<ul class="list-group mb-2 ">
+
+  <li class="list-group-item pb-1">
+    <label class="small d-block">Date</label>
+    <p class="d-inline-block"><%= climbingactivity.Date %></p>
+  </li>
+
+  <div id="activity-show-map" data-lat="<%= climbingactivity.Lat %>" data-lng="<%= climbingactivity.Lng %>"></div>
+
+  <li class="list-group-item pb-1">
+    <label class="small d-block">Comment</label>
+    <p class="d-inline-block"><%= climbingactivity.Comment %></p>
+  </li>
+
+  <li class="list-group-item pb-1">
+    <label class="small d-block">Participants</label>
+    <p class="d-inline-block"><%= climbingactivity.Participants %></p>
+  </li>
+
+
+</ul>
