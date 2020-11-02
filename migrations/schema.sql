@@ -16,6 +16,22 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: climbing_type; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.climbing_type AS ENUM (
+    'TREE',
+    'ROCK',
+    'BOULDER',
+    'ICE',
+    'HIGHROPE',
+    'OTHER'
+);
+
+
+ALTER TYPE public.climbing_type OWNER TO postgres;
+
 SET default_tablespace = '';
 
 --
@@ -28,7 +44,9 @@ CREATE TABLE public.climbingactivities (
     date timestamp without time zone NOT NULL,
     lat numeric NOT NULL,
     lng numeric NOT NULL,
-    type character varying(255) NOT NULL,
+    location character varying(255) NOT NULL,
+    type public.climbing_type NOT NULL,
+    other_type character varying(255) NOT NULL,
     role character varying(255) NOT NULL,
     comment text NOT NULL,
     created_at timestamp without time zone NOT NULL,

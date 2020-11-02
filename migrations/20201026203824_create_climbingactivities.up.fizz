@@ -1,10 +1,22 @@
+
+sql("CREATE TYPE climbing_type AS ENUM (
+       'TREE',
+       'ROCK',
+       'BOULDER',
+       'ICE',
+	   'HIGHROPE',
+	   'OTHER'
+);")
+
 create_table("climbingactivities") {
 	t.Column("id", "uuid", {primary: true})
 	t.Column("user_id", "uuid", {})
 	t.Column("date", "timestamp", {})
 	t.Column("lat", "decimal", {})
 	t.Column("lng", "decimal", {})
-	t.Column("type", "string", {})
+	t.Column("location", "string", {})
+	t.Column("type", "climbing_type", {})
+	t.Column("other_type", "string", {})
 	t.Column("role", "string", {})
 	t.Column("comment", "text", {})
 	t.Timestamps()

@@ -4,7 +4,11 @@
 
 <%= f.InputTag("Lat", {type:"hidden"}) %>
 <%= f.InputTag("Lng", {type:"hidden"}) %>
-<%= f.InputTag("Type") %>
+
+<%= f.SelectTag("Type", {"label": "Type", options: climbingtypes, value: climbingactivity.Type,"required":nil }) %>
+
+<%= f.InputTag("OtherType") %>
+
 <%= f.InputTag("Role") %>
 <%= f.TextAreaTag("Comment", {rows: 10}) %>
 

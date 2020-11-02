@@ -69,9 +69,13 @@ func App() *buffalo.App {
 		app.Use(Authorize)
 
 		app.Middleware.Skip(Authorize, HomeHandler, UsersNew, UsersCreate, AuthCreate)
+		app.Resource("/users_images", UsersImagesResource{})
 
 		app.POST("/users", UsersCreate)
 		app.POST("/signin", AuthCreate)
+
+		app.GET("/users/{user_id}", UserShow)
+		app.GET("/users/{user_id}", UserEdit)
 
 		bah := buffalo.WrapHandlerFunc(gothic.BeginAuthHandler)
 		auth.GET("/{provider}", bah)

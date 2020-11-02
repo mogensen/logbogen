@@ -3,10 +3,27 @@
 @import "~leaflet/dist/leaflet.css";
 @import "~leaflet-easybutton/src/easy-button.css";
 
+
+// Screen sizes
+$small: 575px;
+$medium: 900px;
+
+// Image sizes
+$profile-image-size: 250px;
+$list-image-size: 90px;
+$list-image-size-small: 70px;
+
 @import "buffalo";
 @import "facebook";
-
+@import "profile";
+@import "card";
 
 #activity-show-map, #activity-form-map {
     height: 250px;
+}
+
+
+.activity_icon_img {
+    height: $list-image-size;
+    width: $list-image-size;
 }

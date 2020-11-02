@@ -1,6 +1,7 @@
 package grifts
 
 import (
+	"logbogen/actions"
 	"logbogen/models"
 	"math/rand"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"emperror.dev/errors"
 	"github.com/Pallinder/go-randomdata"
 	"github.com/brianvoe/gofakeit"
+	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/nulls"
 
 	"golang.org/x/crypto/bcrypt"
@@ -39,14 +41,17 @@ func createActivity(user models.User) error {
 	}
 
 	act := &models.Climbingactivity{
-		UserID:  user.ID,
-		Date:    activityTime,
-		Lat:     randFloats(54.8000145534, 57.730016588),
-		Lng:     randFloats(8.08997684086, 12.6900061378),
-		Type:    randType(),
-		Role:    randRole(),
-		Comment: "Fantastisk klatre tur til toppen af det hele. Også kaffe og kage..",
+		UserID:    user.ID,
+		Date:      activityTime,
+		Lat:       randFloats(54.8000145534, 57.730016588),
+		Lng:       randFloats(8.08997684086, 12.6900061378),
+		Type:      randType(),
+		OtherType: randOtherType(),
+		Role:      randRole(),
+		Comment:   "Fantastisk klatre tur til toppen af det hele. Også kaffe og kage..",
 	}
+
+	act.Location = actions.GetLocation(&buffalo.DefaultContext{}, act)
 	models.DB.Create(act)
 
 	return nil

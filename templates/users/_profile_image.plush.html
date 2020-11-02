@@ -1,0 +1,25 @@
+<div class="img-thumbnail">
+  <%= if (image(user.Image)) { %>
+    <a href="<%= pathFor(editUsersImagePath({ users_image_id: user.Image.ID })) %>" >
+      <span class="img-thumbnail-container">
+        <%= if (image(user.Image)) { %>
+          <img src="<%= pathFor(UsersImagePath({ users_image_id: user.Image.ID })) %>" class="rounded-circle">
+        <% } else { %>
+          <img src="/assets/images/empty-avatar.png" class="rounded-circle">
+        <% } %>
+        <span class="img-thumbnail-button">Upload</span>
+      </span>
+    </a>
+  <% } else { %>
+    <a href="<%= pathFor(newUsersImagesPath({ user_id: user.ID })) %>">
+      <span class="img-thumbnail-container">
+        <%= if (image(user.Image)) { %>
+          <img src="<%= pathFor(UsersImagePath({ users_image_id: user.Image.ID })) %>" class="rounded-circle">
+        <% } else { %>
+          <img src="/assets/images/empty-avatar.png" class="rounded-circle">
+        <% } %>
+        <span class="img-thumbnail-button">Upload</span>
+      </span>
+    </a>
+  <% } %>
+</div>

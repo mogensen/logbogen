@@ -33,3 +33,21 @@ We recommend you heading over to [http://gobuffalo.io](http://gobuffalo.io) and 
 Good luck!
 
 [Powered by Buffalo](http://gobuffalo.io)
+
+## Graphics and Icons 
+
+Color icon packs:
+
+- https://www.vecteezy.com/members/danielcampos?utf8=%E2%9C%93&search=climbing&sort_by=popular
+- https://www.vecteezy.com/free-vector/flat-design-tree
+
+Flat gray icons:
+
+- https://www.vecteezy.com/members/paintingred?utf8=%E2%9C%93&search=climber&sort_by=popular
+- https://www.vecteezy.com/members/paintingred?utf8=%E2%9C%93&search=+tree&sort_by=popular
+
+
+- https://www.vecteezy.com/members/rambleron?utf8=%E2%9C%93&search=climb&sort_by=popular
+- https://www.vecteezy.com/vector-art/648502-tree-icon-symbol-sign
+
+<a href="https://www.vecteezy.com/free-vector/climbing">Climbing Vectors by Vecteezy</a>

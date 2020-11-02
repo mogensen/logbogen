@@ -1,0 +1,31 @@
+.img-thumbnail .img-thumbnail-button {
+    left: 0;
+    text-align: center;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    bottom: 0;
+    padding: 10px 0;
+    color: black;
+    font-weight: bolder;
+    position: absolute;
+}
+.img-thumbnail {
+    padding: 0;
+    border: 0;
+    display: inline-block;
+    height: $profile-image-size;
+    width: $profile-image-size;
+}
+.img-thumbnail-container {
+    display: inline-block;
+    overflow: hidden;
+    border-radius: 50%;
+    position: relative;
+    padding: 0;
+    cursor: pointer;
+}
+.img-thumbnail img {
+    border: 4px solid #333333;
+    height: $profile-image-size;
+    width: $profile-image-size;
+}

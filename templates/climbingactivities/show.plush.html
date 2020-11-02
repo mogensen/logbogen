@@ -25,10 +25,12 @@
     <p class="d-inline-block"><%= climbingactivity.Comment %></p>
   </li>
 
-  <li class="list-group-item pb-1">
-    <label class="small d-block">Participants</label>
-    <p class="d-inline-block"><%= climbingactivity.Participants %></p>
-  </li>
-
+  <div class="card-body contacts_body">
+    <ul class="contacts">
+      <%= for (participant) in climbingactivity.Participants { %>
+        <%= partial("users/new_card.html") %>
+      <% } %>
+    </ul>
+  </div>
 
 </ul>

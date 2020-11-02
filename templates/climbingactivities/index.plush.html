@@ -1,26 +1,35 @@
 <div class="py-4 mb-2">
-  <h3 class="d-inline-block">Climbingactivities</h3>
+  <h3 class="d-inline-block">Klatre Logninger</h3>
   <div class="float-right">
     <%= linkTo(newClimbingactivitiesPath(), {class: "btn btn-primary"}) { %>
-      Create New Climbingactivity
+      <i class="fas fa-clipboard-check"></i>&nbsp; Log ny klatretur
     <% } %>
   </div>
 </div>
 
 <table class="table table-hover table-bordered">
   <thead class="thead-light">
-    <th>Date</th><th>Lat</th><th>Lng</th><th>Type</th><th>Role</th><th>Participants</th>
+    <th></th>
+    <th>Date</th>
+    <th>Location</th>
+    <th>Type</th>
+    <th>Role</th>
     <th>&nbsp;</th>
   </thead>
   <tbody>
     <%= for (climbingactivity) in climbingactivities { %>
       <tr>
+        <td><img src="/assets/images/climbing/<%= climbingactivity.Type %>.svg"  class="activity_icon_img"></td>
         <td class="align-middle"><%= climbingactivity.Date %></td>
-        <td class="align-middle"><%= climbingactivity.Lat %></td>
-        <td class="align-middle"><%= climbingactivity.Lng %></td>
-        <td class="align-middle"><%= climbingactivity.Type %></td>
+        <td class="align-middle"><%= climbingactivity.Location %></td>
+        <td class="align-middle">
+        <%= climbingactivity.Type %>
+        <%= if (climbingactivity.Type.String()=="Other") { %>
+          - <%= climbingactivity.OtherType %>
+        <% } %>
+        
+        </td>
         <td class="align-middle"><%= climbingactivity.Role %></td>
-        <td class="align-middle"><%= climbingactivity.Participants %></td>
         <td>
           <div class="float-right">
             <%= linkTo(climbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-info", body: "View"}) %>

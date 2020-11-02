@@ -40,3 +40,31 @@ func UsersCreate(c buffalo.Context) error {
 
 	return c.Redirect(302, "/")
 }
+
+func UserShow(c buffalo.Context) error {
+	// Allocate an empty user
+	user := &models.User{}
+
+	tx := c.Value("tx").(*pop.Connection)
+
+	// To find the user the parameter user_id is used.
+	if err := tx.Eager().Find(user, c.Param("user_id")); err != nil {
+		return c.Error(404, err)
+	}
+
+	return c.Render(200, r.Auto(c, user))
+}
+
+func UserEdit(c buffalo.Context) error {
+	// Allocate an empty user
+	user := &models.User{}
+
+	tx := c.Value("tx").(*pop.Connection)
+
+	// To find the user the parameter user_id is used.
+	if err := tx.Eager().Find(user, c.Param("user_id")); err != nil {
+		return c.Error(404, err)
+	}
+
+	return c.Render(200, r.Auto(c, user))
+}
