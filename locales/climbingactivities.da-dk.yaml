@@ -6,11 +6,14 @@
   translation: "The climbing log was destroyed."
 
 - id: "climbingactivity.title.new"
-  translation: "Ny klatre loggning"
+  translation: "Ny klatre logning"
 - id: "climbingactivity.title.edit"
-  translation: "Rediger loggning"
+  translation: "Rediger logning"
 - id: "climbingactivity.title.list"
   translation: "Klatre Logninger"
+
+- id: "climbingactivity.actions.back"
+  translation: "Tilbage til klatre logningerne"
 
 - id: "climbingactivity.new"
   translation: "Log ny klatretur"
@@ -30,3 +33,16 @@
   translation: "HighRope baner"
 - id: "climbingactivity.type.Other"
   translation: "Andet"
+
+- id: "climbingactivity.date"
+  translation: "Dato"
+- id: "climbingactivity.comment"
+  translation: "Kommentar"
+- id: "climbingactivity.participants"
+  translation: "Deltagere"
+- id: "climbingactivity.type"
+  translation: "Type"
+- id: "climbingactivity.othertype"
+  translation: "Anden type klatring"
+- id: "climbingactivity.role"
+  translation: "Rolle"

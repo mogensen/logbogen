@@ -6,6 +6,12 @@ indent_size = 2
 insert_final_newline = true
 trim_trailing_whitespace = true
 
+[*.js]
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
 [*.fizz]
 indent_style = space
 indent_size = 4

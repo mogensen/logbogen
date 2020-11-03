@@ -1,16 +1,16 @@
-<%= f.InputTag("Date", {type:"date"}) %>
+<%= f.InputTag("Date", {type:"date", label:t("climbingactivity.date")}) %>
 
 <div id="activity-form-map" data-lat="<%= climbingactivity.Lat %>" data-lng="<%= climbingactivity.Lng %>"></div>
 
 <%= f.InputTag("Lat", {type:"hidden"}) %>
 <%= f.InputTag("Lng", {type:"hidden"}) %>
 
-<%= f.SelectTag("Type", {"label": "Type", options: climbingtypes, value: climbingactivity.Type,"required":nil }) %>
+<%= f.SelectTag("Type", {"label": "Type", options: climbingtypes, value: climbingactivity.Type,"required":nil, label:t("climbingactivity.type")}) %>
 
-<%= f.InputTag("OtherType") %>
+<%= f.InputTag("OtherType", {label:t("climbingactivity.othertype")}) %>
 
-<%= f.InputTag("Role") %>
-<%= f.TextAreaTag("Comment", {rows: 10}) %>
+<%= f.InputTag("Role", {label:t("climbingactivity.role")}) %>
+<%= f.TextAreaTag("Comment", {rows: 10, label:t("climbingactivity.comment")}) %>
 
 
 <table class="table table-striped">
@@ -20,7 +20,7 @@
         <th width="85%"></th>
     </thead>
     <tbody>
-        <tr><td colspan=3><b>Klatrer</b></td></tr>
+        <tr><td colspan=3><b><%= t("climbingactivity.participants") %></b></td></tr>
         <%= for (participant) in users { %>
         <tr>
             <td colspan=3>

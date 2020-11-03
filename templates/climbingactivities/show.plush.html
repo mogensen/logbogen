@@ -1,12 +1,21 @@
 <div class="py-4 mb-2">
-  <h3 class="d-inline-block"><%= climbingactivity.Type %> - <%= climbingactivity.Role %></h3>
-
-  <div class="float-right">
-    <%= linkTo(climbingactivitiesPath(), {class: "btn btn-info"}) { %>
-      Back to all Climbingactivities
+  <img src="<%= assetPath("images/climbing/" + climbingactivity.Type + ".svg") %>" class="activity_icon_img">
+  <h3 class="d-inline-block">
+    <%= if (climbingactivity.Type.String()!="Other") { %>
+      <%= t("climbingactivity.type." + climbingactivity.Type) %>
+    <% } else { %>
+      <%= climbingactivity.OtherType %>
     <% } %>
-    <%= linkTo(editClimbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-warning", body: "Edit"}) %>
-    <%= linkTo(climbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-danger", "data-method": "DELETE", "data-confirm": "Are you sure?", body: "Destroy"}) %>
+    <%= t("climbingactivity.near") %>  <%= climbingactivity.Location %></h3>
+    <h4 class="d-inline-block">- <%= climbingactivity.Role %></h4>
+</div>
+<div class="container">
+  <div class="row">
+    <%= linkTo(climbingactivitiesPath(), {class: "btn btn-info"}) { %>
+      <%= t("climbingactivity.actions.back") %>
+    <% } %>
+    <%= linkTo(editClimbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-warning", body: t("actions.edit")}) %>
+    <%= linkTo(climbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-danger", "data-method": "DELETE", "data-confirm": t("actions.confirm"), body: t("actions.destroy")}) %>
   </div>
 </div>
 
@@ -14,23 +23,31 @@
 <ul class="list-group mb-2 ">
 
   <li class="list-group-item pb-1">
-    <label class="small d-block">Date</label>
+    <label class="d-block"><%= t("climbingactivity.date") %></label>
+    <hr/>
     <p class="d-inline-block"><%= climbingactivity.Date %></p>
   </li>
 
+  <li class="">
   <div id="activity-show-map" data-lat="<%= climbingactivity.Lat %>" data-lng="<%= climbingactivity.Lng %>"></div>
+  </li>
 
   <li class="list-group-item pb-1">
-    <label class="small d-block">Comment</label>
+    <label class="d-block"><%= t("climbingactivity.comment") %></label>
+    <hr/>
     <p class="d-inline-block"><%= climbingactivity.Comment %></p>
   </li>
 
-  <div class="card-body contacts_body">
-    <ul class="contacts">
-      <%= for (participant) in climbingactivity.Participants { %>
-        <%= partial("users/new_card.html") %>
-      <% } %>
-    </ul>
-  </div>
+  <li class="list-group-item pb-1">
+    <label class="d-block"><%= t("climbingactivity.participants") %></label>
+    <hr/>
+    <div class="card-body contacts_body">
+      <ul class="contacts">
+        <%= for (participant) in climbingactivity.Participants { %>
+          <%= partial("users/new_card.html") %>
+        <% } %>
+      </ul>
+    </div>
+  </li>
 
 </ul>

@@ -1,0 +1,32 @@
+<div class="d-md-none">
+
+  <div class="card-body">
+    <center class="m-t-30">
+      <%= partial("users/profile_image.html", {user: current_user}) %>
+      <h1 class="card-title m-t-10"><%= current_user.Name %></h1>
+    </center>
+  </div>
+
+  <div class="card-body">
+
+  </div>
+</div>
+
+<div class="d-none d-md-block">
+  <div class="page-header">
+    <h2><%= current_user.Name %></h2>
+  </div>
+
+  <div class="row">
+    <div class="col-auto">
+        <%= partial("users/profile_image.html", {user: current_user}) %>
+    </div>
+    <div class="col-sm-4">
+     <%= current_user.Email %>
+    </div>
+
+    <div class="col-auto">
+     
+    </div>
+  </div>
+</div>

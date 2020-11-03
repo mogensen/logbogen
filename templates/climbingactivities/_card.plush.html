@@ -6,7 +6,12 @@
       </div>
 
       <div class="user_cont col col-auto text-truncate">
-        <b><%= t("climbingactivity.type." + climbingactivity.Type) %> <%= t("climbingactivity.near") %>  <%= climbingactivity.Location %></b>
+        <%= if (climbingactivity.Type.String()!="Other") { %>
+          <%= t("climbingactivity.type." + climbingactivity.Type) %>
+        <% } else { %>
+          <%= climbingactivity.OtherType %>
+        <% } %>
+        <%= t("climbingactivity.near") %>  <%= climbingactivity.Location %></b>
         <p class="text-muted small text-truncate"><%= climbingactivity.Date %></p>
         <p class="text-muted small text-truncate"><%= climbingactivity.Role %></p>
       </div>

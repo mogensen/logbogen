@@ -12,6 +12,9 @@
 - id: "climbingactivity.title.list"
   translation: "All climbs"
 
+- id: "climbingactivity.actions.back"
+  translation: "Back to all Climbingactivities"
+
 - id: "climbingactivity.new"
   translation: "Log a climb"
 
@@ -30,3 +33,17 @@
   translation: "HighRope Climbing"
 - id: "climbingactivity.type.Other"
   translation: "Other Climbing"
+
+- id: "climbingactivity.date"
+  translation: "Date"
+- id: "climbingactivity.comment"
+  translation: "Comment"
+- id: "climbingactivity.participants"
+  translation: "Participants"
+- id: "climbingactivity.type"
+  translation: "Type"
+- id: "climbingactivity.othertype"
+  translation: "Other type of climbing"
+- id: "climbingactivity.role"
+  translation: "Role"
+
