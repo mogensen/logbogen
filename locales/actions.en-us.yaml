@@ -1,0 +1,11 @@
+- id: "actions.view"
+  translation: "View"
+
+- id: "actions.edit"
+  translation: "Edit"
+
+- id: "actions.destroy"
+  translation: "Destroy"
+
+- id: "actions.confirm"
+  translation: "Are you sure?"

@@ -1,8 +1,12 @@
+// https://bootswatch.com/sketchy/
+@import "variables";
+@import "bootswatch";
+
 @import "~bootstrap/scss/bootstrap.scss";
 @import "~@fortawesome/fontawesome-free/css/all.min.css";
 @import "~leaflet/dist/leaflet.css";
 @import "~leaflet-easybutton/src/easy-button.css";
-
+@import "~flag-icon-css/css/flag-icon.css";
 
 // Screen sizes
 $small: 575px;

@@ -13,6 +13,7 @@
 
         </ul>
         <ul class="nav navbar-nav navbar-right">
+            <%= partial("language.html") %>
             <%= if (current_user) { %>
             <li class="nav-item">
                 <a class="nav-link" href="/auth" data-method="DELETE">Log ud</a>

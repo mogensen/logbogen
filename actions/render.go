@@ -41,6 +41,12 @@ func init() {
 				}
 				return ""
 			},
+			"currentRoute": func(name string, help hctx.HelperContext) string {
+				if cp, ok := help.Value("current_route").(buffalo.RouteInfo); ok {
+					return cp.Path
+				}
+				return "/"
+			},
 			// for non-bootstrap form helpers uncomment the lines
 			// below and import "github.com/gobuffalo/helpers/forms"
 			// forms.FormKey:     forms.Form,

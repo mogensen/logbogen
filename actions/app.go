@@ -68,8 +68,10 @@ func App() *buffalo.App {
 		app.Use(SetCurrentUser)
 		app.Use(Authorize)
 
-		app.Middleware.Skip(Authorize, HomeHandler, UsersNew, UsersCreate, AuthCreate)
+		app.Middleware.Skip(Authorize, HomeHandler, UsersNew, UsersCreate, AuthCreate, SwitchLanguage)
 		app.Resource("/users_images", UsersImagesResource{})
+
+		app.POST("/language", SwitchLanguage)
 
 		app.POST("/users", UsersCreate)
 		app.POST("/signin", AuthCreate)

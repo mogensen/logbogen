@@ -1,46 +1,19 @@
 <div class="py-4 mb-2">
-  <h3 class="d-inline-block">Klatre Logninger</h3>
+  <h3 class="d-inline-block"><%= t("climbingactivity.title.list") %></h3>
   <div class="float-right">
     <%= linkTo(newClimbingactivitiesPath(), {class: "btn btn-primary"}) { %>
-      <i class="fas fa-clipboard-check"></i>&nbsp; Log ny klatretur
+      <i class="fas fa-clipboard-check"></i>&nbsp; <%= t("climbingactivity.new") %>
     <% } %>
   </div>
 </div>
 
-<table class="table table-hover table-bordered">
-  <thead class="thead-light">
-    <th></th>
-    <th>Date</th>
-    <th>Location</th>
-    <th>Type</th>
-    <th>Role</th>
-    <th>&nbsp;</th>
-  </thead>
-  <tbody>
+<div class="card-body contacts_body">
+  <ul class="contacts">
     <%= for (climbingactivity) in climbingactivities { %>
-      <tr>
-        <td><img src="/assets/images/climbing/<%= climbingactivity.Type %>.svg"  class="activity_icon_img"></td>
-        <td class="align-middle"><%= climbingactivity.Date %></td>
-        <td class="align-middle"><%= climbingactivity.Location %></td>
-        <td class="align-middle">
-        <%= climbingactivity.Type %>
-        <%= if (climbingactivity.Type.String()=="Other") { %>
-          - <%= climbingactivity.OtherType %>
-        <% } %>
-        
-        </td>
-        <td class="align-middle"><%= climbingactivity.Role %></td>
-        <td>
-          <div class="float-right">
-            <%= linkTo(climbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-info", body: "View"}) %>
-            <%= linkTo(editClimbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-warning", body: "Edit"}) %>
-            <%= linkTo(climbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-danger", "data-method": "DELETE", "data-confirm": "Are you sure?", body: "Destroy"}) %>
-          </div>
-        </td>
-      </tr>
+      <%= partial("climbingactivities/card.html") %>
     <% } %>
-  </tbody>
-</table>
+  </ul>
+</div>
 
 <div class="text-center">
   <%= paginator(pagination) %>

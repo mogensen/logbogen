@@ -1,0 +1,15 @@
+<li class="nav-item">
+<%= formFor({}, {action: languagePath(), method: "POST"}) { %>
+  <input type="hidden" id="url" name="url" value="<%= currentRoute() %>">
+  <input type="hidden" id="lang" name="lang" value="da-dk">
+  <button class="btn btn-success" role="submit"><i class="flag-icon flag-icon-dk"></i></button>
+<% } %>
+</li>
+
+<li class="nav-item">
+<%= formFor({}, {action: languagePath(), method: "POST"}) { %>
+  <input type="hidden" id="url" name="url" value="<%= currentRoute() %>">
+  <input type="hidden" id="lang" name="lang" value="en-us">
+  <button class="btn btn-success" role="submit"><i class="flag-icon flag-icon-us"></i></button>
+<% } %>
+</li>

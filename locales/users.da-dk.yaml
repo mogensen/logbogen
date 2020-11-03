@@ -1,0 +1,9 @@
+- id: "users.created.success"
+  translation: "Brugeren er oprettet."
+- id: "users.updated.success"
+  translation: "Brugeren er opdateret."
+- id: "users.destroyed.success"
+  translation: "Brugeren er slettet."
+
+- id: "users.language-changed"
+  translation: "Sproget er sat til dansk"
