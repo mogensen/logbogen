@@ -29,4 +29,3 @@ name = "lots of widgets"
       widget_id = "<%= uuidNamed("widget") %>"
       created_at = "<%= now() %>"
       updated_at = "<%= now() %>"
-

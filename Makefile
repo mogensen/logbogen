@@ -8,10 +8,9 @@ docker-build: ## build docker image
 
 clean-migrate: ## new test databsae
 	buffalo pop drop
-	buffalo pop create 
+	buffalo pop create
 	buffalo pop migrate up
 	buffalo task demo:seed
-	 
 
 test-coverage: ## Generate test coverage report
 	mkdir -p tmp

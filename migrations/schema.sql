@@ -135,4 +135,3 @@ CREATE UNIQUE INDEX schema_migration_version_idx ON public.schema_migration USIN
 --
 -- PostgreSQL database dump complete
 --
-

@@ -33,7 +33,7 @@
 }
 
 @media (max-width: $small) {
- 
+
     .user_img {
         height: $list-image-size-small;
         width: $list-image-size-small;
@@ -51,7 +51,7 @@ div.row.userInfo {
     overflow-x: auto;
     white-space: nowrap;
 }
- 
+
 div.row.userInfo .user_cont{
     display: inline-block;
     float: none !important;
@@ -60,7 +60,7 @@ div.row.userInfo .user_cont{
 .user_info span {
     font-size: 20px;
 }
-.user_info p {   
+.user_info p {
     margin-bottom: 0px;
     color: rgba(0, 0, 0, 0.6);
 }

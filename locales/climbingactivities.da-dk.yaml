@@ -1,9 +1,9 @@
 - id: "climbingactivity.created.success"
-  translation: "Climbingactivity was successfully created."
+  translation: "The climbing log was created."
 - id: "climbingactivity.updated.success"
-  translation: "Climbingactivity was successfully updated."
+  translation: "The climbing log was updated."
 - id: "climbingactivity.destroyed.success"
-  translation: "Climbingactivity was successfully destroyed."
+  translation: "The climbing log was destroyed."
 
 - id: "climbingactivity.title.new"
   translation: "Ny klatre loggning"

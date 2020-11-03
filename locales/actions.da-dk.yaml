@@ -9,3 +9,6 @@
 
 - id: "actions.confirm"
   translation: "Er du sikker?"
+
+- id: "actions.logout"
+  translation: "Log ud"
