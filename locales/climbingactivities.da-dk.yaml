@@ -12,6 +12,9 @@
 - id: "climbingactivity.title.list"
   translation: "Klatre Logninger"
 
+- id: "climbingactivity.createdby"
+  translation: "Oprettet af: "
+
 - id: "climbingactivity.actions.back"
   translation: "Tilbage til klatre logningerne"
 

@@ -238,7 +238,7 @@ func (v ClimbingactivitiesResource) Update(c buffalo.Context) error {
 		if err != nil {
 			return err
 		}
-		ap := &models.ParticipantsClimbingactivities{
+		ap := &models.ParticipantsClimbingactivity{
 			ActivityID:    climbingactivity.ID,
 			ParticipantID: cID,
 		}
@@ -284,7 +284,7 @@ func (v ClimbingactivitiesResource) Update(c buffalo.Context) error {
 
 func removeAllActivityParticipants(activity models.Climbingactivity, tx *pop.Connection) error {
 
-	activityParticipants := &models.ActivityParticipants{}
+	activityParticipants := &models.ParticipantsClimbingactivities{}
 
 	err := tx.Where("climbingactivity_id = ?", activity.ID).All(activityParticipants)
 	if err != nil {

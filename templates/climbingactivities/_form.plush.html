@@ -12,28 +12,14 @@
 <%= f.InputTag("Role", {label:t("climbingactivity.role")}) %>
 <%= f.TextAreaTag("Comment", {rows: 10, label:t("climbingactivity.comment")}) %>
 
+<label><%= t("climbingactivity.participants") %></label>
+<select id="participant-select" name="participants" class="form-control" multiple="multiple" >
 
-<table class="table table-striped">
-    <thead>
-        <th>&nbsp;</th>
-        <th>&nbsp;</th>
-        <th width="85%"></th>
-    </thead>
-    <tbody>
-        <tr><td colspan=3><b><%= t("climbingactivity.participants") %></b></td></tr>
         <%= for (participant) in users { %>
-        <tr>
-            <td colspan=3>
-                <span class="custom-control custom-checkbox checkbox-lg">
-                    <input type="checkbox" class="custom-control-input" name="participants" id="<%= participant.ID %>"  value="<%= participant.ID %>" <%= checkboxChecked(participant.ID, climbingactivity.Participants) %> >
-                    <label class="custom-control-label" for="<%= participant.ID %>" >
-                        <%= participant.Name %>
-                    </label>
-                </span>
-            </td>
-        </tr>
-        <% } %>
-    </tbody>
-</table>
 
+     <option value="<%= participant.ID %>" <%= selected(participant.ID, climbingactivity.Participants) %> ><%= participant.Name %></option>
+
+        <% } %>
+</select>
+<br />
 <button class="btn btn-success" role="submit">Save</button>

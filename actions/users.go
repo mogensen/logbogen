@@ -59,10 +59,8 @@ func UserEdit(c buffalo.Context) error {
 	// Allocate an empty user
 	user := &models.User{}
 
-	tx := c.Value("tx").(*pop.Connection)
-
 	// To find the user the parameter user_id is used.
-	if err := tx.Eager().Find(user, c.Param("user_id")); err != nil {
+	if err := scope(c).Eager().Find(user, currentUser(c).ID); err != nil {
 		return c.Error(404, err)
 	}
 

@@ -1,6 +1,9 @@
 - id: menu.climbingactivities
   translation: "Activities"
 
+- id: menu.pendingactivities
+  translation: "Pending activities"
+
 - id: title
   translation: "The Climbing Log"
 

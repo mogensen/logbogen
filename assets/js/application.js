@@ -3,33 +3,48 @@ require("bootstrap/dist/js/bootstrap.bundle.js");
 require("@fortawesome/fontawesome-free/js/all.js");
 require("leaflet/dist/leaflet-src.js");
 require("leaflet-easybutton/src/easy-button.js");
+require("select2/dist/js/select2.full.js");
+
 
 import img from 'leaflet/dist/images/marker-icon.png';
 
 $(() => {
+    $.fn.select2.defaults.set( "theme", "bootstrap4" );
+
     const zoomLevel = 15;
     const defaultIcon = new L.icon({
         iconUrl: img,
         iconAnchor: [12.5, 41],
     });
 
+
     $(() => {
-        if ($('activity-form-map').ength > 0) {
+        $('#participant-select').select2({
+        minimumInputLength: 3 // only start searching when the user has input 3 or more characters
+      });
+    })
 
-            var lat = $('#activity-show-map').data("lat");
-            var lng = $('#activity-show-map').data("lng");
-
-            var map = L.map('activity-show-map').setView([lat, lng], zoomLevel);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                id: 'activity-form-map',
-            }).addTo(map);
-
-            var marker = L.marker([lat, lng], { icon: defaultIcon }).addTo(map);
+    $(() => {
+        if ($('#activity-show-map').length == 0) {
+            return;
         }
+
+        var lat = $('#activity-show-map').data("lat");
+        var lng = $('#activity-show-map').data("lng");
+
+        var map = L.map('activity-show-map').setView([lat, lng], zoomLevel);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            id: 'activity-form-map',
+        }).addTo(map);
+
+        L.marker([lat, lng], { icon: defaultIcon }).addTo(map);
     })
 
     function addMapPicker() {
+        if ($('#activity-form-map').length == 0) {
+            return;
+        }
 
         var mapCenter = [22, 87];
         var map = L.map('activity-form-map', { center: mapCenter, zoom: 3 });

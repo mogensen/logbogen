@@ -12,11 +12,8 @@
 }
 .contacts li {
     width: 100% !important;
-    min-height: 124px !important;
-    padding: 10px;
+    padding: 2px;
     margin-bottom: 15px !important;
-    background-color: rgba(0, 0, 0, 0.04);;
-    border-radius: 5px;
 }
 
 .user_img {
@@ -27,9 +24,6 @@
 
 .img_cont {
     position: relative;
-    height: $list-image-size;
-    width: $list-image-size;
-    margin-right: 15px;
 }
 
 @media (max-width: $small) {
@@ -41,26 +35,29 @@
     }
     .img_cont {
         position: relative;
-        height: $list-image-size-small;
-        width: $list-image-size-small;
-        margin-right: 10px;
     }
 }
 
-div.row.userInfo {
+div.userInfo {
+    padding: 10px;
     overflow-x: auto;
     white-space: nowrap;
+    background: #f3f3f3f3;
+    border-radius: 255px 5px 225px 5px/25px 225px 25px 255px;
+    margin: 0;
 }
 
-div.row.userInfo .user_cont{
+div.userInfo .user_cont{
     display: inline-block;
     float: none !important;
 }
 
-.user_info span {
+
+.div.userInfo span {
     font-size: 20px;
 }
-.user_info p {
+
+.div.userInfo p {
     margin-bottom: 0px;
     color: rgba(0, 0, 0, 0.6);
 }

@@ -3,15 +3,15 @@
 
     <div class="user_info  p-2 flex-grow-1 row userInfo">
       <div class="img_cont col col-auto ">
-      <%= if (image(participant.Image)){ %>
-        <img src="<%= pathFor(participantsImagePath({ participants_image_id: participant.Image.ID })) %>" class="rounded-circle user_img">
+      <%= if (image(user.Image)){ %>
+        <img src="<%= pathFor(participantsImagePath({ participants_image_id: user.Image.ID })) %>" class="rounded-circle user_img">
       <% } else { %>
         <img src="/assets/images/empty-avatar.png"  class="rounded-circle user_img">
       <% } %>
       </div>
 
       <div class="user_cont col col-auto text-truncate">
-        <%= linkTo(userPath({ user_id: participant.ID }), { body:  participant.Name}) %>
+        <%= linkTo(userPath({ user_id: user.ID }), { body:  user.Name}) %>
       </div>
     </div>
 

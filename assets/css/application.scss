@@ -8,6 +8,12 @@
 @import "~leaflet-easybutton/src/easy-button.css";
 @import "~flag-icon-css/css/flag-icon.css";
 
+
+$input-border-radius: 0px;
+@import "~select2/dist/css/select2.css";
+@import "~@ttskch/select2-bootstrap4-theme/src/layout.scss";
+
+
 // Screen sizes
 $small: 575px;
 $medium: 900px;
@@ -26,8 +32,11 @@ $list-image-size-small: 70px;
     height: 250px;
 }
 
-
 .activity_icon_img {
     height: $list-image-size;
     width: $list-image-size;
+}
+
+body {
+    padding-bottom: 50px;
 }

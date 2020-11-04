@@ -1,0 +1,14 @@
+<div class="card-body contacts_body">
+  <ul class="contacts">
+    <%= for (user) in users { %>
+      <%= partial("users/new_card.html") %>
+    <% } %>
+  </ul>
+</div>
+
+<%= if(pagination) { %>
+<div class="text-center">
+  <%= paginator(pagination) %>
+</div>
+<% } %>
+

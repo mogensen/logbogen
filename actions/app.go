@@ -76,6 +76,8 @@ func App() *buffalo.App {
 		app.POST("/users", UsersCreate)
 		app.POST("/signin", AuthCreate)
 
+		app.GET("/pendingactivities", PendingActivitiesList)
+
 		app.GET("/users/{user_id}", UserShow)
 		app.GET("/users/{user_id}", UserEdit)
 

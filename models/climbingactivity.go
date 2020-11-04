@@ -14,6 +14,7 @@ import (
 type Climbingactivity struct {
 	ID           uuid.UUID    `json:"id" db:"id"`
 	UserID       uuid.UUID    `db:"user_id"`
+	User         User         `belongs_to:"user_id"`
 	Date         time.Time    `json:"date" db:"date"`
 	Lat          float64      `json:"lat" db:"lat"`
 	Lng          float64      `json:"lng" db:"lng"`

@@ -1,26 +1,38 @@
 <li>
-  <div class="d-flex align-content-start flex-row justify-content-between flex-wrap">
-    <div class="user_info  p-2 flex-grow-1 row userInfo">
+  <div class="d-flex userInfo">
+    <div class="flex-shrink-1  ">
       <div class="img_cont col col-auto ">
         <img src="<%= assetPath("images/climbing/" + climbingactivity.Type + ".svg") %>" class="activity_icon_img">
       </div>
-
-      <div class="user_cont col col-auto text-truncate">
+    </div>
+    <div class="flex-grow-1">
+        <b>
         <%= if (climbingactivity.Type.String()!="Other") { %>
           <%= t("climbingactivity.type." + climbingactivity.Type) %>
         <% } else { %>
           <%= climbingactivity.OtherType %>
         <% } %>
-        <%= t("climbingactivity.near") %>  <%= climbingactivity.Location %></b>
+        <%= t("climbingactivity.near") %>  <%= climbingactivity.Location %>
+        </b>
+
+        <%= if (current_user.ID.String()!=climbingactivity.UserID.String()) { %>
+           <br /><%= t("climbingactivity.createdby") %> <%= climbingactivity.User.Name %>
+        <% }%>
+
+
         <p class="text-muted small text-truncate"><%= climbingactivity.Date %></p>
         <p class="text-muted small text-truncate"><%= climbingactivity.Role %></p>
-      </div>
-
     </div>
-      <div class="float-right">
+
+
+    <div class="flex-shrink-1">
+      <%= if (current_user.ID.String()==climbingactivity.UserID.String()) { %>
           <%= linkTo(climbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-info", body: t("actions.view")}) %>
           <%= linkTo(editClimbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-warning", body: t("actions.edit")}) %>
           <%= linkTo(climbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-danger", "data-method": "DELETE", "data-confirm": t("actions.confirm"), body: t("actions.destroy")}) %>
-      </div>
+      <% } else { %>
+          <%= linkTo(climbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-info", body: t("actions.create")}) %>
+      <% } %>
+    </div>
   </div>
 </li>

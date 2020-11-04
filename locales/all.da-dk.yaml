@@ -1,6 +1,9 @@
 - id: menu.climbingactivities
   translation: "Aktiviteter"
 
+- id: menu.pendingactivities
+  translation: "Afventende aktiviteter"
+
 - id: title
   translation: "Klatre Logbogen"
 

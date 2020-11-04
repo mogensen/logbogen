@@ -12,6 +12,9 @@
 - id: "climbingactivity.title.list"
   translation: "All climbs"
 
+- id: "climbingactivity.createdby"
+  translation: "Created by: "
+
 - id: "climbingactivity.actions.back"
   translation: "Back to all Climbingactivities"
 

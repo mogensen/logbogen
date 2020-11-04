@@ -43,7 +43,7 @@
     <hr/>
     <div class="card-body contacts_body">
       <ul class="contacts">
-        <%= for (participant) in climbingactivity.Participants { %>
+        <%= for (user) in climbingactivity.Participants { %>
           <%= partial("users/new_card.html") %>
         <% } %>
       </ul>

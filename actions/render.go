@@ -41,6 +41,14 @@ func init() {
 				}
 				return ""
 			},
+			"selected": func(id uuid.UUID, slice models.Users) string {
+				for _, c := range slice {
+					if id == c.ID {
+						return "selected='selected'"
+					}
+				}
+				return ""
+			},
 			// for non-bootstrap form helpers uncomment the lines
 			// below and import "github.com/gobuffalo/helpers/forms"
 			// forms.FormKey:     forms.Form,

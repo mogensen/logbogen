@@ -60,7 +60,9 @@
           <h1><%= t("title") %></h1>
         </div>
       </div>
-    <%= partial("users/current.html") %>
+        <%= if (current_user) { %>
+          <%= partial("users/current.html") %>
+        <% } %>
     </div>
   </div>
 </div>
