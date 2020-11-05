@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"logbogen/models"
 	"math/rand"
+	"time"
 
 	"github.com/markbates/grift/grift"
 )
@@ -22,9 +23,17 @@ var _ = grift.Namespace("demo", func() {
 			return err
 		}
 
+		userss := *users
 		for i := 0; i < 200; i++ {
-			u := (*users)[rand.Intn(len(*users))]
-			err := createActivity(u, (*users)[rand.Intn(len(*users))], (*users)[rand.Intn(len(*users))])
+			u := userss[rand.Intn(len(userss))]
+
+			nrOfParticipants := rand.Intn(len(userss))
+			if nrOfParticipants == 0 {
+				nrOfParticipants = 2
+			}
+			userss = Shuffle(userss)
+
+			err := createActivity(u, userss[:nrOfParticipants])
 			if err != nil {
 				return err
 			}
@@ -34,3 +43,15 @@ var _ = grift.Namespace("demo", func() {
 	})
 
 })
+
+func Shuffle(vals models.Users) models.Users {
+	r := rand.New(rand.NewSource(time.Now().Unix()))
+	ret := make(models.Users, len(vals))
+	n := len(vals)
+	for i := 0; i < n; i++ {
+		randIndex := r.Intn(len(vals))
+		ret[i] = vals[randIndex]
+		vals = append(vals[:randIndex], vals[randIndex+1:]...)
+	}
+	return ret
+}

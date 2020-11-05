@@ -43,7 +43,7 @@ func createUser(username, password string) error {
 	return nil
 }
 
-func createActivity(user, participant1, participant2 models.User) error {
+func createActivity(user models.User, participants []models.User) error {
 	activityTime := randomTimestamp(4, 0)
 
 	randFloats := func(min, max float64) float64 {
@@ -53,8 +53,8 @@ func createActivity(user, participant1, participant2 models.User) error {
 	act := &models.Climbingactivity{
 		UserID:    user.ID,
 		Date:      activityTime,
-		Lat:       randFloats(54.8000145534, 57.730016588),
-		Lng:       randFloats(8.08997684086, 12.6900061378),
+		Lat:       randFloats(55.885219, 56.3947998),
+		Lng:       randFloats(10.147212, 10.2941546),
 		Type:      randType(),
 		OtherType: randOtherType(),
 		Role:      randRole(),
@@ -62,7 +62,7 @@ func createActivity(user, participant1, participant2 models.User) error {
 	}
 
 	act.Location = actions.GetLocation(&buffalo.DefaultContext{}, act)
-	act.Participants = []models.User{participant1, participant2}
+	act.Participants = participants
 	models.DB.Create(act)
 
 	return nil
