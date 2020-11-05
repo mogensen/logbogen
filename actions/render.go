@@ -55,6 +55,12 @@ func init() {
 				}
 				return false
 			},
+			"firstUsers": func(n int, users []models.User) []models.User {
+				if len(users) > n {
+					return users[:n]
+				}
+				return users
+			},
 			// for non-bootstrap form helpers uncomment the lines
 			// below and import "github.com/gobuffalo/helpers/forms"
 			// forms.FormKey:     forms.Form,

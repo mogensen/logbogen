@@ -1,7 +1,7 @@
 <li>
   <div class="userInfo">
     <div class="d-flex">
-    
+
       <div class="flex-shrink-1">
         <div class="img_cont col col-auto ">
           <img src="<%= assetPath("images/climbing/" + climbingactivity.Type + ".svg") %>" class="activity_icon_img">
@@ -33,17 +33,23 @@
 
 
       <div class="flex-shrink-1 d-none d-md-block">
-          <%= for (user) in climbingactivity.Participants { %>
-            <%= partial("users/profile_image_mini.html") %>
-          <% } %>
+        <%= for (user) in (firstUsers(6, climbingactivity.Participants)) { %>
+          <%= partial("users/profile_image_mini.html") %>
+        <% } %>
+        <p class="text-muted small text-truncate d-inline">
+          <%= if (len(climbingactivity.Participants) > 6) { %> and <%= (len(climbingactivity.Participants) - 6) %> more.<% } %>
+        </p>
       </div>
 
     </div>
     <div class="d-md-none user-img-thumbnail-mini-container">
-      <%= for (user) in climbingactivity.Participants { %>
+      <%= for (user) in (firstUsers(6, climbingactivity.Participants)) { %>
         <%= partial("users/profile_image_mini.html") %>
       <% } %>
+      <p class="text-muted small text-truncate d-inline">
+        <%= if (len(climbingactivity.Participants) > 6) { %> and <%= (len(climbingactivity.Participants) - 6) %> more.<% } %>
+      </p>
     </div>
-    
+
   </div>
 </li>
