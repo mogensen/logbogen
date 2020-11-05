@@ -1,11 +1,16 @@
 
 <div class="container">
   <div class="row">
-    <div class="col">
+    <div class="col-md-12">
+      <div class="subtitle">
+        <div class="container">
+          <h1><%= t("title") %></h1>
+        </div>
+      </div>
+
       <div class="auth-center">
-        <%= if (current_user) { %>
+        <%= if (!current_user) { %>
           
-        <% } else { %>
           <div class="login-form">
               <form action="/signin" method="post">
               <input name="authenticity_token" value="<%= authenticity_token %>" type="hidden"/>
@@ -38,7 +43,6 @@
                     <a href="#" class="float-right">Forgot Password?</a>
                 </div>
             <div class="or-seperator"><i>or</i></div>
-                  <h2 class="text-center">Log ind</h2>
                   <div class="text-center social-btn">
                       <a href="/auth/facebook" class="btn btn-secondary"><i class="fab fa-facebook"></i>&nbsp; Facebook</a>
                   </div>
@@ -47,19 +51,8 @@
         <% } %>
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
 
-<div class="container">
-  <div class="row">
-    <div class="col-md-12">
-      <div class="subtitle">
-        <div class="container">
-          <h1><%= t("title") %></h1>
-        </div>
-      </div>
         <%= if (current_user) { %>
           <%= partial("users/current.html") %>
         <% } %>

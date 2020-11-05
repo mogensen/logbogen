@@ -40,7 +40,7 @@ func (v ClimbingactivitiesResource) List(c buffalo.Context) error {
 
 	// Paginate results. Params "page" and "per_page" control pagination.
 	// Default values are "page=1" and "per_page=20".
-	q := scope(c).Order("Date").PaginateFromParams(c.Params())
+	q := scope(c).Eager("Participants.Image").Eager().Order("Date").PaginateFromParams(c.Params())
 
 	// Retrieve all Climbingactivities from the DB
 	if err := q.All(climbingactivities); err != nil {
@@ -68,7 +68,7 @@ func (v ClimbingactivitiesResource) Show(c buffalo.Context) error {
 	climbingactivity := &models.Climbingactivity{}
 
 	// To find the Climbingactivity the parameter climbingactivity_id is used.
-	if err := scope(c).Eager("Participants").Find(climbingactivity, c.Param("climbingactivity_id")); err != nil {
+	if err := scope(c).Eager("Participants.Image").Find(climbingactivity, c.Param("climbingactivity_id")); err != nil {
 		return c.Error(http.StatusNotFound, err)
 	}
 
@@ -95,6 +95,45 @@ func (v ClimbingactivitiesResource) New(c buffalo.Context) error {
 	if !ok {
 		c.Error(500, errors.New("no transaction found"))
 	}
+
+	users := &models.Users{}
+	if err := tx.All(users); err != nil {
+		return err
+	}
+	c.Set("users", users)
+	c.Set("climbingtypes", models.ClimbingTypes)
+	return c.Render(http.StatusOK, r.HTML("/climbingactivities/new.plush.html"))
+}
+
+// CloneClimbingActivity renders the form for creating a new Climbingactivity cloned from an existing.
+// This function is mapped to the path GET /climbingactivities/{climbingactivity_id}/clone
+func CloneClimbingActivity(c buffalo.Context) error {
+
+	tx, ok := c.Value("tx").(*pop.Connection)
+	if !ok {
+		c.Error(500, errors.New("no transaction found"))
+	}
+
+	// Allocate an empty Climbingactivity
+	climbingactivity := &models.Climbingactivity{}
+
+	if err := tx.Eager("Participants").Eager("Participants.Image").Find(climbingactivity, c.Param("climbingactivity_id")); err != nil {
+		return c.Error(http.StatusNotFound, err)
+	}
+
+	// TODO Remove self from participants, add original user
+
+	c.Set("climbingactivity", &models.Climbingactivity{
+		Date:         climbingactivity.Date,
+		Lat:          climbingactivity.Lat,
+		Lng:          climbingactivity.Lng,
+		Location:     climbingactivity.Location,
+		Type:         climbingactivity.Type,
+		OtherType:    climbingactivity.OtherType,
+		Comment:      climbingactivity.Comment,
+		UserID:       currentUser(c).ID,
+		Participants: climbingactivity.Participants,
+	})
 
 	users := &models.Users{}
 	if err := tx.All(users); err != nil {

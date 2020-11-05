@@ -58,7 +58,7 @@ func (v UsersImagesResource) List(c buffalo.Context) error {
 }
 
 // Show gets the data for one UsersImage. This function is mapped to
-// the path GET /User_images/{User_image_id}
+// the path GET /User_images/{users_image_id}
 func (v UsersImagesResource) Show(c buffalo.Context) error {
 	// Get the DB connection from the context
 	tx, ok := c.Value("tx").(*pop.Connection)
@@ -69,8 +69,8 @@ func (v UsersImagesResource) Show(c buffalo.Context) error {
 	// Allocate an empty UsersImage
 	UsersImage := &models.UsersImage{}
 
-	// To find the UsersImage the parameter User_image_id is used.
-	if err := tx.Find(UsersImage, c.Param("User_image_id")); err != nil {
+	// To find the UsersImage the parameter users_image_id is used.
+	if err := tx.Find(UsersImage, c.Param("users_image_id")); err != nil {
 		return c.Error(404, err)
 	}
 	p, err := base64.StdEncoding.DecodeString(string(UsersImage.ImageData))
@@ -154,11 +154,11 @@ func (v UsersImagesResource) Create(c buffalo.Context) error {
 	// If there are no errors set a success message
 	c.Flash().Add("success", T.Translate(c, "UsersImage.created.success"))
 	// and redirect to the User show page
-	return c.Redirect(302, "/User/"+UsersImage.UserID.String())
+	return c.Redirect(302, "/users/"+UsersImage.UserID.String())
 }
 
 // Edit renders a edit form for a UsersImage. This function is
-// mapped to the path GET /User_images/{User_image_id}/edit
+// mapped to the path GET /User_images/{users_image_id}/edit
 func (v UsersImagesResource) Edit(c buffalo.Context) error {
 	// Get the DB connection from the context
 	tx, ok := c.Value("tx").(*pop.Connection)
@@ -169,7 +169,7 @@ func (v UsersImagesResource) Edit(c buffalo.Context) error {
 	// Allocate an empty UsersImage
 	UsersImage := &models.UsersImage{}
 
-	if err := tx.Find(UsersImage, c.Param("User_image_id")); err != nil {
+	if err := tx.Find(UsersImage, c.Param("users_image_id")); err != nil {
 		return c.Error(404, err)
 	}
 
@@ -177,7 +177,7 @@ func (v UsersImagesResource) Edit(c buffalo.Context) error {
 }
 
 // Update changes a UsersImage in the DB. This function is mapped to
-// the path PUT /User_images/{User_image_id}
+// the path PUT /User_images/{users_image_id}
 func (v UsersImagesResource) Update(c buffalo.Context) error {
 	// Get the DB connection from the context
 	tx, ok := c.Value("tx").(*pop.Connection)
@@ -188,7 +188,7 @@ func (v UsersImagesResource) Update(c buffalo.Context) error {
 	// Allocate an empty UsersImage
 	UsersImage := &models.UsersImage{}
 
-	if err := tx.Find(UsersImage, c.Param("User_image_id")); err != nil {
+	if err := tx.Find(UsersImage, c.Param("users_image_id")); err != nil {
 		return c.Error(404, err)
 	}
 
@@ -230,11 +230,11 @@ func (v UsersImagesResource) Update(c buffalo.Context) error {
 	// If there are no errors set a success message
 	c.Flash().Add("success", T.Translate(c, "UsersImage.updated.success"))
 	// and redirect to the User_images index page
-	return c.Redirect(302, "/User/"+UsersImage.UserID.String())
+	return c.Redirect(302, "/users/"+UsersImage.UserID.String())
 }
 
 // Destroy deletes a UsersImage from the DB. This function is mapped
-// to the path DELETE /User_images/{User_image_id}
+// to the path DELETE /User_images/{users_image_id}
 func (v UsersImagesResource) Destroy(c buffalo.Context) error {
 	// Get the DB connection from the context
 	tx, ok := c.Value("tx").(*pop.Connection)
@@ -245,8 +245,8 @@ func (v UsersImagesResource) Destroy(c buffalo.Context) error {
 	// Allocate an empty UsersImage
 	UsersImage := &models.UsersImage{}
 
-	// To find the UsersImage the parameter User_image_id is used.
-	if err := tx.Find(UsersImage, c.Param("User_image_id")); err != nil {
+	// To find the UsersImage the parameter users_image_id is used.
+	if err := tx.Find(UsersImage, c.Param("users_image_id")); err != nil {
 		return c.Error(404, err)
 	}
 

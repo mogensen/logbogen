@@ -49,6 +49,12 @@ func init() {
 				}
 				return ""
 			},
+			"image": func(img *models.UsersImage) bool {
+				if img != nil && img.ID != uuid.Nil {
+					return true
+				}
+				return false
+			},
 			// for non-bootstrap form helpers uncomment the lines
 			// below and import "github.com/gobuffalo/helpers/forms"
 			// forms.FormKey:     forms.Form,

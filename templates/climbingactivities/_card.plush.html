@@ -1,38 +1,49 @@
 <li>
-  <div class="d-flex userInfo">
-    <div class="flex-shrink-1  ">
-      <div class="img_cont col col-auto ">
-        <img src="<%= assetPath("images/climbing/" + climbingactivity.Type + ".svg") %>" class="activity_icon_img">
+  <div class="userInfo">
+    <div class="d-flex">
+    
+      <div class="flex-shrink-1">
+        <div class="img_cont col col-auto ">
+          <img src="<%= assetPath("images/climbing/" + climbingactivity.Type + ".svg") %>" class="activity_icon_img">
+        </div>
       </div>
-    </div>
-    <div class="flex-grow-1">
-        <b>
-        <%= if (climbingactivity.Type.String()!="Other") { %>
-          <%= t("climbingactivity.type." + climbingactivity.Type) %>
+      <div class="flex-grow-1">
+        <%= if (current_user.ID.String()==climbingactivity.UserID.String()) { %>
+        <a href="<%= pathFor(climbingactivityPath({ climbingactivity_id: climbingactivity.ID })) %>">
         <% } else { %>
-          <%= climbingactivity.OtherType %>
-        <% } %>
-        <%= t("climbingactivity.near") %>  <%= climbingactivity.Location %>
-        </b>
+        <a href="<%= pathFor(climbingactivityClonePath({ climbingactivity_id: climbingactivity.ID })) %>">
+        <% }%>
+          <b>
+            <%= if (climbingactivity.Type.String()!="Other") { %>
+              <%= t("climbingactivity.type." + climbingactivity.Type) %>
+            <% } else { %>
+              <%= climbingactivity.OtherType %>
+            <% } %>
+            <%= t("climbingactivity.near") %>  <%= climbingactivity.Location %>
+          </b>
+        </a>
 
         <%= if (current_user.ID.String()!=climbingactivity.UserID.String()) { %>
-           <br /><%= t("climbingactivity.createdby") %> <%= climbingactivity.User.Name %>
+        <br /><%= t("climbingactivity.createdby") %> <%= climbingactivity.User.Name %>
         <% }%>
-
 
         <p class="text-muted small text-truncate"><%= climbingactivity.Date %></p>
         <p class="text-muted small text-truncate"><%= climbingactivity.Role %></p>
+      </div>
+
+
+      <div class="flex-shrink-1 d-none d-md-block">
+          <%= for (user) in climbingactivity.Participants { %>
+            <%= partial("users/profile_image_mini.html") %>
+          <% } %>
+      </div>
+
     </div>
-
-
-    <div class="flex-shrink-1">
-      <%= if (current_user.ID.String()==climbingactivity.UserID.String()) { %>
-          <%= linkTo(climbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-info", body: t("actions.view")}) %>
-          <%= linkTo(editClimbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-warning", body: t("actions.edit")}) %>
-          <%= linkTo(climbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-danger", "data-method": "DELETE", "data-confirm": t("actions.confirm"), body: t("actions.destroy")}) %>
-      <% } else { %>
-          <%= linkTo(climbingactivityPath({ climbingactivity_id: climbingactivity.ID }), {class: "btn btn-info", body: t("actions.create")}) %>
+    <div class="d-md-none user-img-thumbnail-mini-container">
+      <%= for (user) in climbingactivity.Participants { %>
+        <%= partial("users/profile_image_mini.html") %>
       <% } %>
     </div>
+    
   </div>
 </li>

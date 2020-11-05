@@ -1,10 +1,16 @@
 <div class="py-4 mb-2">
   <h3 class="d-inline-block"><%= t("climbingactivity.title.list") %></h3>
-  <div class="float-right">
+  <div class="float-right d-none d-md-block">
     <%= linkTo(newClimbingactivitiesPath(), {class: "btn btn-primary"}) { %>
       <i class="fas fa-clipboard-check"></i>&nbsp; <%= t("climbingactivity.new") %>
     <% } %>
   </div>
+</div>
+
+<div class="d-md-none">
+  <%= linkTo(newClimbingactivitiesPath(), {class: "btn btn-primary"}) { %>
+    <i class="fas fa-clipboard-check"></i>&nbsp; <%= t("climbingactivity.new") %>
+  <% } %>
 </div>
 
 <div class="card-body contacts_body">

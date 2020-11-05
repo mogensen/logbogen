@@ -20,8 +20,9 @@ $medium: 900px;
 
 // Image sizes
 $profile-image-size: 250px;
+$profile-image-size-mini: 40px;
 $list-image-size: 90px;
-$list-image-size-small: 70px;
+$list-image-size-small: 50px;
 
 @import "buffalo";
 @import "facebook";
@@ -35,6 +36,14 @@ $list-image-size-small: 70px;
 .activity_icon_img {
     height: $list-image-size;
     width: $list-image-size;
+}
+
+@media (max-width: $small) {
+    .activity_icon_img {
+        margin-left: -10px;
+        height: $list-image-size-small;
+        width: $list-image-size-small;
+    }
 }
 
 body {

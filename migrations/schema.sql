@@ -102,6 +102,21 @@ CREATE TABLE public.users (
 ALTER TABLE public.users OWNER TO postgres;
 
 --
+-- Name: users_images; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.users_images (
+    id uuid NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL,
+    user_id uuid NOT NULL,
+    image_data bytea NOT NULL
+);
+
+
+ALTER TABLE public.users_images OWNER TO postgres;
+
+--
 -- Name: climbingactivities climbingactivities_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -115,6 +130,14 @@ ALTER TABLE ONLY public.climbingactivities
 
 ALTER TABLE ONLY public.participants_climbingactivities
     ADD CONSTRAINT participants_climbingactivities_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users_images users_images_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users_images
+    ADD CONSTRAINT users_images_pkey PRIMARY KEY (id);
 
 
 --
@@ -135,3 +158,4 @@ CREATE UNIQUE INDEX schema_migration_version_idx ON public.schema_migration USIN
 --
 -- PostgreSQL database dump complete
 --
+

@@ -77,6 +77,7 @@ func App() *buffalo.App {
 		app.POST("/signin", AuthCreate)
 
 		app.GET("/pendingactivities", PendingActivitiesList)
+		app.GET("/climbingactivities/{climbingactivity_id}/clone", CloneClimbingActivity)
 
 		app.GET("/users/{user_id}", UserShow)
 		app.GET("/users/{user_id}", UserEdit)

@@ -58,7 +58,6 @@ func AuthCallback(c buffalo.Context) error {
 		return errors.WithStack(err)
 	}
 
-	c.Flash().Add("success", "You have been logged in")
 	return c.Redirect(302, "/")
 }
 
@@ -102,7 +101,6 @@ func AuthCreate(c buffalo.Context) error {
 		return bad()
 	}
 	c.Session().Set("current_user_id", u.ID)
-	c.Flash().Add("success", T.Translate(c, "auth.login.success"))
 
 	redirectURL := "/"
 	if redir, ok := c.Session().Get("redirectURL").(string); ok {
@@ -123,7 +121,7 @@ func SetCurrentUser(next buffalo.Handler) buffalo.Handler {
 		if uid := c.Session().Get("current_user_id"); uid != nil {
 			u := &models.User{}
 			tx := c.Value("tx").(*pop.Connection)
-			if err := tx.Find(u, uid); err != nil {
+			if err := tx.Eager().Find(u, uid); err != nil {
 				c.Session().Clear()
 				return next(c)
 			}

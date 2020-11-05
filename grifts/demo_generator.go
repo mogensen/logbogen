@@ -1,6 +1,7 @@
 package grifts
 
 import (
+	"encoding/base64"
 	"logbogen/actions"
 	"logbogen/models"
 	"math/rand"
@@ -11,6 +12,7 @@ import (
 	"github.com/brianvoe/gofakeit"
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/nulls"
+	"github.com/ipsn/go-adorable"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -30,10 +32,18 @@ func createUser(username, password string) error {
 	if err := models.DB.Create(&user); err != nil {
 		return errors.WithStack(err)
 	}
+
+	avatar := adorable.Random()
+
+	pImage := models.UsersImage{
+		ImageData: []byte(base64.StdEncoding.EncodeToString(avatar)),
+		UserID:    user.ID,
+	}
+	models.DB.Create(&pImage)
 	return nil
 }
 
-func createActivity(user models.User) error {
+func createActivity(user, participant1, participant2 models.User) error {
 	activityTime := randomTimestamp(4, 0)
 
 	randFloats := func(min, max float64) float64 {
@@ -52,6 +62,7 @@ func createActivity(user models.User) error {
 	}
 
 	act.Location = actions.GetLocation(&buffalo.DefaultContext{}, act)
+	act.Participants = []models.User{participant1, participant2}
 	models.DB.Create(act)
 
 	return nil

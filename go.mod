@@ -25,6 +25,7 @@ require (
 	github.com/gobuffalo/validate/v3 v3.3.0
 	github.com/gobuffalo/x v0.0.0-20190224155809-6bb134105960
 	github.com/gofrs/uuid v3.2.0+incompatible
+	github.com/ipsn/go-adorable v1.0.0
 	github.com/klauspost/dawa v0.0.0-20190808155501-e7d6c9409b61
 	github.com/kpawlik/geojson v0.0.0-20171201195549-1a4f120c6b41 // indirect
 	github.com/markbates/goth v1.65.0
@@ -39,4 +40,5 @@ require (
 	golang.org/x/net v0.0.0-20201021035429-f5854403a974 // indirect
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9 // indirect
 	golang.org/x/sys v0.0.0-20201026173827-119d4633e4d1 // indirect
+	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 )

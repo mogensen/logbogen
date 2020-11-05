@@ -24,7 +24,7 @@ var _ = grift.Namespace("demo", func() {
 
 		for i := 0; i < 200; i++ {
 			u := (*users)[rand.Intn(len(*users))]
-			err := createActivity(u)
+			err := createActivity(u, (*users)[rand.Intn(len(*users))], (*users)[rand.Intn(len(*users))])
 			if err != nil {
 				return err
 			}

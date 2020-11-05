@@ -1,0 +1,6 @@
+create_table("users_images") {
+	t.Column("id", "uuid", {primary: true})
+	t.Timestamps()
+	t.Column("user_id", "uuid", {})
+	t.Column("image_data", "bytea", {})
+}

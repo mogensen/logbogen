@@ -1,22 +1,23 @@
-.img-thumbnail .img-thumbnail-button {
+.user-img-thumbnail .user-img-thumbnail-button {
     left: 0;
     text-align: center;
     width: 100%;
-    background: rgba(255, 255, 255, 0.8);
+    // background: rgba(255, 255, 255, 0.8);
     bottom: 0;
     padding: 10px 0;
     color: black;
     font-weight: bolder;
     position: absolute;
 }
-.img-thumbnail {
+.user-img-thumbnail {
+    background-color: none !important;
     padding: 0;
     border: 0;
     display: inline-block;
     height: $profile-image-size;
     width: $profile-image-size;
 }
-.img-thumbnail-container {
+.user-img-thumbnail-container {
     display: inline-block;
     overflow: hidden;
     border-radius: 50%;
@@ -24,8 +25,19 @@
     padding: 0;
     cursor: pointer;
 }
-.img-thumbnail img {
+.user-img-thumbnail img {
     border: 4px solid #333333;
     height: $profile-image-size;
     width: $profile-image-size;
+}
+
+.user-img-thumbnail-mini-container {
+    padding-left: ($profile-image-size-mini );
+}
+
+.user-img-thumbnail-mini img {
+    border: 2px solid #333333;
+    height: $profile-image-size-mini;
+    width: $profile-image-size-mini;
+    margin-left: - ($profile-image-size-mini - 5*($profile-image-size-mini/8));
 }

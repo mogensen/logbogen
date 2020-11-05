@@ -25,6 +25,7 @@ type User struct {
 	UpdatedAt    time.Time    `json:"updated_at" db:"updated_at"`
 	AvatarURL    string       `json:"avatar_url" db:"avatar_url"`
 	PasswordHash string       `json:"password_hash" db:"password_hash"`
+	Image        *UsersImage  `has_one:"users_images" fk_id:"user_id"`
 
 	Password             string `json:"-" db:"-"`
 	PasswordConfirmation string `json:"-" db:"-"`

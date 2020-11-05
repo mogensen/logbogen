@@ -1,0 +1,2 @@
+drop_table("users_images")
+drop_column("users", "users_images")
