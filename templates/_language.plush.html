@@ -2,7 +2,7 @@
 <%= formFor({}, {action: languagePath(), method: "POST"}) { %>
   <input type="hidden" id="url" name="url" value="<%= current_path %>">
   <input type="hidden" id="lang" name="lang" value="da-dk">
-  <button class="btn btn-success" role="submit"><i class="flag-icon flag-icon-dk"></i></button>
+  <button class="btn" role="submit"><i class="flag-icon flag-icon-dk"></i></button>
 <% } %>
 </li>
 
@@ -10,6 +10,6 @@
 <%= formFor({}, {action: languagePath(), method: "POST"}) { %>
   <input type="hidden" id="url" name="url" value="<%= current_path %>">
   <input type="hidden" id="lang" name="lang" value="en-us">
-  <button class="btn btn-success" role="submit"><i class="flag-icon flag-icon-us"></i></button>
+  <button class="btn" role="submit"><i class="flag-icon flag-icon-us"></i></button>
 <% } %>
 </li>
