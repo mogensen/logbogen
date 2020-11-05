@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"logbogen/models"
+	"logbogen/services"
 	"os"
 	"strings"
 
@@ -23,7 +24,7 @@ func init() {
 	gothic.Store = App().SessionStore
 
 	goth.UseProviders(
-		facebook.New(os.Getenv("FACEBOOK_KEY"), os.Getenv("FACEBOOK_SECRET"), fmt.Sprintf("%s%s", os.Getenv("APP_HOST"), "/auth/facebook/callback")),
+		facebook.New(os.Getenv("FACEBOOK_KEY"), os.Getenv("FACEBOOK_SECRET"), fmt.Sprintf("%s%s", os.Getenv("APP_HOST"), "/auth/facebook/callback/")),
 	)
 }
 
@@ -33,7 +34,7 @@ func AuthCallback(c buffalo.Context) error {
 		return c.Error(401, err)
 	}
 	tx := c.Value("tx").(*pop.Connection)
-	q := tx.Where("provider = ? and provider_id = ?", gu.Provider, gu.UserID)
+	q := tx.Eager("Image").Where("provider = ? and provider_id = ?", gu.Provider, gu.UserID)
 	exists, err := q.Exists("users")
 	if err != nil {
 		return errors.WithStack(err)
@@ -48,10 +49,13 @@ func AuthCallback(c buffalo.Context) error {
 	u.Provider = gu.Provider
 	u.ProviderID = gu.UserID
 	u.Email = nulls.NewString(gu.Email)
-	u.AvatarURL = gu.AvatarURL
+
 	if err = tx.Save(u); err != nil {
 		return errors.WithStack(err)
 	}
+
+	// Try getting the current FB profile image
+	_ = services.TryUpdateImage(c, gu, u)
 
 	c.Session().Set("current_user_id", u.ID)
 	if err = c.Session().Save(); err != nil {

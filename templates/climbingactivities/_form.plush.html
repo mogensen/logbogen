@@ -13,13 +13,10 @@
 <%= f.TextAreaTag("Comment", {rows: 10, label:t("climbingactivity.comment")}) %>
 
 <label><%= t("climbingactivity.participants") %></label>
-<select id="participant-select" name="participants" class="form-control" multiple="multiple" >
-
-        <%= for (participant) in users { %>
-
-     <option value="<%= participant.ID %>" <%= selected(participant.ID, climbingactivity.Participants) %> ><%= participant.Name %></option>
-
-        <% } %>
+<select id="participant-select" name="participants" class="form-control" multiple="multiple">
+    <%= for (participant) in users { %>
+    <option value="<%= participant.ID %>" <%= selected(participant.ID, climbingactivity.Participants) %> ><%= participant.Name %></option>
+    <% } %>
 </select>
 <br />
 <button class="btn btn-success" role="submit">Save</button>

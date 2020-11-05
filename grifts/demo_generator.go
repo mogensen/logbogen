@@ -2,6 +2,7 @@ package grifts
 
 import (
 	"encoding/base64"
+	"fmt"
 	"logbogen/actions"
 	"logbogen/models"
 	"math/rand"
@@ -28,6 +29,8 @@ func createUser(username, password string) error {
 		Provider:     "localuser",
 		ProviderID:   username,
 		PasswordHash: string(ph),
+		MemberNumber: fmt.Sprintf("%d-%s-%d", gofakeit.Year(), randomdata.StringSample("TC", "TI"), randomdata.Number(999)),
+		Organization: randomdata.StringSample("Dansk Træklatreforening", "FDF", "Fjeldgruppen", "DGI"),
 	}
 	if err := models.DB.Create(&user); err != nil {
 		return errors.WithStack(err)

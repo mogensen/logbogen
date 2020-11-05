@@ -15,6 +15,9 @@
 - id: "climbingactivity.createdby"
   translation: "Created by: "
 
+- id: "climbingactivity.logfirsthere"
+  translation: "Create your first log by pushing: "
+
 - id: "climbingactivity.actions.back"
   translation: "Back to all Climbingactivities"
 

@@ -1,0 +1,39 @@
+<div class="card">
+  <div class="card-body">
+    <div class="d-md-none">
+
+      <div class="card-body">
+        <center class="">
+          <%= partial("users/profile_image.html") %>
+          <h1 class="card-title m-t-10"><%= user.Name %></h1>
+        </center>
+      </div>
+
+      <div class="card-body">
+        <p class="text-truncate"><%= user.Email %></p>
+        <p class="text-truncate"><%= user.Organization %></p>
+        <p class="text-truncate"><%= user.MemberNumber %></p>
+      </div>
+    </div>
+
+    <div class="d-none d-md-block">
+      <div class="page-header">
+        <h1><%= user.Name %></h1>
+      </div>
+
+      <div class="row">
+        <div class="col-auto">
+            <%= partial("users/profile_image.html") %>
+        </div>
+        <div class="col-sm-4">
+          <p class="text-truncate"><%= user.Email %></p>
+          <p class="text-truncate"><%= user.Organization %></p>
+          <p class="text-truncate"><%= user.MemberNumber %></p>
+        </div>
+
+        <div class="col-auto">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

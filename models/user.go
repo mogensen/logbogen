@@ -24,8 +24,10 @@ type User struct {
 	CreatedAt    time.Time    `json:"created_at" db:"created_at"`
 	UpdatedAt    time.Time    `json:"updated_at" db:"updated_at"`
 	AvatarURL    string       `json:"avatar_url" db:"avatar_url"`
-	PasswordHash string       `json:"password_hash" db:"password_hash"`
+	PasswordHash string       `json:"-" db:"password_hash"`
 	Image        *UsersImage  `has_one:"users_images" fk_id:"user_id"`
+	MemberNumber string       `json:"member_number" db:"member_number"`
+	Organization string       `json:"organization" db:"organization"`
 
 	Password             string `json:"-" db:"-"`
 	PasswordConfirmation string `json:"-" db:"-"`

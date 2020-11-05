@@ -1,7 +1,7 @@
 <span class="user-img-thumbnail-mini">
   <%= if (image(user.Image)) { %>
-    <img src="<%= pathFor(usersImagePath({ users_image_id: user.Image.ID })) %>" class="rounded-circle">
+    <img src="<%= pathFor(usersImagePath({ users_image_id: user.Image.ID })) %>" class="rounded-circle" alt="<%= user.Name %>">
   <% } else { %>
-    <img src="/assets/images/empty-avatar.png" class="rounded-circle">
+    <img src="/assets/images/empty-avatar.png" class="rounded-circle" alt="<%= user.Name %>">
   <% } %>
 </span>

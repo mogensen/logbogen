@@ -7,11 +7,33 @@
   </div>
 </div>
 
-<div class="d-md-none">
+<div class="d-flex flex-row-reverse d-md-none">
+  <div class="p-2">
   <%= linkTo(newClimbingactivitiesPath(), {class: "btn btn-primary"}) { %>
     <i class="fas fa-clipboard-check"></i>&nbsp; <%= t("climbingactivity.new") %>
   <% } %>
+  </div>
+
 </div>
+
+
+<%= if (len(climbingactivities) == 0) { %>
+
+<div class="d-flex flex-wrap-reverse justify-content-center">
+  <div class="p-2 align-self-center">
+  <p>
+    <%= t("climbingactivity.logfirsthere") %>
+    <%= linkTo(newClimbingactivitiesPath(), {class: "btn btn-primary"}) { %>
+      <i class="fas fa-clipboard-check"></i>&nbsp; <%= t("climbingactivity.new") %>
+    <% } %>
+  </p>
+
+  </div>
+  <div class="p-2 ">
+  <img src="<%= assetPath("images/arrow.svg") %>">
+  </div>
+</div>
+<% } %>
 
 <div class="card-body contacts_body">
   <ul class="contacts">

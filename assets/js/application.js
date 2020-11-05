@@ -9,7 +9,7 @@ require("select2/dist/js/select2.full.js");
 import img from 'leaflet/dist/images/marker-icon.png';
 
 $(() => {
-    $.fn.select2.defaults.set( "theme", "bootstrap4" );
+    $.fn.select2.defaults.set("theme", "bootstrap4");
 
     const zoomLevel = 15;
     const defaultIcon = new L.icon({
