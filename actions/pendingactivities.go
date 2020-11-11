@@ -22,9 +22,21 @@ func PendingActivitiesList(c buffalo.Context) error {
 		return fmt.Errorf("no transaction found")
 	}
 
-	pca := &models.ParticipantsClimbingactivities{}
+	pca := &[]models.ParticipantsClimbingactivity{}
+	res := models.Climbingactivities{}
 
 	tx.Where("user_id = (?)", currentUser(c).ID).All(pca)
+	if len(*pca) == 0 {
+		return responder.Wants("html", func(c buffalo.Context) error {
+			c.Set("climbingactivities", &res)
+			return c.Render(http.StatusOK, r.HTML("/climbingactivities/index.plush.html"))
+		}).Wants("json", func(c buffalo.Context) error {
+			return c.Render(200, r.JSON(&res))
+		}).Wants("xml", func(c buffalo.Context) error {
+			return c.Render(200, r.XML(&res))
+		}).Respond(c)
+
+	}
 
 	pendingactivities := &models.Climbingactivities{}
 
@@ -49,7 +61,6 @@ func PendingActivitiesList(c buffalo.Context) error {
 	}
 
 	// Remove already logged climbs
-	res := models.Climbingactivities{}
 	for _, pending := range *pendingactivities {
 		found := false
 		for _, act := range *climbingactivities {
@@ -65,9 +76,6 @@ func PendingActivitiesList(c buffalo.Context) error {
 	}
 
 	return responder.Wants("html", func(c buffalo.Context) error {
-		// Add the paginator to the context so it can be used in the template.
-		// c.Set("pagination", q.Paginator)
-
 		c.Set("climbingactivities", &res)
 		return c.Render(http.StatusOK, r.HTML("/climbingactivities/index.plush.html"))
 	}).Wants("json", func(c buffalo.Context) error {
