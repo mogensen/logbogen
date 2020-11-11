@@ -257,7 +257,7 @@ func (v ClimbingactivitiesResource) Update(c buffalo.Context) error {
 	// Allocate an empty Climbingactivity
 	climbingactivity := &models.Climbingactivity{}
 
-	if err := tx.Find(climbingactivity, c.Param("climbingactivity_id")); err != nil {
+	if err := tx.Eager("Participants").Find(climbingactivity, c.Param("climbingactivity_id")); err != nil {
 		return c.Error(http.StatusNotFound, err)
 	}
 
@@ -266,6 +266,35 @@ func (v ClimbingactivitiesResource) Update(c buffalo.Context) error {
 		return err
 	}
 	climbingactivity.Location = GetLocation(c, climbingactivity)
+
+	verrs, err := tx.ValidateAndUpdate(climbingactivity)
+	if err != nil {
+		return err
+	}
+
+	if verrs.HasAny() {
+		return responder.Wants("html", func(c buffalo.Context) error {
+			// Make the errors available inside the html template
+			c.Set("errors", verrs)
+
+			// Render again the edit.html template that the user can
+			// correct the input.
+			users := &models.Users{}
+			if err := tx.All(users); err != nil {
+				return err
+			}
+			c.Set("users", users)
+
+			c.Set("climbingactivity", climbingactivity)
+			c.Set("climbingtypes", models.ClimbingTypes)
+
+			return c.Render(http.StatusUnprocessableEntity, r.HTML("/climbingactivities/edit.plush.html"))
+		}).Wants("json", func(c buffalo.Context) error {
+			return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
+		}).Wants("xml", func(c buffalo.Context) error {
+			return c.Render(http.StatusUnprocessableEntity, r.XML(verrs))
+		}).Respond(c)
+	}
 
 	if err := removeAllActivityParticipants(*climbingactivity, tx); err != nil {
 		return fmt.Errorf("Failed removing activityParticipants: %v", err)
@@ -284,28 +313,6 @@ func (v ClimbingactivitiesResource) Update(c buffalo.Context) error {
 		if err := tx.Create(ap); err != nil {
 			return err
 		}
-	}
-
-	verrs, err := tx.ValidateAndUpdate(climbingactivity)
-	if err != nil {
-		return err
-	}
-
-	if verrs.HasAny() {
-		return responder.Wants("html", func(c buffalo.Context) error {
-			// Make the errors available inside the html template
-			c.Set("errors", verrs)
-
-			// Render again the edit.html template that the user can
-			// correct the input.
-			c.Set("climbingactivity", climbingactivity)
-
-			return c.Render(http.StatusUnprocessableEntity, r.HTML("/climbingactivities/edit.plush.html"))
-		}).Wants("json", func(c buffalo.Context) error {
-			return c.Render(http.StatusUnprocessableEntity, r.JSON(verrs))
-		}).Wants("xml", func(c buffalo.Context) error {
-			return c.Render(http.StatusUnprocessableEntity, r.XML(verrs))
-		}).Respond(c)
 	}
 
 	return responder.Wants("html", func(c buffalo.Context) error {
