@@ -3,15 +3,14 @@ package grifts
 import (
 	"encoding/base64"
 	"fmt"
-	"logbogen/actions"
 	"logbogen/models"
+	"logbogen/services"
 	"math/rand"
 	"time"
 
 	"emperror.dev/errors"
 	"github.com/Pallinder/go-randomdata"
 	"github.com/brianvoe/gofakeit"
-	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/nulls"
 	"github.com/ipsn/go-adorable"
 
@@ -64,7 +63,8 @@ func createActivity(user models.User, participants []models.User) error {
 		Comment:   "Fantastisk klatre tur til toppen af det hele. Også kaffe og kage..",
 	}
 
-	act.Location = actions.GetLocation(&buffalo.DefaultContext{}, act)
+	geo, _ := services.ReverseGeocode(act.Lat, act.Lng)
+	act.Location = geo.SimpleDisplayName()
 	act.Participants = participants
 	models.DB.Create(act)
 

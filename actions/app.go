@@ -1,14 +1,15 @@
 package actions
 
 import (
+	"logbogen/achievementevents"
+	"logbogen/models"
+
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/envy"
 	forcessl "github.com/gobuffalo/mw-forcessl"
 	paramlogger "github.com/gobuffalo/mw-paramlogger"
 	"github.com/gobuffalo/plush"
 	"github.com/unrolled/secure"
-
-	"logbogen/models"
 
 	"github.com/gobuffalo/buffalo-pop/v2/pop/popmw"
 	csrf "github.com/gobuffalo/mw-csrf"
@@ -89,6 +90,8 @@ func App() *buffalo.App {
 		auth.GET("/{provider}/callback", AuthCallback)
 		app.Resource("/climbingactivities", ClimbingactivitiesResource{})
 		app.ServeFiles("/", assetsBox) // serve files from the public directory
+
+		achievementevents.Init()
 	}
 	plush.DefaultTimeFormat = "02 Jan 2006"
 
