@@ -39,8 +39,37 @@ func Init() {
 
 		case "PUT":
 			fmt.Printf("### Event: ClimbingActivity : updated -> %s\n", user.Name)
+		default:
+			return
 		}
 
-	})
+		climbingactivities := &models.Climbingactivities{}
+		q := models.DB.Where("user_id = ?", user.ID)
+		// Retrieve all Climbingactivities from the DB
+		if err := q.All(climbingactivities); err != nil {
+			return
+		}
+		earned := []UnlockableArchievement{}
 
+		possibleArchievements := getAllPossibleArchievements()
+
+		for _, possible := range possibleArchievements {
+			if possible.Evaluate(climbingactivities) {
+				earned = append(earned, possible)
+			}
+		}
+		for _, archivement := range earned {
+			fmt.Printf("##### %s has earned '%s' %s\n", user.Name, archivement.GetDescription(), archivement.GetSlug())
+		}
+	})
+}
+
+func getAllPossibleArchievements() []UnlockableArchievement {
+	possibleArchievements := []UnlockableArchievement{}
+	for _, v := range models.ClimbingTypes {
+		for i := 0; i < 10; i++ {
+			possibleArchievements = append(possibleArchievements, &NumberOfClimbsArchievement{ClimbType: v, Level: i})
+		}
+	}
+	return possibleArchievements
 }
