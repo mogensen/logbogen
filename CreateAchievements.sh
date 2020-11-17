@@ -3,7 +3,7 @@
 CONVERT="docker run -u 1000 --rm -v /home/mogensen/private/logbogen/assets/images/:/imgs --entrypoint convert emiketic/image-processing"
 COMPOSITE="docker run -u 1000 --rm -v /home/mogensen/private/logbogen/assets/images/:/imgs --entrypoint composite emiketic/image-processing"
 
-declare -a ClimbingArray=("Boulder" "HighRope" "Ice" "Other" "Rock" "Tree" )
+declare -a ClimbingArray=("Boulder" "HighRope" "Ice" "Other" "Rock" "Tree" "Wall")
 
 # Create star PNG
 $CONVERT -background none -size 1024x1024 /imgs/stars/star.svg  /imgs/stars/star.png

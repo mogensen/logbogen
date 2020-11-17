@@ -26,6 +26,7 @@ CREATE TYPE public.climbing_type AS ENUM (
     'BOULDER',
     'ICE',
     'HIGHROPE',
+    'WALL',
     'OTHER'
 );
 

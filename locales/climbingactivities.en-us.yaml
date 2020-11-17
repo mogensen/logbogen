@@ -37,6 +37,8 @@
   translation: "Ice Climbing"
 - id: "climbingactivity.type.HighRope"
   translation: "HighRope Climbing"
+- id: "climbingactivity.type.Wall"
+  translation: "Wall Climbing"
 - id: "climbingactivity.type.Other"
   translation: "Other Climbing"
 

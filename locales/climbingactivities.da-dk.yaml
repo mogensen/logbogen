@@ -37,6 +37,8 @@
   translation: "Isklatring"
 - id: "climbingactivity.type.HighRope"
   translation: "HighRope baner"
+- id: "climbingactivity.type.Wall"
+  translation: "Væg klatring"
 - id: "climbingactivity.type.Other"
   translation: "Andet"
 

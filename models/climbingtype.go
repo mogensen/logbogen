@@ -18,6 +18,8 @@ const (
 	Ice ClimbingType = "ICE"
 	// HighRope Climbing
 	HighRope ClimbingType = "HIGHROPE"
+	// Wall Climbing
+	Wall ClimbingType = "WALL"
 	// Other Climbing
 	Other ClimbingType = "OTHER"
 )
@@ -34,6 +36,8 @@ func (ct ClimbingType) String() string {
 		return "Ice"
 	case HighRope:
 		return "HighRope"
+	case Wall:
+		return "Wall"
 	case Other:
 		return "Other"
 	default:
@@ -49,4 +53,4 @@ func (c ClimbingType) SelectValue() interface{} {
 }
 
 // ClimbingTypes is all the avaiable types of climbing
-var ClimbingTypes = []ClimbingType{Tree, Rock, Boulder, Ice, HighRope, Other}
+var ClimbingTypes = []ClimbingType{Tree, Rock, Boulder, Ice, HighRope, Wall, Other}
