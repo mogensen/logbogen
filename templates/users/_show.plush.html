@@ -29,10 +29,9 @@
           <p class="text-truncate"><%= user.Email %></p>
           <p class="text-truncate"><%= user.Organization %></p>
           <p class="text-truncate"><%= user.MemberNumber %></p>
+          <%= partial("achievements/small.html", {achievement: user.Achievement}) %>
         </div>
-
-        <div class="col-auto">
-        </div>
+        <div class="col-auto"></div>
       </div>
     </div>
   </div>

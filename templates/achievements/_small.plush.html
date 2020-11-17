@@ -1,0 +1,7 @@
+<div class="d-flex">
+  <%= for (a) in achievement.Data["earned"] { %>
+    <div class="flex-shrink-1">
+      <img width=64 src="<%= assetPath("images/" + a["ImageSlug"] ) %>" title="<%= a["Name"] %>">
+    </div>
+  <% } %>
+</div>

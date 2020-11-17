@@ -35,6 +35,21 @@ ALTER TYPE public.climbing_type OWNER TO postgres;
 SET default_tablespace = '';
 
 --
+-- Name: achievements; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.achievements (
+    id uuid NOT NULL,
+    data jsonb NOT NULL,
+    user_id uuid NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.achievements OWNER TO postgres;
+
+--
 -- Name: climbingactivities; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -117,6 +132,14 @@ CREATE TABLE public.users_images (
 
 
 ALTER TABLE public.users_images OWNER TO postgres;
+
+--
+-- Name: achievements achievements_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.achievements
+    ADD CONSTRAINT achievements_pkey PRIMARY KEY (id);
+
 
 --
 -- Name: climbingactivities climbingactivities_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres

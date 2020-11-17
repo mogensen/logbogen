@@ -1,7 +1,7 @@
 package actions
 
 import (
-	"logbogen/achievementevents"
+	_ "logbogen/achievementevents"
 	"logbogen/models"
 
 	"github.com/gobuffalo/buffalo"
@@ -89,11 +89,15 @@ func App() *buffalo.App {
 		auth.Middleware.Skip(Authorize, bah, AuthCallback)
 		auth.GET("/{provider}/callback", AuthCallback)
 		app.Resource("/climbingactivities", ClimbingactivitiesResource{})
-		app.ServeFiles("/", assetsBox) // serve files from the public directory
 
-		achievementevents.Init()
+		app.ServeFiles("/", assetsBox) // serve files from the public directory
 	}
 	plush.DefaultTimeFormat = "02 Jan 2006"
+
+	// e := events.Event{
+	// 	Kind: "logbogen:achievements:updateall",
+	// }
+	// events.Emit(e)
 
 	return app
 }

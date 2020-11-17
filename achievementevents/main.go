@@ -6,10 +6,11 @@ import (
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/events"
+	"github.com/gobuffalo/pop/v5/slices"
 )
 
 // Init registers all event listeners
-func Init() {
+func init() {
 	// if you want to give your listener a nice name to identify itself
 	events.NamedListen("climbingactivity listener", func(e events.Event) {
 
@@ -30,46 +31,87 @@ func Init() {
 		}
 
 		switch ri.Method {
-
 		case "DELETE":
 			fmt.Printf("### Event: ClimbingActivity : deleted -> %s\n", user.Name)
-
 		case "POST":
 			fmt.Printf("### Event: ClimbingActivity : created -> %s\n", user.Name)
-
 		case "PUT":
 			fmt.Printf("### Event: ClimbingActivity : updated -> %s\n", user.Name)
 		default:
 			return
 		}
 
-		climbingactivities := &models.Climbingactivities{}
-		q := models.DB.Where("user_id = ?", user.ID)
-		// Retrieve all Climbingactivities from the DB
-		if err := q.All(climbingactivities); err != nil {
+		updateAchievementsForUser(user)
+	})
+
+	events.NamedListen("achievement updater", func(e events.Event) {
+		if e.Kind != "logbogen:achievements:updateall" {
 			return
 		}
-		earned := []UnlockableArchievement{}
 
-		possibleArchievements := getAllPossibleArchievements()
-
-		for _, possible := range possibleArchievements {
-			if possible.Evaluate(climbingactivities) {
-				earned = append(earned, possible)
-			}
+		users := &models.Users{}
+		// Retrieve all Users
+		if err := models.DB.All(users); err != nil {
+			fmt.Printf("### Event: ERROR -> %v\n", err)
+			return
 		}
-		for _, archivement := range earned {
-			fmt.Printf("##### %s has earned '%s' %s\n", user.Name, archivement.GetDescription(), archivement.GetSlug())
+		for _, v := range *users {
+			updateAchievementsForUser(&v)
 		}
 	})
+
 }
 
-func getAllPossibleArchievements() []UnlockableArchievement {
-	possibleArchievements := []UnlockableArchievement{}
-	for _, v := range models.ClimbingTypes {
-		for i := 0; i < 10; i++ {
-			possibleArchievements = append(possibleArchievements, &NumberOfClimbsArchievement{ClimbType: v, Level: i})
+func updateAchievementsForUser(user *models.User) {
+	fmt.Printf("### Event: updating achievements -> %s\n", user.Name)
+
+	climbingactivities := &models.Climbingactivities{}
+	q := models.DB.Where("user_id = ?", user.ID)
+	// Retrieve all Climbingactivities from the DB
+	if err := q.All(climbingactivities); err != nil {
+		fmt.Printf("### Event: ERROR getting activities -> %v\n", err)
+		return
+	}
+
+	a := &models.Achievement{}
+	q = models.DB.Where("user_id = ?", user.ID)
+	exists, err := q.Exists(a)
+	if err != nil {
+		fmt.Printf("### Event: ERROR on exists -> %v\n", err)
+		return
+	}
+	if exists {
+		if err = q.First(a); err != nil {
+			fmt.Printf("### Event: ERROR on first -> %v\n", err)
 		}
 	}
-	return possibleArchievements
+
+	earned := []UnlockableAchievement{}
+	possibleAchievement := getAllPossibleAchievements()
+
+	for _, possible := range possibleAchievement {
+		if possible.Evaluate(climbingactivities) {
+			earned = append(earned, possible)
+		}
+	}
+
+	a.UserID = user.ID
+	a.Data = slices.Map{
+		"earned": earned,
+	}
+
+	if err = models.DB.Save(a); err != nil {
+		fmt.Printf("### Event: ERROR saving -> %v\n", err)
+	}
+}
+
+func getAllPossibleAchievements() []UnlockableAchievement {
+	possibleAchievements := []UnlockableAchievement{}
+	for _, cType := range models.ClimbingTypes {
+		for level := 0; level < 5; level++ {
+			a := NewNumberOfClimbsAchievement(cType, level)
+			possibleAchievements = append(possibleAchievements, a)
+		}
+	}
+	return possibleAchievements
 }

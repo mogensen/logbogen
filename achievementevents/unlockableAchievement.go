@@ -2,9 +2,8 @@ package achievementevents
 
 import "logbogen/models"
 
-type UnlockableArchievement interface {
+type UnlockableAchievement interface {
 	Evaluate(climbs *models.Climbingactivities) bool
-	GetSlug() string
-	GetDescription() string
+	GetName() string
 	GetLevel() int
 }

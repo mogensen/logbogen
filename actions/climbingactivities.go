@@ -68,7 +68,7 @@ func (v ClimbingactivitiesResource) Show(c buffalo.Context) error {
 	climbingactivity := &models.Climbingactivity{}
 
 	// To find the Climbingactivity the parameter climbingactivity_id is used.
-	if err := scope(c).Eager("Participants.Image").Find(climbingactivity, c.Param("climbingactivity_id")); err != nil {
+	if err := scope(c).Eager("Participants.Image").Eager("Participants.Achievement").Find(climbingactivity, c.Param("climbingactivity_id")); err != nil {
 		return c.Error(http.StatusNotFound, err)
 	}
 

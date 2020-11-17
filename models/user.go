@@ -26,6 +26,7 @@ type User struct {
 	AvatarURL    string       `json:"avatar_url" db:"avatar_url"`
 	PasswordHash string       `json:"-" db:"password_hash"`
 	Image        *UsersImage  `has_one:"users_images" fk_id:"user_id"`
+	Achievement  *Achievement `has_one:"achievement" fk_id:"user_id"`
 	MemberNumber string       `json:"member_number" db:"member_number"`
 	Organization string       `json:"organization" db:"organization"`
 

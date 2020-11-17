@@ -1,0 +1,6 @@
+create_table("achievements") {
+	t.Column("id", "uuid", {primary: true})
+	t.Column("data", "jsonb", {})
+	t.Column("user_id", "uuid", {})
+	t.Timestamps()
+}
