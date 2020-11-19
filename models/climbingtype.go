@@ -27,19 +27,19 @@ const (
 func (ct ClimbingType) String() string {
 	switch ct {
 	case Tree:
-		return "Tree"
+		return "tree"
 	case Rock:
-		return "Rock"
+		return "rock"
 	case Boulder:
-		return "Boulder"
+		return "boulder"
 	case Ice:
-		return "Ice"
+		return "ice"
 	case HighRope:
-		return "HighRope"
+		return "highrope"
 	case Wall:
-		return "Wall"
+		return "wall"
 	case Other:
-		return "Other"
+		return "other"
 	default:
 		return ""
 	}

@@ -16,19 +16,20 @@ import (
 
 // User is used by pop to map your users database table to your go code.
 type User struct {
-	ID           uuid.UUID    `json:"id" db:"id"`
-	Name         string       `json:"name" db:"name"`
-	Email        nulls.String `json:"email" db:"email"`
-	Provider     string       `json:"provider" db:"provider"`
-	ProviderID   string       `json:"provider_id" db:"provider_id"`
-	CreatedAt    time.Time    `json:"created_at" db:"created_at"`
-	UpdatedAt    time.Time    `json:"updated_at" db:"updated_at"`
-	AvatarURL    string       `json:"avatar_url" db:"avatar_url"`
-	PasswordHash string       `json:"-" db:"password_hash"`
-	Image        *UsersImage  `has_one:"users_images" fk_id:"user_id"`
-	Achievement  *Achievement `has_one:"achievement" fk_id:"user_id"`
-	MemberNumber string       `json:"member_number" db:"member_number"`
-	Organization string       `json:"organization" db:"organization"`
+	ID                 uuid.UUID           `json:"id" db:"id"`
+	Name               string              `json:"name" db:"name"`
+	Email              nulls.String        `json:"email" db:"email"`
+	Provider           string              `json:"provider" db:"provider"`
+	ProviderID         string              `json:"provider_id" db:"provider_id"`
+	CreatedAt          time.Time           `json:"created_at" db:"created_at"`
+	UpdatedAt          time.Time           `json:"updated_at" db:"updated_at"`
+	AvatarURL          string              `json:"avatar_url" db:"avatar_url"`
+	PasswordHash       string              `json:"-" db:"password_hash"`
+	Image              *UsersImage         `has_one:"users_images" fk_id:"user_id"`
+	Achievement        *Achievement        `has_one:"achievement" fk_id:"user_id"`
+	ClimbingActivities *Climbingactivities `has_many:"climbingactivitie" fk_id:"user_id"`
+	MemberNumber       string              `json:"member_number" db:"member_number"`
+	Organization       string              `json:"organization" db:"organization"`
 
 	Password             string `json:"-" db:"-"`
 	PasswordConfirmation string `json:"-" db:"-"`
