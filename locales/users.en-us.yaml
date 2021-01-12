@@ -5,5 +5,12 @@
 - id: "users.destroyed.success"
   translation: "User was successfully destroyed."
 
+- id: "users.title.new"
+  translation: "New user"
+- id: "users.title.edit"
+  translation: "Edit user"
+- id: "users.title.list"
+  translation: "All users"
+
 - id: "users.language-changed"
   translation: "Language is changed to English"

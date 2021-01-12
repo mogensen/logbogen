@@ -2,7 +2,7 @@
   <h3 class="d-inline-block"><%= t("UsersImage.title.new") %></h3>
 </div>
 
-<%= formFor(usersImage, {action: usersImagesPath(), method: "POST"}) { %>
+<%= formFor(usersImage, {action: usersImagePath({ users_image_id: usersImage.ID }), method: "PUT"}) { %>
   <%= partial("users_images/form.html") %>
   <%= linkTo(rootPath(), {class: "btn btn-warning", "data-confirm": "Are you sure?", body: "Cancel"}) %>
 <% } %>

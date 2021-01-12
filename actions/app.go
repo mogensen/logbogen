@@ -75,6 +75,7 @@ func App() *buffalo.App {
 
 		app.POST("/language", SwitchLanguage)
 
+		app.GET("/users/new", UsersNew)
 		app.POST("/users", UsersCreate)
 		app.POST("/signin", AuthCreate)
 

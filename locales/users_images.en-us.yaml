@@ -1,0 +1,13 @@
+- id: "UsersImage.created.success"
+  translation: "Your image was successfully uploaded."
+- id: "UsersImage.updated.success"
+  translation: "Your image was successfully uploaded."
+- id: "UsersImage.destroyed.success"
+  translation: "Your image has been deleted."
+
+- id: "UsersImage.title.new"
+  translation: "New image"
+- id: "UsersImage.title.edit"
+  translation: "Edit image"
+- id: "UsersImage.title.list"
+  translation: "All images"

@@ -54,3 +54,5 @@
   translation: "Anden type klatring"
 - id: "climbingactivity.role"
   translation: "Rolle"
+- id: "climbingactivity.role.example"
+  translation: "Instruktør, deltager"

@@ -49,7 +49,6 @@ func (c *Climbingactivity) Validate(tx *pop.Connection) (*validate.Errors, error
 	return validate.Validate(
 		&validators.TimeIsPresent{Field: c.Date, Name: "Date"},
 		&validators.StringIsPresent{Field: c.Role, Name: "Role"},
-		&validators.StringIsPresent{Field: c.Comment, Name: "Comment"},
 	), nil
 }
 

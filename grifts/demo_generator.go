@@ -11,7 +11,6 @@ import (
 	"emperror.dev/errors"
 	"github.com/Pallinder/go-randomdata"
 	"github.com/brianvoe/gofakeit"
-	"github.com/gobuffalo/nulls"
 	"github.com/ipsn/go-adorable"
 
 	"golang.org/x/crypto/bcrypt"
@@ -23,13 +22,15 @@ func createUser(username, password string) error {
 		return err
 	}
 	user := models.User{
-		Name:         randomdata.FirstName(randomdata.RandomGender) + " " + randomdata.LastName(),
-		Email:        nulls.NewString(username + "@logbogen.nu"),
-		Provider:     "localuser",
-		ProviderID:   username,
-		PasswordHash: string(ph),
-		MemberNumber: fmt.Sprintf("%d-%s-%d", gofakeit.Year(), randomdata.StringSample("TC", "TI"), randomdata.Number(999)),
-		Organization: randomdata.StringSample("Dansk Træklatreforening", "FDF", "Fjeldgruppen", "DGI"),
+		Name:               randomdata.FirstName(randomdata.RandomGender) + " " + randomdata.LastName(),
+		Email:              username + "@logbogen.nu",
+		Provider:           "localuser",
+		ProviderID:         username,
+		PasswordHash:       string(ph),
+		MemberNumber:       fmt.Sprintf("%d-%s-%d", gofakeit.Year(), randomdata.StringSample("TC", "TI"), randomdata.Number(999)),
+		Organization:       randomdata.StringSample("Dansk Træklatreforening", "FDF", "Fjeldgruppen", "DGI"),
+		Achievement:        &models.Achievement{},
+		ClimbingActivities: &models.Climbingactivities{},
 	}
 	if err := models.DB.Create(&user); err != nil {
 		return errors.WithStack(err)

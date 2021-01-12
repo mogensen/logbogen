@@ -1,10 +1,12 @@
 package actions
 
 import (
+	"log"
 	"logbogen/models"
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop/v5"
+	"github.com/gobuffalo/validate/v3"
 	"github.com/pkg/errors"
 )
 
@@ -18,12 +20,29 @@ func UsersNew(c buffalo.Context) error {
 
 // UsersCreate registers a new user with the application.
 func UsersCreate(c buffalo.Context) error {
+
 	u := &models.User{}
 	if err := c.Bind(u); err != nil {
 		return errors.WithStack(err)
 	}
+	u.Provider = "localuser"
+	u.ProviderID = u.Email
+	log.Printf("%#v", u)
 
 	tx := c.Value("tx").(*pop.Connection)
+
+	q := tx.Where("email = ?", u.ProviderID)
+	exists, err := q.Exists("users")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if exists {
+		verrs := &validate.Errors{Errors: map[string][]string{"email": {"Email alread exists"}}}
+		c.Set("user", u)
+		c.Set("errors", verrs)
+		return c.Render(422, r.Auto(c, u))
+	}
+
 	verrs, err := u.Create(tx)
 	if err != nil {
 		return errors.WithStack(err)
@@ -32,7 +51,7 @@ func UsersCreate(c buffalo.Context) error {
 	if verrs.HasAny() {
 		c.Set("user", u)
 		c.Set("errors", verrs)
-		return c.Render(200, r.HTML("users/new.html"))
+		return c.Render(422, r.Auto(c, u))
 	}
 
 	c.Session().Set("current_user_id", u.ID)

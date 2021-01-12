@@ -117,11 +117,19 @@ func CloneClimbingActivity(c buffalo.Context) error {
 	// Allocate an empty Climbingactivity
 	climbingactivity := &models.Climbingactivity{}
 
-	if err := tx.Eager("Participants").Eager("Participants.Image").Find(climbingactivity, c.Param("climbingactivity_id")); err != nil {
+	if err := tx.Eager().Find(climbingactivity, c.Param("climbingactivity_id")); err != nil {
 		return c.Error(http.StatusNotFound, err)
 	}
 
-	// TODO Remove self from participants, add original user
+	participants := models.Users{}
+	// Add original user as participant
+	participants = append(participants, climbingactivity.User)
+	// Remove self from participants
+	for _, r := range climbingactivity.Participants {
+		if r.ID != currentUser(c).ID {
+			participants = append(participants, r)
+		}
+	}
 
 	c.Set("climbingactivity", &models.Climbingactivity{
 		Date:         climbingactivity.Date,
@@ -132,7 +140,7 @@ func CloneClimbingActivity(c buffalo.Context) error {
 		OtherType:    climbingactivity.OtherType,
 		Comment:      climbingactivity.Comment,
 		UserID:       currentUser(c).ID,
-		Participants: climbingactivity.Participants,
+		Participants: participants,
 	})
 
 	users := &models.Users{}

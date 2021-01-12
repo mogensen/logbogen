@@ -5,5 +5,12 @@
 - id: "users.destroyed.success"
   translation: "Brugeren er slettet."
 
+- id: "users.title.new"
+  translation: "Ny bruger"
+- id: "users.title.edit"
+  translation: "Rediger bruger"
+- id: "users.title.list"
+  translation: "Alle brugere"
+
 - id: "users.language-changed"
   translation: "Sproget er sat til dansk"

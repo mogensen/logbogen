@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"emperror.dev/errors"
-	"github.com/gobuffalo/nulls"
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/validate/v3"
 	"github.com/gobuffalo/validate/v3/validators"
@@ -18,7 +17,7 @@ import (
 type User struct {
 	ID                 uuid.UUID           `json:"id" db:"id"`
 	Name               string              `json:"name" db:"name"`
-	Email              nulls.String        `json:"email" db:"email"`
+	Email              string              `json:"email" db:"email"`
 	Provider           string              `json:"provider" db:"provider"`
 	ProviderID         string              `json:"provider_id" db:"provider_id"`
 	CreatedAt          time.Time           `json:"created_at" db:"created_at"`
@@ -40,6 +39,8 @@ type User struct {
 func (u *User) Create(tx *pop.Connection) (*validate.Errors, error) {
 	u.ProviderID = strings.ToLower(u.ProviderID)
 	u.Provider = "localuser"
+	u.Achievement = &Achievement{}
+	u.ClimbingActivities = &Climbingactivities{}
 	ph, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return validate.NewErrors(), errors.WithStack(err)
@@ -68,6 +69,9 @@ func (u Users) String() string {
 func (u *User) Validate(tx *pop.Connection) (*validate.Errors, error) {
 	return validate.Validate(
 		&validators.StringIsPresent{Field: u.Name, Name: "Name"},
+		&validators.StringLengthInRange{Field: u.Name, Name: "Name", Min: 3, Max: 255},
+		&validators.EmailIsPresent{Field: u.Email, Name: "Email"},
+		&validators.StringLengthInRange{Field: u.Password, Name: "Password", Min: 8, Max: 200},
 		&validators.StringIsPresent{Field: u.Provider, Name: "Provider"},
 		&validators.StringIsPresent{Field: u.ProviderID, Name: "ProviderID"},
 	), nil

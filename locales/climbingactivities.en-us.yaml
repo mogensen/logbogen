@@ -54,4 +54,5 @@
   translation: "Other type of climbing"
 - id: "climbingactivity.role"
   translation: "Role"
-
+- id: "climbingactivity.role.example"
+  translation: "Instructor, participant"

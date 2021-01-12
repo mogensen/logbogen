@@ -10,7 +10,6 @@ import (
 
 	"emperror.dev/errors"
 	"github.com/gobuffalo/buffalo"
-	"github.com/gobuffalo/nulls"
 	"github.com/gobuffalo/pop/v5"
 	"github.com/gobuffalo/validate/v3"
 	"github.com/gobuffalo/x/defaults"
@@ -39,7 +38,10 @@ func AuthCallback(c buffalo.Context) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	u := &models.User{}
+	u := &models.User{
+		Achievement:        &models.Achievement{},
+		ClimbingActivities: &models.Climbingactivities{},
+	}
 	if exists {
 		if err = q.First(u); err != nil {
 			return errors.WithStack(err)
@@ -48,7 +50,7 @@ func AuthCallback(c buffalo.Context) error {
 	u.Name = defaults.String(gu.Name, gu.NickName)
 	u.Provider = gu.Provider
 	u.ProviderID = gu.UserID
-	u.Email = nulls.NewString(gu.Email)
+	u.Email = gu.Email
 
 	if err = tx.Save(u); err != nil {
 		return errors.WithStack(err)

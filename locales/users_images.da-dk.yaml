@@ -1,0 +1,13 @@
+- id: "UsersImage.created.success"
+  translation: "Dit billede er uploadet."
+- id: "UsersImage.updated.success"
+  translation: "Dit billede er uploadet."
+- id: "UsersImage.destroyed.success"
+  translation: "Dit billede er slettet"
+
+- id: "UsersImage.title.new"
+  translation: "Nyt billede"
+- id: "UsersImage.title.edit"
+  translation: "Rediger billede"
+- id: "UsersImage.title.list"
+  translation: "Alle billeder"
