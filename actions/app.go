@@ -6,6 +6,7 @@ import (
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/envy"
+	"github.com/gobuffalo/events"
 	forcessl "github.com/gobuffalo/mw-forcessl"
 	paramlogger "github.com/gobuffalo/mw-paramlogger"
 	"github.com/gobuffalo/plush/v4"
@@ -94,10 +95,10 @@ func App() *buffalo.App {
 	}
 	plush.DefaultTimeFormat = "02 Jan 2006"
 
-	// e := events.Event{
-	// 	Kind: "logbogen:achievements:updateall",
-	// }
-	// events.Emit(e)
+	e := events.Event{
+		Kind: "logbogen:achievements:updateall",
+	}
+	events.Emit(e)
 
 	return app
 }

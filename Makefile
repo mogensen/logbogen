@@ -6,7 +6,13 @@ help:
 docker-build: ## build docker image
 	docker build -t logbogen:latest
 
-clean-migrate: ## new test databsae
+docker-up: ## build-compose up
+	docker-compose up -d
+
+docker-down: ## build-compose up
+	docker-compose down
+
+clean-migrate: ## new test database
 	buffalo pop drop
 	buffalo pop create
 	buffalo pop migrate up
