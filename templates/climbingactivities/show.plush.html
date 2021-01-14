@@ -1,15 +1,41 @@
-<div class="py-4 mb-2">
-  <img src="<%= assetPath("images/climbing/" + climbingactivity.Type + ".svg") %>" class="activity_icon_img">
-  <h3 class="d-inline-block">
-    <%= if (climbingactivity.Type.String()!="Other") { %>
-      <%= t("climbingactivity.type." + climbingactivity.Type) %>
-    <% } else { %>
-      <%= climbingactivity.OtherType %>
-    <% } %>
-    <%= t("climbingactivity.near") %>  <%= climbingactivity.Location %></h3>
-    <h4 class="d-inline-block">- <%= climbingactivity.Role %></h4>
+<!-- Large devices -->
+<div class="d-none d-lg-block">
+  <div class="py-4 mb-2">
+    <img src="<%= assetPath("images/climbing/" + climbingactivity.Type + ".svg") %>" class="activity_icon_img">
+    <h3 class="d-inline-block">
+      <%= if (climbingactivity.Type.String()!="Other") { %>
+        <%= t("climbingactivity.type." + climbingactivity.Type) %>
+      <% } else { %>
+        <%= climbingactivity.OtherType %>
+      <% } %>
+      <%= t("climbingactivity.near") %>  <%= climbingactivity.Location %></h3>
+      <h4 class="d-inline-block">- <%= climbingactivity.Role %></h4>
+  </div>
 </div>
-<div class="container">
+
+
+<!-- Small devices -->
+<div class="d-lg-none">
+  <div class="py-4 mb-2">
+    <img src="<%= assetPath("images/climbing/" + climbingactivity.Type + ".svg") %>" class="activity_icon_img">
+    <h3 class="d-inline-block">
+      <%= if (climbingactivity.Type.String()!="Other") { %>
+        <%= t("climbingactivity.type." + climbingactivity.Type) %>
+      <% } else { %>
+        <%= climbingactivity.OtherType %>
+      <% } %>
+
+      </h3>
+      <br>
+      <h4 class="d-inline-block"><%= t("climbingactivity.near") %> <%= climbingactivity.Location %></h4>
+      <h5 class="d-inline-block">- <%= climbingactivity.Role %></h5>
+  </div>
+</div>
+
+
+<!-- END Header -->
+
+<div class="container pb-2">
   <div class="row">
     <%= linkTo(climbingactivitiesPath(), {class: "btn btn-info"}) { %>
       <%= t("climbingactivity.actions.back") %>
@@ -29,7 +55,7 @@
   </li>
 
   <li class="">
-  <div id="activity-show-map" data-lat="<%= climbingactivity.Lat %>" data-lng="<%= climbingactivity.Lng %>"></div>
+    <div id="activity-show-map" data-lat="<%= climbingactivity.Lat %>" data-lng="<%= climbingactivity.Lng %>"></div>
   </li>
 
   <li class="list-group-item pb-1">

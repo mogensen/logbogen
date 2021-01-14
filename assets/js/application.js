@@ -11,7 +11,7 @@ import img from 'leaflet/dist/images/marker-icon.png';
 $(() => {
     $.fn.select2.defaults.set("theme", "bootstrap4");
 
-    const zoomLevel = 15;
+    const zoomLevel = 12;
     const defaultIcon = new L.icon({
         iconUrl: img,
         iconAnchor: [12.5, 41],

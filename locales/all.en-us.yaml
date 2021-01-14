@@ -7,3 +7,7 @@
 - id: title
   translation: "The Climbing Log"
 
+- id: and
+  translation: "and"
+- id: more
+  translation: "more"

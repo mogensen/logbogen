@@ -89,7 +89,7 @@ func AuthCreate(c buffalo.Context) error {
 		verrs := validate.NewErrors()
 		verrs.Add("username", "invalid username/password")
 		c.Set("errors", verrs)
-		return c.Render(422, r.HTML("auth/new.html"))
+		return c.Render(422, r.HTML("/index.plush.html"))
 	}
 
 	if err != nil {

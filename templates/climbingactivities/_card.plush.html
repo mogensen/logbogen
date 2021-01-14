@@ -13,14 +13,14 @@
         <% } else { %>
         <a href="<%= pathFor(climbingactivityClonePath({ climbingactivity_id: climbingactivity.ID })) %>">
         <% }%>
-          <b>
+
             <%= if (climbingactivity.Type.String()!="Other") { %>
               <%= t("climbingactivity.type." + climbingactivity.Type) %>
             <% } else { %>
               <%= climbingactivity.OtherType %>
             <% } %>
             <%= t("climbingactivity.near") %>  <%= climbingactivity.Location %>
-          </b>
+
         </a>
 
         <%= if (current_user.ID.String()!=climbingactivity.UserID.String()) { %>
@@ -37,7 +37,7 @@
           <%= partial("users/profile_image_mini.html") %>
         <% } %>
         <p class="text-muted small text-truncate d-inline">
-          <%= if (len(climbingactivity.Participants) > 6) { %> and <%= (len(climbingactivity.Participants) - 6) %> more.<% } %>
+          <%= if (len(climbingactivity.Participants) > 6) { %> <%= t("and") %> <%= (len(climbingactivity.Participants) - 6) %> <%= t("more") %> <% } %>
         </p>
       </div>
 
@@ -47,7 +47,8 @@
         <%= partial("users/profile_image_mini.html") %>
       <% } %>
       <p class="text-muted small text-truncate d-inline">
-        <%= if (len(climbingactivity.Participants) > 6) { %> and <%= (len(climbingactivity.Participants) - 6) %> more.<% } %>
+        <%= if (len(climbingactivity.Participants) > 6) { %> <%= t("and") %> <%= (len(climbingactivity.Participants) - 6) %> <%= t("more") %> <% } %>
+
       </p>
     </div>
 

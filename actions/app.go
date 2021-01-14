@@ -20,10 +20,13 @@ import (
 	"github.com/markbates/goth/gothic"
 )
 
+var app *buffalo.App
+
 // ENV is used to help switch settings based on where the
 // application is being run. Default is "development".
 var ENV = envy.Get("GO_ENV", "development")
-var app *buffalo.App
+
+// T is used to handle all translations
 var T *i18n.Translator
 
 // App is where all routes and middleware for buffalo
@@ -64,6 +67,8 @@ func App() *buffalo.App {
 		// Setup and use translations:
 		app.Use(translations())
 
+		app.Use(plushTimeFormat())
+
 		app.GET("/", HomeHandler)
 
 		auth := app.Group("/auth")
@@ -94,7 +99,6 @@ func App() *buffalo.App {
 
 		app.ServeFiles("/", assetsBox) // serve files from the public directory
 	}
-	plush.DefaultTimeFormat = "02 Jan 2006"
 
 	e := events.Event{
 		Kind: "logbogen:achievements:updateall",
@@ -102,6 +106,12 @@ func App() *buffalo.App {
 	events.Emit(e)
 
 	return app
+}
+
+// plushTimeFormat sets default time format for all plush templates
+func plushTimeFormat() buffalo.MiddlewareFunc {
+	plush.DefaultTimeFormat = "02 Jan 2006"
+	return T.Middleware()
 }
 
 // translations will load locale files, set up the translator `actions.T`,

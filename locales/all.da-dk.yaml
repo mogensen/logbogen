@@ -7,3 +7,7 @@
 - id: title
   translation: "Klatre Logbogen"
 
+- id: and
+  translation: "og"
+- id: more
+  translation: "mere"
