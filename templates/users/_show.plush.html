@@ -13,8 +13,6 @@
 
       <div class="card-body">
         <p class="text-truncate"><%= user.Email %></p>
-        <p class="text-truncate"><%= user.Organization %></p>
-        <p class="text-truncate"><%= user.MemberNumber %></p>
       </div>
       <div class="card-body">
         <%= partial("achievements/small.html", {achievement: user.Achievement}) %>
@@ -32,8 +30,6 @@
         </div>
         <div class="col-sm-6">
           <p class="text-truncate"><%= user.Email %></p>
-          <p class="text-truncate"><%= user.Organization %></p>
-          <p class="text-truncate"><%= user.MemberNumber %></p>
           <%= partial("achievements/small.html", {achievement: user.Achievement}) %>
         </div>
       </div>

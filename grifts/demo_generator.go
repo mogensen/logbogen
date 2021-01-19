@@ -2,7 +2,6 @@ package grifts
 
 import (
 	"encoding/base64"
-	"fmt"
 	"logbogen/models"
 	"logbogen/services"
 	"math/rand"
@@ -22,13 +21,13 @@ func createUser(username, password string) error {
 		return err
 	}
 	user := models.User{
-		Name:               randomdata.FirstName(randomdata.RandomGender) + " " + randomdata.LastName(),
-		Email:              username + "@logbogen.nu",
-		Provider:           "localuser",
-		ProviderID:         username,
-		PasswordHash:       string(ph),
-		MemberNumber:       fmt.Sprintf("%d-%s-%d", gofakeit.Year(), randomdata.StringSample("TC", "TI"), randomdata.Number(999)),
-		Organization:       randomdata.StringSample("Dansk Træklatreforening", "FDF", "Fjeldgruppen", "DGI"),
+		Name:         randomdata.FirstName(randomdata.RandomGender) + " " + randomdata.LastName(),
+		Email:        username + "@logbogen.nu",
+		Provider:     "localuser",
+		ProviderID:   username,
+		PasswordHash: string(ph),
+		// MemberNumber:       fmt.Sprintf("%d-%s-%d", gofakeit.Year(), randomdata.StringSample("TC", "TI"), randomdata.Number(999)),
+		// Organization:       randomdata.StringSample("Dansk Træklatreforening", "FDF", "Fjeldgruppen", "DGI"),
 		Achievement:        &models.Achievement{},
 		ClimbingActivities: &models.Climbingactivities{},
 	}

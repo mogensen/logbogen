@@ -110,8 +110,6 @@ CREATE TABLE public.users (
     provider_id character varying(255) NOT NULL,
     avatar_url character varying(255) NOT NULL,
     password_hash character varying(255) NOT NULL,
-    member_number character varying(255) NOT NULL,
-    organization character varying(255) NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL
 );
