@@ -1,0 +1,13 @@
+{{define "climbingactivities/create"}}
+<div class="py-4 mb-2">
+  <h3 class="d-inline-block">Ny klatre logning</h3>
+</div>
+
+
+  
+      <form method="POST" action="/activities/create">
+          {{ template "climbingactivities/form" . }}
+      </form>
+
+
+{{end}}

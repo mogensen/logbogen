@@ -1,0 +1,31 @@
+{{define "users/login_form"}}
+<div class="auth-center">
+    <div class="login-form">
+        <form method="POST" action="/auth/login">
+            <formset>
+                <h2 class="text-center">Sign in</h2>
+                <div>
+                    <label for="username" class="form-label mt-4">Username:</label>
+                    <input type="text" class="form-control" id="username" name="username" required><br>
+                </div>
+
+                <div>
+                    <label for="password" class="form-label mt-4">Password:</label>
+                    <input type="password" class="form-control" id="password" name="password" required><br>
+                </div>
+                <input type="hidden" id="csrf" name="csrf" value="{{ .csrf }}">
+                {{ if .error }}
+                <div class="alert alert-danger" role="alert">
+                    {{ .error }}
+                </div>
+                {{ end }}
+
+                <button type="submit" class="btn btn-primary login-btn btn-block">Login</button>
+                <div class="clearfix">
+                    <a href="/auth/signup" class="float-right">Sign up</a>
+                </div>
+            </formset>
+        </form>
+    </div>
+</div>
+{{end}}

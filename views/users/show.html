@@ -1,0 +1,49 @@
+{{define "users/show"}}
+
+<div class="card">
+  <div class="card-body">
+    <div class="d-md-none">
+
+      <div class="card-body">
+        <center class="">
+          {{ template "users/profile_image" . }}
+          <h1 class="card-title m-t-10">{{ .UserName }}</h1>
+        </center>
+      </div>
+
+      <div class="card-body">
+        <p class="text-truncate">{{ .UserEmail }}</p>
+      </div>
+      <div class="card-body">
+        <!-- { { template "achievements/small" . } } -->
+      </div>
+    </div>
+
+    <div class="d-none d-md-block">
+      <div class="page-header">
+        <h1>{{ .UserName }}</h1>
+      </div>
+
+      <div class="row">
+        <div class="col-auto">
+            {{ template "users/profile_image" . }}
+        </div>
+        <div class="col-sm-6">
+          <p class="text-truncate">{{ .UserEmail }}</p>
+          {{ template "achievements/small" . }}
+        </div>
+      </div>
+
+    </div>
+    <div class="row">
+        <div class="col">
+          <script>
+            // markers = { { json user.ClimbingActivities } };
+          </script>
+          <div id="user-show-map"></div>
+        </div>
+      </div>
+  </div>
+</div>
+
+{{end}}

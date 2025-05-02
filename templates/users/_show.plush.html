@@ -1,0 +1,49 @@
+{{define "users/show"}}
+
+<div class="card">
+  <div class="card-body">
+    <div class="d-md-none">
+
+      <div class="card-body">
+        <center class="">
+          <%= partial("users/profile_image.html") %>
+          <h1 class="card-title m-t-10"><%= user.Name %></h1>
+        </center>
+      </div>
+
+      <div class="card-body">
+        <p class="text-truncate"><%= user.Email %></p>
+      </div>
+      <div class="card-body">
+        <%= partial("achievements/small.html", {achievement: user.Achievement}) %>
+      </div>
+    </div>
+
+    <div class="d-none d-md-block">
+      <div class="page-header">
+        <h1><%= user.Name %></h1>
+      </div>
+
+      <div class="row">
+        <div class="col-auto">
+            <%= partial("users/profile_image.html") %>
+        </div>
+        <div class="col-sm-6">
+          <p class="text-truncate"><%= user.Email %></p>
+          <%= partial("achievements/small.html", {achievement: user.Achievement}) %>
+        </div>
+      </div>
+
+    </div>
+    <div class="row">
+        <div class="col">
+          <script>
+            markers = <%= json(user.ClimbingActivities) %>;
+          </script>
+          <div id="user-show-map"></div>
+        </div>
+      </div>
+  </div>
+</div>
+
+{{end}}

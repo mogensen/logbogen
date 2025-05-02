@@ -1,0 +1,61 @@
+{{ define "climbingactivities/form" }}
+
+<formset>
+    <input type="hidden" id="csrf" name="csrf" value="{{ .csrf }}">
+    {{ if .error }}
+    <div class="alert alert-danger" role="alert">
+        {{ .error }}
+    </div>
+    {{ end }}
+
+
+    <div>
+        <label for="date" class="form-label mt-4">Date:</label>
+        <input type="date" class="form-control" id="date" name="date" required><br>
+    </div>
+
+    <div id="activity-form-map" data-lat="{{.ClimbingActivity.Lat}}" data-lng="{{.ClimbingActivity.Lng}}"></div>
+
+    <input type="hidden" class="form-control" id="date" name="date" required><br>
+    <input type="hidden" class="form-control" id="date" name="date" required><br>
+
+    <div>
+        <label for="type" class="form-label mt-4">Type:</label>
+        <select id="location-select" name="location" class="form-control">
+            {{ range .Types }}
+            <option value="{{ .ID }}">{{ .Name }}</option>
+            {{end}}
+        </select>
+    </div>
+
+    <div>
+        <label for="other-type" class="form-label mt-4">Anden Type:</label>
+        <input type="text" class="form-control" id="other-type" name="other-type" required><br>
+    </div>
+
+    <div>
+        <label for="Role" class="form-label mt-4">Role:</label>
+        <input type="text" class="form-control" id="role" name="role" placeholder="Instruktør, deltager">
+    </div>
+
+    <div>
+        <label for="comment" class="form-label mt-4">Kommentar:</label>
+        <textarea class="form-control" id="comment" name="comment" rows="10"></textarea>
+    </div>
+
+    <label>
+        Deltagere:
+    </label>
+    <select id="participant-select" name="participants" class="form-control" multiple="multiple">
+        {{ range .Users }}
+        <option value="{{ .ID }}" selected="participant.ID, climbingactivity.Participants">
+            {{ .Name }}
+        </option>
+        {{end}}
+    </select>
+    <br />
+
+    <button class="btn btn-success" role="submit">Save</button>
+</formset>
+
+{{ end }}

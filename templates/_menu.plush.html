@@ -1,0 +1,28 @@
+<nav class="navbar navbar-expand-sm bg-light navbar-light">
+    <a class="navbar-brand" href="/">Logbogen</a>
+    <%= if (current_user) { %>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText"
+        aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarText">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item <%= isActive("climbingactivitiesPath")  %>">
+                <a class="nav-link" href="<%= pathFor(climbingactivitiesPath()) %>" > <%= t("menu.climbingactivities") %></a>
+            </li>
+            <li class="nav-item <%= isActive("pendingactivitiesPath")  %>">
+                <a class="nav-link" href="<%= pathFor(pendingactivitiesPath()) %>" > <%= t("menu.pendingactivities") %></a>
+            </li>
+
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+            <%= partial("language.html") %>
+            <%= if (current_user) { %>
+            <li class="nav-item">
+                <a class="nav-link" href="/auth" data-method="DELETE"><%= t("actions.logout") %></a>
+            </li>
+            <% } %>
+        </ul>
+    </div>
+    <% } %>
+</nav>

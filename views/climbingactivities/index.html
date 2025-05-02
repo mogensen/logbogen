@@ -1,0 +1,48 @@
+{{define "climbingactivities/list"}}
+
+<div class="py-4 mb-2">
+  <h3 class="d-inline-block">Klatre Logninger</h3>
+  <div class="float-right d-none d-md-block">
+    <a href="/ativities/create" class="btn btn-primary">
+      <i class="fas fa-clipboard-check"></i>&nbsp; Log ny klatretur
+    </a>
+  </div>
+</div>
+
+<div class="d-flex flex-row-reverse d-md-none">
+  <div class="p-2">
+    <a href="/ativities/create" class="btn btn-primary">
+      <i class="fas fa-clipboard-check"></i>&nbsp; Log ny klatretur
+    </a>
+  </div>
+</div>
+
+
+{{ if not .ClimbingActivities }}
+
+<div class="d-flex flex-wrap-reverse justify-content-center">
+  <div class="p-2 align-self-center">
+  <p>
+    Opret første logning med at trykke på
+    <a href="/ativities/create" class="btn btn-primary">
+      <i class="fas fa-clipboard-check"></i>&nbsp; Log ny klatretur
+    </a>
+  </p>
+
+  </div>
+  <div class="p-2 ">
+  <img src="/images/arrow.svg">
+  </div>
+</div>
+{{end}}
+
+<div class="card-body contacts_body">
+  <ul class="contacts">
+    {{ range .Climbingactivities }}
+       partial "climbingactivities/card" .
+    {{end}}
+  </ul>
+</div>
+
+
+{{end}}

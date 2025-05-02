@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
+    <title>Logbogen</title>
+    <%= stylesheetTag("application.css") %>
+    <meta name="csrf-param" content="authenticity_token" />
+    <meta name="csrf-token" content="<%= authenticity_token %>" />
+
+    <link rel="apple-touch-icon" sizes="180x180"" href="<%= assetPath("images/favicons/apple-touch-icon.png") %>" >
+    <link rel="icon" type="image/png" sizes="32x32"" href="<%= assetPath("images/favicons/favicon-32x32.png") %>" >
+    <link rel="icon" type="image/png" sizes="16x16"" href="<%= assetPath("images/favicons/favicon-16x16.png") %>" >
+    <link rel="manifest"" href="<%= assetPath("images/favicons/site.webmanifest")%>" >
+    <link rel="mask-icon"" href="<%= assetPath("images/favicons/safari-pinned-tab.svg") %>" color="#5bbad5" >
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+
+  </head>
+  <body>
+    <header>
+      <%= partial("menu.html") %>
+    </header>
+
+    <div class="container">
+      <%= partial("flash.html") %>
+      <%= yield %>
+    </div>
+
+    <%= javascriptTag("usermap.js") %>
+    <%= javascriptTag("application.js") %>
+  </body>
+</html>

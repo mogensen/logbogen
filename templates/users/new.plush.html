@@ -1,0 +1,8 @@
+<div class="py-4 mb-2">
+  <h3 class="d-inline-block"><%= t("users.title.new") %></h3>
+</div>
+
+<%= formFor(user, {action: usersPath (), method: "POST"}) { %>
+  <%= partial("users/form.html") %>
+  <%= linkTo(rootPath(), {class: "btn btn-warning", "data-confirm": "Are you sure?", body: "Cancel"}) %>
+<% } %>
