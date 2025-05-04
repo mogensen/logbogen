@@ -1,4 +1,5 @@
 {{ define "climbingactivities/form" }}
+{{ $activity := .ClimbingActivity }}
 
 <formset>
     <input type="hidden" id="csrf" name="csrf" value="{{ .csrf }}">
@@ -10,37 +11,37 @@
 
 
     <div>
-        <label for="date" class="form-label mt-4">Date:</label>
-        <input type="date" class="form-control" id="date" name="date" required><br>
+        <label for="climbingactivity-date" class="form-label mt-4">Date:</label>
+        <input type="date" class="form-control" id="climbingactivity-date" name="date" value="{{fmtDate .ClimbingActivity.Date}}" required><br>
     </div>
 
     <div id="activity-form-map" data-lat="{{.ClimbingActivity.Lat}}" data-lng="{{.ClimbingActivity.Lng}}"></div>
 
-    <input type="hidden" class="form-control" id="date" name="date" required><br>
-    <input type="hidden" class="form-control" id="date" name="date" required><br>
+    <input type="hidden" class="form-control" id="climbingactivity-lat" name="lat" value="{{.ClimbingActivity.Lat}}"  required><br>
+    <input type="hidden" class="form-control" id="climbingactivity-lng" name="lng" value="{{.ClimbingActivity.Lng}}"  required><br>
 
-    <div>
-        <label for="type" class="form-label mt-4">Type:</label>
-        <select id="location-select" name="location" class="form-control">
-            {{ range .Types }}
-            <option value="{{ .ID }}">{{ .Name }}</option>
+    <div class="form-group">
+        <label for="climbingactivity-type" class="form-label mt-4">Type:</label>
+        <select id="climbingactivity-type" name="type" class="form-control">
+            {{ range .ClimbingTypes }}
+            <option value="{{ . }}"  {{if eq . $activity.Type}}selected{{end}}>{{ . }}</option>
             {{end}}
         </select>
     </div>
 
-    <div>
-        <label for="other-type" class="form-label mt-4">Anden Type:</label>
-        <input type="text" class="form-control" id="other-type" name="other-type" required><br>
+    <div class="form-group">
+        <label for="climbingactivity-othertype" class="form-label mt-4">Anden Type:</label>
+        <input type="text" class="form-control" id="climbingactivity-othertype" name="otherType" value="{{.ClimbingActivity.OtherType}}">
+    </div>
+
+    <div class="form-group">
+        <label for="climbingactivity-role" class="form-label mt-4">Role:</label>
+        <input type="text" class="form-control" id="climbingactivity-role" name="role" placeholder="Instruktør, deltager" value="{{.ClimbingActivity.Role}}">
     </div>
 
     <div>
-        <label for="Role" class="form-label mt-4">Role:</label>
-        <input type="text" class="form-control" id="role" name="role" placeholder="Instruktør, deltager">
-    </div>
-
-    <div>
-        <label for="comment" class="form-label mt-4">Kommentar:</label>
-        <textarea class="form-control" id="comment" name="comment" rows="10"></textarea>
+        <label for="climbingactivity-comment" class="form-label mt-4">Kommentar:</label>
+        <textarea class="form-control" id="climbingactivity-comment" name="comment" rows="10">{{.ClimbingActivity.Comment}}</textarea>
     </div>
 
     <label>

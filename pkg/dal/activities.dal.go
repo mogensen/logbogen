@@ -19,9 +19,8 @@ func (o *Participants) Scan(src any) error {
 	if !ok {
 		return errors.New("src value cannot cast to []byte")
 	}
-	ids := strings.Split(string(bytes), ",")
-	for _, v := range ids {
-
+	ids := strings.SplitSeq(string(bytes), ",")
+	for v := range ids {
 		if v == "" {
 			continue
 		}
@@ -56,6 +55,7 @@ type ClimbingActivity struct {
 	Lng          float64      `gorm:"not null"`
 	Location     string       `gorm:"not null"`
 	Type         string       `gorm:"not null"`
+	OtherType    string       `gorm:"not null default ''"`
 	Role         string       `gorm:"not null"`
 	Comment      string       `gorm:"not null"`
 	Participants Participants `gorm:"type:VARCHAR(1024)"`
@@ -78,9 +78,9 @@ func FindClimbingActivityByUser(dest interface{}, ClimbingActivityIden interface
 	return FindClimbingActivity(dest, "id = ? AND user = ?", ClimbingActivityIden, userIden)
 }
 
-// FindClimbingActivitysByUser finds the ClimbingActivitys with user's identifier given
-func FindClimbingActivitysByUser(dest interface{}, userIden interface{}) *gorm.DB {
-	return database.DB.Model(&ClimbingActivity{}).Find(dest, "user = ?", userIden)
+// FindClimbingActivitiesByUser finds the ClimbingActivitys with user's identifier given
+func FindClimbingActivitiesByUser(dest interface{}, userIden interface{}) *gorm.DB {
+	return database.DB.Model(&ClimbingActivity{}).Order("date DESC").Find(dest, "user = ?", userIden)
 }
 
 // DeleteClimbingActivity deletes a ClimbingActivity from ClimbingActivitys' table with the given ClimbingActivity and user identifier

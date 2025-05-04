@@ -15,10 +15,12 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/csrf"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/template/html/v2"
 	"github.com/mogensen/logbook/pkg/dal"
 	"github.com/mogensen/logbook/pkg/database"
 	"github.com/mogensen/logbook/pkg/routes"
+	"github.com/mogensen/logbook/pkg/types"
 	"github.com/mogensen/logbook/pkg/utils"
 	"github.com/mogensen/logbook/pkg/utils/middleware"
 )
@@ -46,6 +48,23 @@ func main() {
 
 	// HTML templates
 	engine := html.New("./views", ".html")
+	engine.AddFunc("current_user", utils.GetUser)
+	engine.AddFunc("is_current_user", utils.IsCurrentUser)
+	engine.AddFunc("fmtDate", utils.FormatDate)
+	engine.AddFunc("is_same_user", utils.IsSameUser)
+	engine.AddFunc("json", utils.ToJSON)
+
+	type ActivityCtx struct {
+		UserID   *uint
+		Activity *types.ClimbingActivity
+	}
+
+	engine.AddFunc("ctxActivity", func(user uint, activity types.ClimbingActivity) ActivityCtx {
+		return ActivityCtx{
+			UserID:   &user,
+			Activity: &activity,
+		}
+	})
 
 	// Create a Fiber app
 	app := fiber.New(fiber.Config{
@@ -54,6 +73,8 @@ func main() {
 		ViewsLayout:       "layouts/main",
 		PassLocalsToViews: true,
 	})
+	// Initialize default config
+	app.Use(logger.New())
 
 	app.Static("/", "./assets")
 

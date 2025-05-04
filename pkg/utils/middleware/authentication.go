@@ -16,7 +16,7 @@ func Auth(c *fiber.Ctx) error {
 	loggedIn, _ := session.Get("loggedIn").(bool)
 	if !loggedIn {
 		// User is not authenticated, redirect to the login page
-		return c.Redirect("/login")
+		return c.Redirect("/")
 	}
 
 	username, _ := session.Get("username").(string)

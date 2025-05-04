@@ -1,22 +1,12 @@
 <div class="container">
 	<div class="row">
 		<div class="col-md-12">
-			<div class="subtitle">
-				<div class="container">
-					<h1> {{ .Title }}</h1>
-				</div>
-			</div>
 
 			{{ if not .LoggedIn }}
-				{{ template "users/login_form" . }}
+			{{ template "users/login_form" . }}
 			{{ else }}
-				{{ template "users/profile_image" . }}
-				{{ template "achievements/small" . }}
-				<script>
-					markers = {{ .ClimbingActivities }};
-				</script>
-				<div id="user-show-map"></div>
-				{{ template "users/show" . }}
+
+			{{ template "users/show" . }}
 			{{ end }}
 		</div>
 	</div>

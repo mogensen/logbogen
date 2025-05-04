@@ -1,0 +1,78 @@
+{{define "climbingactivities/show"}}
+<!-- Large devices -->
+<div class="d-none d-lg-block">
+  <div class="py-4 mb-2">
+    <img src="/images/climbing/{{ .ClimbingActivity.Type }}.svg" class="activity_icon_img">
+    <h3 class="d-inline-block">
+      {{ if eq .ClimbingActivity.Type "other" }}
+        {{ .ClimbingActivity.OtherType }}
+      {{ else }}
+        {{ .ClimbingActivity.Type }}
+      {{ end}}
+      nær {{ .ClimbingActivity.Location }}</h3>
+      <h4 class="d-inline-block">- {{ .ClimbingActivity.Role }}</h4>
+  </div>
+</div>
+
+
+<!-- Small devices -->
+<div class="d-lg-none">
+  <div class="py-4 mb-2">
+    <img src="/images/climbing/{{ .ClimbingActivity.Type}}.svg" class="activity_icon_img">
+    <h3 class="d-inline-block">
+      {{ if eq .ClimbingActivity.Type "other" }}
+        {{.ClimbingActivity.OtherType }}
+      {{ else }}
+        {{ .ClimbingActivity.Type }}
+      {{ end}}
+      </h3>
+      <br>
+      <h4 class="d-inline-block">nær {{ .ClimbingActivity.Location }}</h4>
+      <h5 class="d-inline-block">- {{ .ClimbingActivity.Role }}</h5>
+  </div>
+</div>
+
+
+<!-- END Header -->
+
+<div class="container pb-2">
+  <div class="btn-group" role="group" aria-label="Basic example">
+    <a href="/activities/list" class=" col btn btn-info">      Tilbage    </a>
+    <a href="/activities/{{ .ClimbingActivity.ID }}/edit" class=" col btn btn-warning">Edit</a>
+    <a href="/activities/delete/{{ .ClimbingActivity.ID }}" class=" col btn btn-danger" data-method="DELETE" data-confirm="actions.confirm">Slet</a>
+  </div>
+</div>
+
+<ul class="list-group mb-2 ">
+
+  <li class="list-group-item pb-1">
+    <label class="d-block">Dato</label>
+    <hr/>
+    <p class="d-inline-block">{{ fmtDate .ClimbingActivity.Date }}</p>
+  </li>
+
+  <li class="">
+    <div id="activity-show-map" data-lat="{{ .ClimbingActivity.Lat }}" data-lng="{{ .ClimbingActivity.Lng }}"></div>
+  </li>
+
+  <li class="list-group-item pb-1">
+    <label class="d-block">Comment</label>
+    <hr/>
+    <p class="d-inline-block">{{ .ClimbingActivity.Comment }}</p>
+  </li>
+
+  <li class="list-group-item pb-1">
+    <label class="d-block">Deltagere</label>
+    <hr/>
+    <div class="card-body contacts_body">
+      <ul class="contacts">
+        {{range .ClimbingActivity.Participants }}
+          {{template "users/card" .}}
+        {{ end}}
+      </ul>
+    </div>
+  </li>
+
+</ul>
+
+{{end}}

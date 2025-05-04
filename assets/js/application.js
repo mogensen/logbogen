@@ -94,8 +94,8 @@ $(() => {
         };
 
         map.on('click', function (e) {
-            $('#climbingactivity-Lat').val(e.latlng.lat);
-            $('#climbingactivity-Lng').val(e.latlng.lng);
+            $('#climbingactivity-lat').val(e.latlng.lat);
+            $('#climbingactivity-lng').val(e.latlng.lng);
             updateMarker(e.latlng.lat, e.latlng.lng);
         });
 
@@ -115,18 +115,20 @@ $(() => {
 
 $(() => {
     function updateOther() {
-        if ($(this).val() == "OTHER") {
-            $("#climbingactivity-OtherType").parent(".form-group").slideDown();
+        console.log("updateOther");
+        console.log($(this).val());
+        if ($(this).val() == "other") {
+            $("#climbingactivity-othertype").parent(".form-group").slideDown();
         } else {
-            $("#climbingactivity-OtherType").parent(".form-group").slideUp();
+            $("#climbingactivity-othertype").parent(".form-group").slideUp();
         }
     }
 
-    $("#climbingactivity-Type").on('change', updateOther);
+    $("#climbingactivity-type").on('change', updateOther);
 
-    if ($("#climbingactivity-Type").val() == "OTHER") {
-        $("#climbingactivity-OtherType").parent(".form-group").sjow();
+    if ($("#climbingactivity-type").val() == "other") {
+        $("#climbingactivity-othertype").parent(".form-group").show();
     } else {
-        $("#climbingactivity-OtherType").parent(".form-group").hide();
+        $("#climbingactivity-othertype").parent(".form-group").hide();
     }
 });

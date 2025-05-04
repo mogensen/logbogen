@@ -10,7 +10,7 @@ $(() => {
         return;
     }
 
-    var map = new L.Map('user-show-map').setView([56, 10], 5);
+    var map = new L.Map('user-show-map').setView([56, 10], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         id: 'user-show-map',
@@ -19,26 +19,46 @@ $(() => {
     var lang = getCookie("lang");
     var markerArray = [];
 
-    markers.forEach(function (row) {
-        console.log(row)
+    fetch('/activities/list', {
+        headers: {
+            'Accept': 'application/json',
+        }
+    })
+        .then(response => {
+            if (response.ok) {
+                return response.json(); // Parse the response data as JSON
+            } else {
+                throw new Error('API request failed');
+            }
+        })
+        .then(data => {
+            // Process the response data here
+            data.forEach(function (row) {
 
-        var icon = new L.icon({
-            iconUrl: '/images/climbing/' + row.type.toLowerCase() + '.svg',
-            iconSize: [35, 35],
-            iconAnchor: [22, 35]
+                var icon = new L.icon({
+                    iconUrl: '/images/climbing/' + row.type.toLowerCase() + '.svg',
+                    iconSize: [35, 35],
+                    iconAnchor: [22, 35]
+                });
+
+                var m = L.marker(
+                    new L.LatLng(row.lat, row.lng), {
+                    icon: icon,
+                    title: markerTitle(row),
+                    win_url: "/activities/" + row.id,
+                });
+
+                markerArray.push(m);
+                m.addTo(map);
+                m.on('click', onClick);
+            })
+
+            map.fitBounds(L.featureGroup(markerArray).getBounds());
+        })
+        .catch(error => {
+            // Handle any errors here
+            console.error(error); // Example: Logging the error to the console
         });
-
-        var m = L.marker(
-            new L.LatLng(row.lat, row.lng), {
-            icon: icon,
-            title: markerTitle(row),
-            win_url: "/climbingactivities/" + row.id,
-        });
-
-        markerArray.push(m);
-        m.addTo(map);
-        m.on('click', onClick);
-    });
 
     function onClick(e) {
         window.location = this.options.win_url;

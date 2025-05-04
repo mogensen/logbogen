@@ -1,0 +1,61 @@
+{{define "climbingactivities/card"}}
+{{ $user := .UserID }}
+{{ $activity :=  .Activity }}
+
+<li>
+  <div class="userInfo">
+    <div class="d-flex">
+
+      <div class="flex-shrink-1">
+        <div class="img_cont col col-auto ">
+          <img src="/images/climbing/{{$activity.Type}}.svg" alt="{{$activity.Type}}" class="activity_icon_img">
+        </div>
+      </div>
+
+      <div class="flex-grow-1 px-2">
+        {{ if (is_same_user $user $activity.User) }}
+        <a href="/activities/{{ $activity.ID }}">
+        {{ else }}
+        <a href="/activities/clone/{{ $activity.ID }}">
+        {{end}}
+
+        {{ if eq $activity.Type "Other" }}
+          {{$activity.OtherType }}
+        {{ else }}
+          {{ $activity.Type }}
+        {{ end}}
+        nær {{ $activity.Location }}
+
+        {{ if not (is_same_user $user $activity.User) }}
+        <!-- TODO get name of the user -->
+        <br /> createdby {{ $activity.User }}
+        {{end}}
+        </a>
+
+        <p class="text-muted small text-truncate">{{ fmtDate $activity.Date }}</p>
+        <p class="text-muted small text-truncate">{{ $activity.Role }}</p>
+      </div>
+
+
+      <div class="flex-shrink-1 d-none d-md-block">
+        {{ range  $activity.Participants }}
+           partial("users/profile_image_mini") $activity. 
+        {{end}}
+        <p class="text-muted small text-truncate d-inline">
+           if len(.Participants) > 6 and len(.Participants) - 6  more 
+      </div>
+
+    </div>
+    <div class="d-md-none user-img-thumbnail-mini-container">
+      {{ range  $activity.Participants }}
+         partial("users/profile_image_mini") $activity. 
+      {{end}}
+      <p class="text-muted small text-truncate d-inline">
+        if len(.Participants) > 6 and len(.Participants) - 6  more 
+      </p>
+    </div>
+
+  </div>
+</li>
+
+{{end}}

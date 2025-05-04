@@ -8,12 +8,13 @@ import (
 
 // TodoRoutes contains all routes relative to /todo
 func ActivitiesRoutes(app fiber.Router) {
-	r := app.Group("/ativities").Use(middleware.Auth)
+	r := app.Group("/activities").Use(middleware.Auth)
 
 	r.Get("/create", services.CreateClimbingActivityPage)
 	r.Post("/create", services.CreateClimbingActivity)
 	r.Get("/list", services.GetClimbingActivitys)
-	r.Get("/:ActivitiesID", services.GetClimbingActivity)
-	r.Patch("/:ActivitiesID", services.UpdateClimbingActivity)
-	r.Delete("/:ActivitiesID", services.DeleteClimbingActivity)
+	r.Get("/:ActivityID", services.GetClimbingActivity)
+	r.Get("/:ActivityID/edit", services.EditClimbingActivity)
+	r.Post("/:ActivityID", services.UpdateClimbingActivity)
+	r.Delete("/:ActivityID", services.DeleteClimbingActivity)
 }
