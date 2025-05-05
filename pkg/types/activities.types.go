@@ -46,19 +46,20 @@ var ClimbingTypes = []ClimbingType{Tree, Rock, Boulder, Ice, HighRope, Wall, Oth
 
 // ClimbingActivity struct contains the ClimbingActivity field which should be returned in a
 type ClimbingActivity struct {
-	ID           uuid.UUID    `json:"id" form:"id"`
-	User         *uint        `json:"user" form:"user"`
-	Date         Date         `json:"date" form:"date"`
-	Lat          float64      `json:"lat" form:"lat"`
-	Lng          float64      `json:"lng" form:"lng"`
-	Location     string       `json:"location" form:"location"`
-	Type         ClimbingType `json:"type" form:"type"`
-	OtherType    string       `json:"otherType" form:"otherType"`
-	Role         string       `json:"role" form:"role"`
-	Comment      string       `json:"comment" form:"comment"`
-	Participants []uint64     `json:"participants" form:"participants"`
-	CreatedAt    time.Time    `json:"createdAt" form:"createdAt"`
-	UpdatedAt    time.Time    `json:"updatedAt" form:"updatedAt"`
+	ID              uuid.UUID    `json:"id" form:"id"`
+	User            *uint64      `json:"user" form:"user"`
+	Date            Date         `json:"date" form:"date"`
+	Lat             float64      `json:"lat" form:"lat"`
+	Lng             float64      `json:"lng" form:"lng"`
+	Location        string       `json:"location" form:"location"`
+	Type            ClimbingType `json:"type" form:"type"`
+	OtherType       string       `json:"otherType" form:"otherType"`
+	Role            string       `json:"role" form:"role"`
+	Comment         string       `json:"comment" form:"comment"`
+	ParticipantsIDs []uint64     `form:"participants"`
+	Participants    []User       `json:"participants"`
+	CreatedAt       time.Time    `json:"createdAt" form:"createdAt"`
+	UpdatedAt       time.Time    `json:"updatedAt" form:"updatedAt"`
 }
 
 // CreateDTO struct defines the /ClimbingActivity/create payload

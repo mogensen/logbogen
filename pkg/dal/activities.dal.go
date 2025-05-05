@@ -15,7 +15,7 @@ import (
 type Participants []uint64
 
 func (o *Participants) Scan(src any) error {
-	bytes, ok := src.([]byte)
+	bytes, ok := src.(string)
 	if !ok {
 		return errors.New("src value cannot cast to []byte")
 	}
@@ -49,7 +49,7 @@ func (o Participants) Value() (driver.Value, error) {
 type ClimbingActivity struct {
 	gorm.Model
 	ID           uuid.UUID    `gorm:"not null"`
-	User         *uint        `gorm:"index,not null"`
+	User         *uint64      `gorm:"index,not null"`
 	Date         time.Time    `gorm:"not null"`
 	Lat          float64      `gorm:"not null"`
 	Lng          float64      `gorm:"not null"`

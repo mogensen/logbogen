@@ -28,3 +28,8 @@ func FindUser(dest interface{}, conds ...interface{}) *gorm.DB {
 func FindUserByEmail(dest interface{}, email string) *gorm.DB {
 	return FindUser(dest, "email = ?", email)
 }
+
+// FindUser searches the user's table with the condition given
+func FindUsers(dest interface{}, conds ...interface{}) *gorm.DB {
+	return database.DB.Model(&User{}).Find(dest, conds...)
+}

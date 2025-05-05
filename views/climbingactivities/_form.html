@@ -44,17 +44,10 @@
         <textarea class="form-control" id="climbingactivity-comment" name="comment" rows="10">{{.ClimbingActivity.Comment}}</textarea>
     </div>
 
-    <label>
-        Deltagere:
-    </label>
-    <select id="participant-select" name="participants" class="form-control" multiple="multiple">
-        {{ range .Users }}
-        <option value="{{ .ID }}" selected="participant.ID, climbingactivity.Participants">
-            {{ .Name }}
-        </option>
-        {{end}}
-    </select>
-    <br />
+    <div>
+        <label for="climbingactivity-participants" class="form-label mt-4">Deltagere:</label>
+        <select id="climbingactivity-participants" name="participants" class="form-control" multiple="multiple"></select>
+    </div>
 
     <button class="btn btn-success" role="submit">Save</button>
 </formset>

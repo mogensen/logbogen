@@ -20,7 +20,7 @@ func Auth(c *fiber.Ctx) error {
 	}
 
 	username, _ := session.Get("username").(string)
-	userID, _ := session.Get("userID").(uint)
+	userID, _ := session.Get("userID").(uint64)
 
 	c.Locals("LoggedIn", loggedIn)
 	c.Locals("UserName", username)
@@ -42,7 +42,7 @@ func User(c *fiber.Ctx) error {
 	}
 
 	username, _ := session.Get("username").(string)
-	userID, _ := session.Get("userID").(uint)
+	userID, _ := session.Get("userID").(uint64)
 
 	c.Locals("LoggedIn", loggedIn)
 	c.Locals("UserName", username)

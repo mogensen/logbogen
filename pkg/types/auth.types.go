@@ -14,19 +14,15 @@ type SignupDTO struct {
 
 // UserResponse todo
 type UserResponse struct {
-	ID       uint   `json:"id"`
+	ID       uint64 `json:"id"`
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"-"`
 }
 
-// AccessResponse todo
-type AccessResponse struct {
-	Token string `json:"token"`
-}
-
-// AuthResponse todo
-type AuthResponse struct {
-	User *UserResponse   `json:"user"`
-	Auth *AccessResponse `json:"auth"`
+// User todo
+type User struct {
+	ID    uint64 `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }

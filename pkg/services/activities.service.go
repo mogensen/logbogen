@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -17,6 +18,9 @@ func CreateClimbingActivityPage(c *fiber.Ctx) error {
 	// Render the create climbing activity page
 	return c.Render("climbingactivities/create", fiber.Map{
 		"ClimbingTypes": types.ClimbingTypes,
+		"ClimbingActivity": &types.ClimbingActivity{
+			Date: types.Date(time.Now()),
+		},
 	})
 }
 
@@ -38,7 +42,7 @@ func CreateClimbingActivity(c *fiber.Ctx) error {
 		OtherType:    b.ClimbingActivity.OtherType,
 		Role:         b.ClimbingActivity.Role,
 		Comment:      b.ClimbingActivity.Comment,
-		Participants: b.ClimbingActivity.Participants,
+		Participants: b.ClimbingActivity.ParticipantsIDs,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 		User:         utils.GetUser(c),
@@ -54,24 +58,54 @@ func CreateClimbingActivity(c *fiber.Ctx) error {
 	return c.Redirect("/activities/" + activity.ID.String())
 }
 
-// GetClimbingActivitys returns the ClimbingActivitys list
-func GetClimbingActivitys(c *fiber.Ctx) error {
-	activities := []types.ClimbingActivity{}
+// GetClimbingActivities returns the ClimbingActivitys list
+func GetClimbingActivities(c *fiber.Ctx) error {
+	activities := []dal.ClimbingActivity{}
+
+	slog.Warn("HELLO!!!", "user", *utils.GetUser(c))
 
 	err := dal.FindClimbingActivitiesByUser(&activities, utils.GetUser(c)).Error
 	if err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
 
-	accept := c.Accepts("html", "json")
+	slog.Warn("Found activities", "activities", len(activities))
 
+	userMap, err := getUserMap()
+	if err != nil {
+		return err
+	}
+
+	res := make([]*types.ClimbingActivity, len(activities))
+	for i, activity := range activities {
+		res[i] = mapActivityFromDal(&activity, userMap)
+	}
+	slog.Warn("Mapped activities", "activities", res)
+
+	accept := c.Accepts("html", "json")
 	if accept == "json" {
-		return c.JSON(activities)
+		return c.JSON(res)
 	}
 
 	return c.Render("climbingactivities/list", fiber.Map{
-		"ClimbingActivities": &activities,
+		"ClimbingActivities": &res,
 	})
+}
+
+func getUserMap() (map[uint64]types.User, error) {
+	users := &[]types.User{}
+
+	err := dal.FindUsers(users).Error
+	if err != nil {
+		return nil, fiber.NewError(fiber.StatusConflict, err.Error())
+	}
+
+	userMap := make(map[uint64]types.User)
+	for i, user := range *users {
+		userMap[user.ID] = (*users)[i]
+
+	}
+	return userMap, nil
 }
 
 // GetClimbingActivity return a single ClimbingActivity
@@ -82,16 +116,50 @@ func GetClimbingActivity(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid ActivityID")
 	}
 
-	activity := &types.ClimbingActivity{}
+	activity := &dal.ClimbingActivity{}
 
 	err := dal.FindClimbingActivityByUser(activity, activityID, utils.GetUser(c)).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return c.JSON(&types.ClimbingActivityCreate{})
 	}
 
+	userMap, err := getUserMap()
+	if err != nil {
+		return err
+	}
+
+	res := mapActivityFromDal(activity, userMap)
+
 	return c.Render("climbingactivities/show", fiber.Map{
-		"ClimbingActivity": activity,
+		"ClimbingActivity": res,
 	})
+}
+
+func mapActivityFromDal(activity *dal.ClimbingActivity, userMap map[uint64]types.User) *types.ClimbingActivity {
+
+	participants := make([]types.User, len(activity.Participants))
+	for i, participant := range activity.Participants {
+		if user, ok := userMap[participant]; ok {
+			participants[i] = user
+		}
+	}
+
+	return &types.ClimbingActivity{
+		ID:              activity.ID,
+		Date:            types.Date(activity.Date),
+		Lat:             activity.Lat,
+		Lng:             activity.Lng,
+		Location:        activity.Location,
+		Type:            types.ClimbingType(activity.Type),
+		OtherType:       activity.OtherType,
+		Role:            activity.Role,
+		Comment:         activity.Comment,
+		Participants:    participants,
+		CreatedAt:       activity.CreatedAt,
+		UpdatedAt:       activity.UpdatedAt,
+		User:            activity.User,
+		ParticipantsIDs: activity.Participants,
+	}
 }
 
 // EditClimbingActivity return a single ClimbingActivity
@@ -160,7 +228,7 @@ func UpdateClimbingActivity(c *fiber.Ctx) error {
 		OtherType:    b.ClimbingActivity.OtherType,
 		Role:         b.ClimbingActivity.Role,
 		Comment:      b.ClimbingActivity.Comment,
-		Participants: b.ClimbingActivity.Participants,
+		Participants: b.ClimbingActivity.ParticipantsIDs,
 		UpdatedAt:    time.Now(),
 		User:         utils.GetUser(c),
 	}

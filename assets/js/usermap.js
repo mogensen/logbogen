@@ -53,7 +53,14 @@ $(() => {
                 m.on('click', onClick);
             })
 
-            map.fitBounds(L.featureGroup(markerArray).getBounds());
+            if (markerArray.length <= 1) {
+                map.setView([markerArray[0].getLatLng().lat, markerArray[0].getLatLng().lng], 10);
+            } else {
+                var group = L.featureGroup(markerArray).addTo(map);
+                console.log(group.getBounds().pad(0.2));
+                map.fitBounds(group.getBounds());
+            }
+
         })
         .catch(error => {
             // Handle any errors here
@@ -71,8 +78,10 @@ $(() => {
         return row.type.charAt(0).toUpperCase() + row.type.slice(1).toLowerCase() + " climbing " + month + " " + year;
     }
 
-    var group = L.featureGroup(markerArray).addTo(map);
-    map.fitBounds(group.getBounds());
+
+    
+
+
 
 
     function getCookie(name) {

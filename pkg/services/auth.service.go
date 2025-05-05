@@ -15,13 +15,15 @@ import (
 
 // Login service logs in a user
 func Login(ctx *fiber.Ctx) error {
-	// Retrieve the submitted form data
-	uName := ctx.FormValue("username")
-	uPass := ctx.FormValue("password")
+	b := new(types.LoginDTO)
+
+	if err := utils.ParseBodyAndValidate(ctx, b); err != nil {
+		return err
+	}
 
 	u := &types.UserResponse{}
 
-	err := dal.FindUserByEmail(u, uName).Error
+	err := dal.FindUserByEmail(u, b.Email).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return ctx.Render("index", fiber.Map{
@@ -31,7 +33,7 @@ func Login(ctx *fiber.Ctx) error {
 		})
 	}
 
-	if err := password.Verify(u.Password, uPass); err != nil {
+	if err := password.Verify(u.Password, b.Password); err != nil {
 		return ctx.Render("index", fiber.Map{
 			"Title": "Login",
 			"csrf":  utils.GetCsrf(ctx),
@@ -85,12 +87,13 @@ func SignupPage(ctx *fiber.Ctx) error {
 
 // Signup service creates a user
 func Signup(ctx *fiber.Ctx) error {
-	// Retrieve the submitted form data
-	uEmail := ctx.FormValue("username")
-	uPass := ctx.FormValue("password")
-	uName := ctx.FormValue("name")
+	b := new(types.SignupDTO)
 
-	err := dal.FindUserByEmail(&struct{ ID string }{}, uEmail).Error
+	if err := utils.ParseBodyAndValidate(ctx, b); err != nil {
+		return err
+	}
+
+	err := dal.FindUserByEmail(&struct{ ID string }{}, b.Email).Error
 
 	// If email already exists, return
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -98,9 +101,9 @@ func Signup(ctx *fiber.Ctx) error {
 	}
 
 	user := &dal.User{
-		Name:     uName,
-		Password: password.Generate(uPass),
-		Email:    uEmail,
+		Name:     b.Name,
+		Password: password.Generate(b.Password),
+		Email:    b.Email,
 	}
 
 	// Create a user, if error return
@@ -113,4 +116,15 @@ func Signup(ctx *fiber.Ctx) error {
 		"csrf":  utils.GetCsrf(ctx),
 		"error": "User created, please login",
 	})
+}
+
+func GetUsers(ctx *fiber.Ctx) error {
+	users := &[]types.UserResponse{}
+
+	err := dal.FindUsers(users).Error
+	if err != nil {
+		return fiber.NewError(fiber.StatusConflict, err.Error())
+	}
+
+	return ctx.JSON(users)
 }

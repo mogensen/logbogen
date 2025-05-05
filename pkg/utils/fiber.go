@@ -34,12 +34,12 @@ func ParseBodyAndValidate(ctx *fiber.Ctx, body interface{}) *fiber.Error {
 }
 
 // GetUser is helper function for getting authenticated user's id
-func GetUser(c *fiber.Ctx) *uint {
-	id, _ := c.Locals("USER").(uint)
+func GetUser(c *fiber.Ctx) *uint64 {
+	id, _ := c.Locals("USER").(uint64)
 	return &id
 }
 
-func IsCurrentUser(c *fiber.Ctx, userId uint) bool {
+func IsCurrentUser(c *fiber.Ctx, userId uint64) bool {
 	currentUserId := GetUser(c)
 	if currentUserId == nil {
 
@@ -57,10 +57,14 @@ func GetCsrf(c *fiber.Ctx) string {
 }
 
 func FormatDate(date types.Date) string {
+	emptyDate := types.Date{}
+	if date == emptyDate {
+		return time.Now().Format("2006-01-02")
+	}
 	return time.Time(date).Format("2006-01-02")
 }
 
-func IsSameUser(a, b *uint) bool {
+func IsSameUser(a, b *uint64) bool {
 	if a == nil || b == nil {
 		return false
 	}
@@ -73,4 +77,11 @@ func ToJSON(v []types.ClimbingActivity) (template.HTML, error) {
 		return "", err
 	}
 	return template.HTML(string(b)), nil
+}
+
+func FirstSix(s []types.User) []types.User {
+	if len(s) > 6 {
+		return s[:6]
+	}
+	return s
 }

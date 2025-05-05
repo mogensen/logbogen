@@ -11,7 +11,7 @@ var (
 	// PORT returns the server listening port
 	PORT = getEnv("PORT", "5000")
 	// DB returns the name of the sqlite database
-	DB = getEnv("DB", "gotodo.db")
+	DB = getEnv("DB", "fiber.db")
 	// TOKENKEY returns the jwt token secret
 	TOKENKEY = getEnv("TOKEN_KEY", "")
 	// TOKENEXP returns the jwt token expiration duration.

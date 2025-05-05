@@ -33,7 +33,7 @@
 
       <div class="flex-shrink-1 d-none d-md-block">
         {{ for (firstUsers(6, .Participants)) }}
-          {{ partial("users/profile_image_mini") . }}
+          {{ template "users/profile_image_mini" . }}
         {{end}}
         <p class="text-muted small text-truncate d-inline">
           {{ if len(.Participants) > 6 and len(.Participants) - 6 }} more {{end}}
@@ -43,7 +43,7 @@
     </div>
     <div class="d-md-none user-img-thumbnail-mini-container">
       {{ for (firstUsers(6, .Participants)) }}
-        {{ partial("users/profile_image_mini") . }}
+        {{ template "users/profile_image_mini" . }}
       {{end}}
       <p class="text-muted small text-truncate d-inline">
         {{ if len(.Participants) > 6 and len(.Participants) - 6 }} more {{end}}

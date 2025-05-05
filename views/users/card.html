@@ -3,15 +3,13 @@
 
     <div class="user_info  p-2 flex-grow-1 row userInfo">
       <div class="img_cont col col-auto ">
-      <%= if (image(user.Image)){ %>
-        <img src="<%= pathFor(usersImagePath({ users_image_id: user.Image.ID })) %>" class="rounded-circle user_img">
-      <% } else { %>
-        <img src="/assets/images/empty-avatar.png"  class="rounded-circle user_img">
-      <% } %>
+      
+        <img src="/images/empty-avatar.png"  class="rounded-circle user_img">
+      
       </div>
 
       <div class="user_cont col col-auto text-truncate">
-        <%= linkTo(userPath({ user_id: user.ID }), { body:  user.Name}) %>
+        <a href="/users/{{ .ID }}/">{{ .Name }}</a>
       </div>
     </div>
 

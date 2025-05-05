@@ -53,13 +53,14 @@ func main() {
 	engine.AddFunc("fmtDate", utils.FormatDate)
 	engine.AddFunc("is_same_user", utils.IsSameUser)
 	engine.AddFunc("json", utils.ToJSON)
+	engine.AddFunc("firstSix", utils.FirstSix)
 
 	type ActivityCtx struct {
-		UserID   *uint
+		UserID   *uint64
 		Activity *types.ClimbingActivity
 	}
 
-	engine.AddFunc("ctxActivity", func(user uint, activity types.ClimbingActivity) ActivityCtx {
+	engine.AddFunc("ctxActivity", func(user uint64, activity types.ClimbingActivity) ActivityCtx {
 		return ActivityCtx{
 			UserID:   &user,
 			Activity: &activity,

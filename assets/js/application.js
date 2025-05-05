@@ -7,7 +7,7 @@
 
 
 $(() => {
-    $.fn.select2.defaults.set("theme", "bootstrap4");
+    $.fn.select2.defaults.set("theme", "classic");
 
     const zoomLevel = 12;
     const defaultIcon = new L.icon({
@@ -17,9 +17,31 @@ $(() => {
 
 
     $(() => {
-        $('#participant-select').select2({
-        minimumInputLength: 3 // only start searching when the user has input 3 or more characters
-      });
+        $('#climbingactivity-participants').select2({
+            minimumInputLength: 3,
+            ajax: {
+                url: '/users/list',
+                dataType: 'json',
+                // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
+                processResults: function (data) {
+                    // Transform: [{"id":1,"name":"Frederik Mogensen","email":"frede@server-1.dk"},{"id":2,"name":"Tine Stenum","email":"tine@mail.com"}]
+                    // into: {  "results": [{"id":1,"text":"Frederik Mogensen"},{"id":2,"text":"Tine Stenum"}], {  "pagination": {    "more": true  } }
+
+                    res = data.map(function (item) {
+                        return {
+                            id: item.id,
+                            text: item.name + " (" + item.email + ")",
+                        };
+                    });
+                    console.log(res);
+
+                    // Transforms the top-level key of the response object from 'items' to 'results'
+                    return {
+                        results: res
+                    };
+                },
+            }
+        });
     })
 
     $(() => {
