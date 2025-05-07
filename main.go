@@ -54,6 +54,7 @@ func main() {
 	engine.AddFunc("is_same_user", utils.IsSameUser)
 	engine.AddFunc("json", utils.ToJSON)
 	engine.AddFunc("firstSix", utils.FirstSix)
+	engine.AddFunc("userImage", utils.UserImage)
 
 	type ActivityCtx struct {
 		UserID   *uint64

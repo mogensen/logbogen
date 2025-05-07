@@ -57,8 +57,7 @@ $(() => {
                 map.setView([markerArray[0].getLatLng().lat, markerArray[0].getLatLng().lng], 10);
             } else {
                 var group = L.featureGroup(markerArray).addTo(map);
-                console.log(group.getBounds().pad(0.2));
-                map.fitBounds(group.getBounds());
+                map.fitBounds(group.getBounds().pad(0.1));
             }
 
         })

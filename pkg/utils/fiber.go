@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"log/slog"
 	"time"
@@ -84,4 +85,14 @@ func FirstSix(s []types.User) []types.User {
 		return s[:6]
 	}
 	return s
+}
+
+func UserImage(user types.User) string {
+	colors := []string{"32ab5a", "efdc9d", "70b74a", "97c650", "ebce81", "807a4e", "c4c69b", "439133", "6d6d5b", "d9d9d3"}
+	hash := 0
+	for _, char := range user.Name {
+		hash += int(char)
+	}
+	color := colors[hash%len(colors)]
+	return fmt.Sprintf("https://ui-avatars.com/api/?name=%s&background=%s", user.Name, color)
 }

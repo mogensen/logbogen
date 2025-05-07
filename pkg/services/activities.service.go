@@ -62,8 +62,6 @@ func CreateClimbingActivity(c *fiber.Ctx) error {
 func GetClimbingActivities(c *fiber.Ctx) error {
 	activities := []dal.ClimbingActivity{}
 
-	slog.Warn("HELLO!!!", "user", *utils.GetUser(c))
-
 	err := dal.FindClimbingActivitiesByUser(&activities, utils.GetUser(c)).Error
 	if err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
@@ -170,15 +168,22 @@ func EditClimbingActivity(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid ActivityID")
 	}
 
-	activity := &types.ClimbingActivity{}
+	activity := &dal.ClimbingActivity{}
 
 	err := dal.FindClimbingActivityByUser(activity, activityID, utils.GetUser(c)).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return c.JSON(&types.ClimbingActivityCreate{})
 	}
 
+	userMap, err := getUserMap()
+	if err != nil {
+		return err
+	}
+
+	res := mapActivityFromDal(activity, userMap)
+
 	return c.Render("climbingactivities/edit", fiber.Map{
-		"ClimbingActivity": activity,
+		"ClimbingActivity": res,
 		"ClimbingTypes":    types.ClimbingTypes,
 	})
 }

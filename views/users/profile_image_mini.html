@@ -1,5 +1,5 @@
 {{define "users/profile_image_mini"}}
 <span class="user-img-thumbnail-mini">
-    <img src="/images/empty-avatar.png" class="rounded-circle" title="{{.Name}}">
+    <img src="{{ userImage . }}" class="rounded-circle" title="{{.Name}}">
 </span>
 {{end}}

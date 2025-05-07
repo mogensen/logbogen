@@ -46,7 +46,11 @@
 
     <div>
         <label for="climbingactivity-participants" class="form-label mt-4">Deltagere:</label>
-        <select id="climbingactivity-participants" name="participants" class="form-control" multiple="multiple"></select>
+        <select id="climbingactivity-participants" name="participants" class="form-control" multiple="multiple">
+            {{ range .ClimbingActivity.Participants }}
+            <option value="{{ .ID }}" selected>{{ .Name }}</option>
+            {{end}}
+        </select>
     </div>
 
     <button class="btn btn-success" role="submit">Save</button>
