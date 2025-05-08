@@ -154,3 +154,28 @@ $(() => {
         $("#climbingactivity-othertype").parent(".form-group").hide();
     }
 });
+
+
+$(() => {
+    // Bind click to OK button within popup
+    $('#confirm-delete').on('click', '.btn-ok', function (e) {
+        console.log("confirm-delete");
+        console.log($(this));
+
+        var $modalDiv = $(e.delegateTarget);
+        var id = $(this).data('recordId');
+
+        $modalDiv.addClass('loading');
+        $.post('/activities/' + id + '/delete').then(function () {
+            location.href = '/activities/list';
+        });
+    });
+
+    // Bind to modal opening to set necessary data properties to be used to make request
+    $('#confirm-delete').on('show.bs.modal', function (e) {
+        console.log($(e.relatedTarget))
+        var data = $(e.relatedTarget).data();
+        $('.title', this).text(data.recordTitle);
+        $('.btn-ok', this).data('recordId', data.recordId);
+    });
+});

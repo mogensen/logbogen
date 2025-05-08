@@ -203,9 +203,3 @@ div.userInfo p {
 body {
   padding-bottom: 50px;
 }
-
-/*# sourceMappingURL=application.css.map */
-
-.select2-container--default .select2-selection--multiple {
-  border: 1px solid #606060;
-}

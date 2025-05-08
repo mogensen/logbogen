@@ -1,15 +1,10 @@
 {{define "climbingactivities/show"}}
+
 <!-- Large devices -->
 <div class="d-none d-lg-block">
   <div class="py-4 mb-2">
     <img src="/images/climbing/{{ .ClimbingActivity.Type }}.svg" class="activity_icon_img">
-    <h3 class="d-inline-block">
-      {{ if eq .ClimbingActivity.Type "other" }}
-        {{ .ClimbingActivity.OtherType }}
-      {{ else }}
-        {{ .ClimbingActivity.Type }}
-      {{ end}}
-      nær {{ .ClimbingActivity.Location }}</h3>
+      <h3 class="d-inline-block">{{ .ClimbingActivity.Title }}</h3>
       <h4 class="d-inline-block">- {{ .ClimbingActivity.Role }}</h4>
   </div>
 </div>
@@ -19,13 +14,7 @@
 <div class="d-lg-none">
   <div class="py-4 mb-2">
     <img src="/images/climbing/{{ .ClimbingActivity.Type}}.svg" class="activity_icon_img">
-    <h3 class="d-inline-block">
-      {{ if eq .ClimbingActivity.Type "other" }}
-        {{.ClimbingActivity.OtherType }}
-      {{ else }}
-        {{ .ClimbingActivity.Type }}
-      {{ end}}
-      </h3>
+    <h3 class="d-inline-block">{{ .ClimbingActivity.TypeStr }}</h3>
       <br>
       <h4 class="d-inline-block">nær {{ .ClimbingActivity.Location }}</h4>
       <h5 class="d-inline-block">- {{ .ClimbingActivity.Role }}</h5>
@@ -38,10 +27,32 @@
 <div class="container pb-2">
   <div class="btn-group" role="group" aria-label="Basic example">
     <a href="/activities/list" class=" col btn btn-info">      Tilbage    </a>
-    <a href="/activities/{{ .ClimbingActivity.ID }}/edit" class=" col btn btn-warning">Edit</a>
-    <a href="/activities/delete/{{ .ClimbingActivity.ID }}" class=" col btn btn-danger" data-method="DELETE" data-confirm="actions.confirm">Slet</a>
+    <a href="/activities/{{ .ClimbingActivity.ID }}/edit" class="col btn btn-warning">Rediger</a>
+    <button type="button" data-record-id="{{ .ClimbingActivity.ID }}" data-record-title="{{ .ClimbingActivity.Title }}" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirm-delete">Slet</button>
+
   </div>
 </div>
+
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+          </div>
+          <div class="modal-body">
+              <p>Du er ved at slette</p>
+              <b><i class="title"></i></b>
+              <br/>
+              <p>Er du sikker?</p>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-danger btn-ok">Slet</button>
+          </div>
+      </div>
+  </div>
+</div>
+
 
 <ul class="list-group mb-2 ">
 

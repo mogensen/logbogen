@@ -74,17 +74,17 @@ func FindClimbingActivity(dest interface{}, conds ...interface{}) *gorm.DB {
 }
 
 // FindClimbingActivityByUser finds a ClimbingActivity with given ClimbingActivity and user identifier
-func FindClimbingActivityByUser(dest interface{}, ClimbingActivityIden interface{}, userIden interface{}) *gorm.DB {
+func FindClimbingActivityByUser(dest interface{}, ClimbingActivityIden string, userIden uint64) *gorm.DB {
 	return FindClimbingActivity(dest, "id = ? AND user = ?", ClimbingActivityIden, userIden)
 }
 
 // FindClimbingActivitiesByUser finds the ClimbingActivitys with user's identifier given
-func FindClimbingActivitiesByUser(dest interface{}, userIden interface{}) *gorm.DB {
+func FindClimbingActivitiesByUser(dest interface{}, userIden uint64) *gorm.DB {
 	return database.DB.Model(&ClimbingActivity{}).Order("date DESC").Find(dest, "user = ?", userIden)
 }
 
 // DeleteClimbingActivity deletes a ClimbingActivity from ClimbingActivitys' table with the given ClimbingActivity and user identifier
-func DeleteClimbingActivity(ClimbingActivityIden interface{}, userIden interface{}) *gorm.DB {
+func DeleteClimbingActivity(ClimbingActivityIden interface{}, userIden uint64) *gorm.DB {
 	return database.DB.Unscoped().Delete(&ClimbingActivity{}, "id = ? AND user = ?", ClimbingActivityIden, userIden)
 }
 

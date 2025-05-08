@@ -62,6 +62,18 @@ type ClimbingActivity struct {
 	UpdatedAt       time.Time    `json:"updatedAt" form:"updatedAt"`
 }
 
+func (c *ClimbingActivity) TypeStr() string {
+	if c.Type == Other {
+		return c.OtherType
+	}
+	return c.Type.String()
+
+}
+
+func (c *ClimbingActivity) Title() string {
+	return c.TypeStr() + " nær " + c.Location
+}
+
 // CreateDTO struct defines the /ClimbingActivity/create payload
 type CreateDTO struct {
 	*ClimbingActivity

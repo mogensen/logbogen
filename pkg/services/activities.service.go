@@ -2,7 +2,6 @@ package services
 
 import (
 	"errors"
-	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -45,7 +44,7 @@ func CreateClimbingActivity(c *fiber.Ctx) error {
 		Participants: b.ClimbingActivity.ParticipantsIDs,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
-		User:         utils.GetUser(c),
+		User:         &utils.GetUser(c).ID,
 	}
 
 	geo, _ := ReverseGeocode(b.ClimbingActivity.Lat, b.ClimbingActivity.Lng)
@@ -62,12 +61,10 @@ func CreateClimbingActivity(c *fiber.Ctx) error {
 func GetClimbingActivities(c *fiber.Ctx) error {
 	activities := []dal.ClimbingActivity{}
 
-	err := dal.FindClimbingActivitiesByUser(&activities, utils.GetUser(c)).Error
+	err := dal.FindClimbingActivitiesByUser(&activities, utils.GetUser(c).ID).Error
 	if err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
-
-	slog.Warn("Found activities", "activities", len(activities))
 
 	userMap, err := getUserMap()
 	if err != nil {
@@ -78,7 +75,6 @@ func GetClimbingActivities(c *fiber.Ctx) error {
 	for i, activity := range activities {
 		res[i] = mapActivityFromDal(&activity, userMap)
 	}
-	slog.Warn("Mapped activities", "activities", res)
 
 	accept := c.Accepts("html", "json")
 	if accept == "json" {
@@ -116,7 +112,7 @@ func GetClimbingActivity(c *fiber.Ctx) error {
 
 	activity := &dal.ClimbingActivity{}
 
-	err := dal.FindClimbingActivityByUser(activity, activityID, utils.GetUser(c)).Error
+	err := dal.FindClimbingActivityByUser(activity, activityID, utils.GetUser(c).ID).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return c.JSON(&types.ClimbingActivityCreate{})
 	}
@@ -170,7 +166,7 @@ func EditClimbingActivity(c *fiber.Ctx) error {
 
 	activity := &dal.ClimbingActivity{}
 
-	err := dal.FindClimbingActivityByUser(activity, activityID, utils.GetUser(c)).Error
+	err := dal.FindClimbingActivityByUser(activity, activityID, utils.GetUser(c).ID).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return c.JSON(&types.ClimbingActivityCreate{})
 	}
@@ -196,7 +192,7 @@ func DeleteClimbingActivity(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid ActivityID")
 	}
 
-	res := dal.DeleteClimbingActivity(activityID, utils.GetUser(c))
+	res := dal.DeleteClimbingActivity(activityID, utils.GetUser(c).ID)
 	if res.RowsAffected == 0 {
 		return fiber.NewError(fiber.StatusConflict, "Unable to delete ClimbingActivity")
 	}
@@ -235,13 +231,13 @@ func UpdateClimbingActivity(c *fiber.Ctx) error {
 		Comment:      b.ClimbingActivity.Comment,
 		Participants: b.ClimbingActivity.ParticipantsIDs,
 		UpdatedAt:    time.Now(),
-		User:         utils.GetUser(c),
+		User:         &utils.GetUser(c).ID,
 	}
 
 	geo, _ := ReverseGeocode(b.ClimbingActivity.Lat, b.ClimbingActivity.Lng)
 	activity.Location = geo.SimpleDisplayName()
 
-	err := dal.UpdateClimbingActivity(activityID, utils.GetUser(c), activity).Error
+	err := dal.UpdateClimbingActivity(activityID, utils.GetUser(c).ID, activity).Error
 	if err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}

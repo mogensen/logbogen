@@ -1,5 +1,7 @@
 package types
 
+import "github.com/mogensen/logbook/pkg/dal"
+
 // LoginDTO defined the /login payload
 type LoginDTO struct {
 	Email    string `json:"email" validate:"required,email"`
@@ -25,4 +27,12 @@ type User struct {
 	ID    uint64 `json:"id"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
+}
+
+func UserFromDal(user *dal.User) *User {
+	return &User{
+		ID:    user.ID,
+		Name:  user.Name,
+		Email: user.Email,
+	}
 }

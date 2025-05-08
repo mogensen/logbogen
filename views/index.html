@@ -4,7 +4,7 @@
 			{{ if not .LoggedIn }}
 				{{ template "users/login_form" . }}
 			{{ else }}
-				{{ template "users/show" . }}
+				{{ template "users/show" .USER }}
 			{{ end }}
 		</div>
 	</div>

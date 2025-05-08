@@ -16,5 +16,5 @@ func ActivitiesRoutes(app fiber.Router) {
 	r.Get("/:ActivityID", services.GetClimbingActivity)
 	r.Get("/:ActivityID/edit", services.EditClimbingActivity)
 	r.Post("/:ActivityID", services.UpdateClimbingActivity)
-	r.Delete("/:ActivityID", services.DeleteClimbingActivity)
+	r.Post("/:ActivityID/delete", services.DeleteClimbingActivity)
 }

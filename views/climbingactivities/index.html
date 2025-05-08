@@ -1,5 +1,5 @@
 {{define "climbingactivities/list"}}
-{{ $user := .USER }}
+{{ $userID := .USER.ID }}
 
 <div class="py-4 mb-2">
   <h3 class="d-inline-block">Klatre Logninger</h3>
@@ -17,7 +17,6 @@
     </a>
   </div>
 </div>
-
 
 {{ if not .ClimbingActivities }}
 <div class="d-flex flex-wrap-reverse justify-content-center">
@@ -39,7 +38,7 @@
 <div class="card-body contacts_body">
   <ul class="contacts">
     {{ range .ClimbingActivities }}
-       {{ template "climbingactivities/card" (ctxActivity $user .) }}
+       {{ template "climbingactivities/card" (ctxActivity $userID .) }}
     {{end}}
   </ul>
 </div>
