@@ -1,5 +1,5 @@
-    <h1>Login Page</h1>
-	<p>Please login to access the protected route.</p>
+    <h1>Opret bruger</h1>
+	<p>For at kunne benytte logbogen skal du have en bruger.</p>
 	<form method="POST" action="/auth/signup" class="form-signin">
 		<fieldset>
 
@@ -10,19 +10,22 @@
 
 		<div>
 			<label for="email" class="form-label mt-4">Email:</label>
-			<input type="text" class="form-control" id="email" name="email" required><br>
-			<div data-lastpass-icon-root="" style="position: relative !important; height: 0px !important; width: 0px !important; float: left !important;"></div><small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+			<input type="text" class="form-control" id="email" name="email" required>
 		</div>
 	
 		<div>
 			<label for="password" class="form-label mt-4">Password:</label>
-			<input type="password" class="form-control" id="password" name="password" required><br>
+			<input type="password" class="form-control" id="password" name="password" required>
 		</div>
 		
 		<input type="hidden" id="csrf" name="csrf" value="{{ .csrf }}">
 		{{ if .error }}
 		<p class="error">Error: {{ .error }}</p>
 		{{ end }}
-		<button type="submit" class="btn btn-primary">Login</button>
+
+		<div>
+			<br/>
+			<button type="submit" class="btn btn-primary">Opret</button>
+		</div>
 		</fieldset>
 	</form>

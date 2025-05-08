@@ -79,7 +79,7 @@ func Logout(ctx *fiber.Ctx) error {
 
 func SignupPage(ctx *fiber.Ctx) error {
 	// Render the registration page
-	return ctx.Render("register", fiber.Map{
+	return ctx.Render("users/register", fiber.Map{
 		"Title": "Register",
 		"csrf":  utils.GetCsrf(ctx),
 	})
