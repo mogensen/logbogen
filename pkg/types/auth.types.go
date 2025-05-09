@@ -24,9 +24,10 @@ type UserResponse struct {
 
 // User todo
 type User struct {
-	ID    uint64 `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	ID           uint64        `json:"id"`
+	Name         string        `json:"name"`
+	Email        string        `json:"email"`
+	Achievements []Achievement `json:"achievements"`
 }
 
 func UserFromDal(user *dal.User) *User {

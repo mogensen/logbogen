@@ -1,11 +1,7 @@
-{{define "archivements/small"}}
-
 <div class="d-flex flex-wrap">
-  {{ range .Achievement }}
+  {{ range .Achievements }}
     <div class="flex-shrink-1">
       <img width=64 src="/images/{{ .ImageSlug }}" title="{{.Name}}">
     </div>
   {{ end }}
 </div>
-
-{{end}}
