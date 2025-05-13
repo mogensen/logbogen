@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/mogensen/logbook/pkg/dal"
 	"github.com/mogensen/logbook/pkg/database"
@@ -129,7 +130,30 @@ func GetUsers(ctx *fiber.Ctx) error {
 	return ctx.JSON(users)
 }
 
-func GetUser(userId uint64) (*types.User, error) {
+func GetUser(ctx *fiber.Ctx) error {
+	userIdParam := ctx.Params("UserID")
+
+	if userIdParam == "" {
+		return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid user")
+	}
+
+	// Parse the user ID from the URL parameter
+	userId, err := strconv.ParseUint(userIdParam, 10, 64)
+	if err != nil {
+		return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid user")
+	}
+
+	user, err := GetUserByID(userId)
+	if err != nil {
+		return fiber.NewError(fiber.StatusConflict, err.Error())
+	}
+
+	return ctx.Render("users/user", fiber.Map{
+		"User": user,
+	})
+}
+
+func GetUserByID(userId uint64) (*types.User, error) {
 	user := &dal.User{}
 
 	err := dal.FindUserById(user, userId).Error

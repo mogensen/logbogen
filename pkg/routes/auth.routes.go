@@ -17,4 +17,5 @@ func AuthRoutes(app fiber.Router) {
 
 	r = app.Group("/users").Use(middleware.Auth)
 	r.Get("/list", services.GetUsers)
+	r.Get("/:UserID", services.GetUser)
 }

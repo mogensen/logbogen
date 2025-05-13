@@ -57,5 +57,5 @@ func getCurrentUser(c *fiber.Ctx) (*types.User, error) {
 
 	userID, _ := session.Get("userID").(uint64)
 
-	return services.GetUser(userID)
+	return services.GetUserByID(userID)
 }
