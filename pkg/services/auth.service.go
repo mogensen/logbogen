@@ -18,7 +18,10 @@ func Login(ctx *fiber.Ctx) error {
 	b := new(types.LoginDTO)
 
 	if err := utils.ParseBodyAndValidate(ctx, b); err != nil {
-		return err
+		return ctx.Render("index", fiber.Map{
+			"csrf":  utils.GetCsrf(ctx),
+			"error": err.Message,
+		})
 	}
 
 	u := &types.UserResponse{}
@@ -27,7 +30,6 @@ func Login(ctx *fiber.Ctx) error {
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return ctx.Render("index", fiber.Map{
-			"Title": "Login",
 			"csrf":  utils.GetCsrf(ctx),
 			"error": "Invalid email or password",
 		})
@@ -35,7 +37,6 @@ func Login(ctx *fiber.Ctx) error {
 
 	if err := password.Verify(u.Password, b.Password); err != nil {
 		return ctx.Render("index", fiber.Map{
-			"Title": "Login",
 			"csrf":  utils.GetCsrf(ctx),
 			"error": "Invalid email or password",
 		})
@@ -112,7 +113,6 @@ func Signup(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Render("login", fiber.Map{
-		"Title": "Login",
 		"csrf":  utils.GetCsrf(ctx),
 		"error": "User created, please login",
 	})
@@ -127,4 +127,20 @@ func GetUsers(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(users)
+}
+
+func GetUser(userId uint64) (*types.User, error) {
+	user := &dal.User{}
+
+	err := dal.FindUserById(user, userId).Error
+	if err != nil {
+		return nil, fiber.NewError(fiber.StatusConflict, err.Error())
+	}
+
+	activies, err := GetActivitiesForUser(user.ID)
+	if err != nil {
+		return nil, fiber.NewError(fiber.StatusConflict, err.Error())
+	}
+
+	return types.UserFromDal(user, Archivements(activies)), nil
 }

@@ -59,21 +59,9 @@ func CreateClimbingActivity(c *fiber.Ctx) error {
 
 // GetClimbingActivities returns the ClimbingActivitys list
 func GetClimbingActivities(c *fiber.Ctx) error {
-	activities := []dal.ClimbingActivity{}
-
-	err := dal.FindClimbingActivitiesByUser(&activities, utils.GetUser(c).ID).Error
-	if err != nil {
-		return fiber.NewError(fiber.StatusConflict, err.Error())
-	}
-
-	userMap, err := getUserMap()
+	res, err := GetActivitiesForUser(utils.GetUser(c).ID)
 	if err != nil {
 		return err
-	}
-
-	res := make([]*types.ClimbingActivity, len(activities))
-	for i, activity := range activities {
-		res[i] = mapActivityFromDal(&activity, userMap)
 	}
 
 	accept := c.Accepts("html", "json")
@@ -84,6 +72,26 @@ func GetClimbingActivities(c *fiber.Ctx) error {
 	return c.Render("climbingactivities/list", fiber.Map{
 		"ClimbingActivities": &res,
 	})
+}
+
+func GetActivitiesForUser(userId uint64) ([]*types.ClimbingActivity, error) {
+	activities := []dal.ClimbingActivity{}
+
+	err := dal.FindClimbingActivitiesByUser(&activities, userId).Error
+	if err != nil {
+		return nil, fiber.NewError(fiber.StatusConflict, err.Error())
+	}
+
+	userMap, err := getUserMap()
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*types.ClimbingActivity, len(activities))
+	for i, activity := range activities {
+		res[i] = mapActivityFromDal(&activity, userMap)
+	}
+	return res, nil
 }
 
 func getUserMap() (map[uint64]types.User, error) {

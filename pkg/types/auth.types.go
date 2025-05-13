@@ -30,10 +30,11 @@ type User struct {
 	Achievements []Achievement `json:"achievements"`
 }
 
-func UserFromDal(user *dal.User) *User {
+func UserFromDal(user *dal.User, achievements []Achievement) *User {
 	return &User{
-		ID:    user.ID,
-		Name:  user.Name,
-		Email: user.Email,
+		ID:           user.ID,
+		Name:         user.Name,
+		Email:        user.Email,
+		Achievements: achievements,
 	}
 }

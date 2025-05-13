@@ -3,8 +3,8 @@ package middleware
 import (
 	"fmt"
 
-	"github.com/mogensen/logbook/pkg/dal"
 	"github.com/mogensen/logbook/pkg/database"
+	"github.com/mogensen/logbook/pkg/services"
 	"github.com/mogensen/logbook/pkg/types"
 
 	"github.com/gofiber/fiber/v2"
@@ -57,11 +57,5 @@ func getCurrentUser(c *fiber.Ctx) (*types.User, error) {
 
 	userID, _ := session.Get("userID").(uint64)
 
-	dalUser := &dal.User{}
-	err = dal.FindUserById(dalUser, userID).Error
-	if err != nil {
-		return nil, fiber.NewError(fiber.StatusNotFound, "User not found")
-	}
-	user := types.UserFromDal(dalUser)
-	return user, nil
+	return services.GetUser(userID)
 }
