@@ -20,7 +20,14 @@
 		
 		<input type="hidden" id="csrf" name="csrf" value="{{ .csrf }}">
 		{{ if .error }}
-		<p class="error">Error: {{ .error }}</p>
+		<div class="alert alert-danger" role="alert">
+			{{ .error }}
+		</div>
+		{{ end }}
+		{{ if .info }}
+		<div class="alert alert-success" role="alert">
+			{{ .info }}
+		</div>
 		{{ end }}
 
 		<div>

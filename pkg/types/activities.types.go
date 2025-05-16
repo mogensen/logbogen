@@ -43,11 +43,21 @@ func MapClimbingType(t string) ClimbingType {
 
 // ClimbingTypes is all the avaiable types of climbing
 var ClimbingTypes = []ClimbingType{Tree, Rock, Boulder, Ice, HighRope, Wall, Other}
+var Names = map[ClimbingType]string{
+	Tree:     "Træklatring",
+	Rock:     "Klippklatring",
+	Boulder:  "Bouldering",
+	Ice:      "Isklatring",
+	HighRope: "Høje Seil",
+	Wall:     "Vægklatring",
+	Other:    "Andet",
+}
 
 // ClimbingActivity struct contains the ClimbingActivity field which should be returned in a
 type ClimbingActivity struct {
 	ID              uuid.UUID    `json:"id" form:"id"`
-	User            *uint64      `json:"user" form:"user"`
+	UserId          *uint64      `form:"user"`
+	User            User         `json:"user"`
 	Date            Date         `json:"date" form:"date"`
 	Lat             float64      `json:"lat" form:"lat"`
 	Lng             float64      `json:"lng" form:"lng"`
@@ -66,7 +76,7 @@ func (c *ClimbingActivity) TypeStr() string {
 	if c.Type == Other {
 		return c.OtherType
 	}
-	return c.Type.String()
+	return Names[c.Type]
 
 }
 

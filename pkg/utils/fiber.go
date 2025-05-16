@@ -9,7 +9,10 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/mogensen/logbook/pkg/types"
+	"github.com/ruang-guru/monday"
 )
+
+var _emptyDate = types.Date{}
 
 // ParseBody is helper function for parsing the body.
 // Is any error occurs it will panic.
@@ -58,11 +61,23 @@ func GetCsrf(c *fiber.Ctx) string {
 }
 
 func FormatDate(date types.Date) string {
-	emptyDate := types.Date{}
-	if date == emptyDate {
-		return time.Now().Format("2006-01-02")
+	day := time.Time(date)
+	if date == _emptyDate {
+		day = time.Now()
 	}
-	return time.Time(date).Format("2006-01-02")
+	return time.Time(day).Format("2006-01-02")
+}
+
+func FormatDateHuman(date types.Date) string {
+	day := time.Time(date)
+	if date == _emptyDate {
+		day = time.Now()
+	}
+
+	res := monday.Format(day, "Monday 2 January 2006", monday.LocaleDaDK)
+	// uppercase the first letter
+	res = string(res[0]-32) + res[1:]
+	return res
 }
 
 func IsSameUser(a, b *uint64) bool {

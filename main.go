@@ -51,6 +51,7 @@ func main() {
 	engine.AddFunc("current_user", utils.GetUser)
 	engine.AddFunc("is_current_user", utils.IsCurrentUser)
 	engine.AddFunc("fmtDate", utils.FormatDate)
+	engine.AddFunc("fmtDateHuman", utils.FormatDateHuman)
 	engine.AddFunc("is_same_user", utils.IsSameUser)
 	engine.AddFunc("json", utils.ToJSON)
 	engine.AddFunc("firstSix", utils.FirstSix)

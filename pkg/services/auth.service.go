@@ -99,7 +99,9 @@ func Signup(ctx *fiber.Ctx) error {
 
 	// If email already exists, return
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		return fiber.NewError(fiber.StatusConflict, "Email already exists")
+		return ctx.Render("users/register", fiber.Map{
+			"error": "Der er already en bruger med denne email",
+		})
 	}
 
 	user := &dal.User{
@@ -113,9 +115,8 @@ func Signup(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusConflict, err.Error.Error())
 	}
 
-	return ctx.Render("login", fiber.Map{
-		"csrf":  utils.GetCsrf(ctx),
-		"error": "User created, please login",
+	return ctx.Render("index", fiber.Map{
+		"info": "Brugeren er oprettet, du kan nu logge ind",
 	})
 }
 

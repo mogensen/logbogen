@@ -94,17 +94,50 @@ func GetActivitiesForUser(userId uint64) ([]*types.ClimbingActivity, error) {
 	return res, nil
 }
 
-func getUserMap() (map[uint64]types.User, error) {
-	users := &[]types.User{}
+func GetPendingActivitiesForUser(c *fiber.Ctx) error {
+	activities := []dal.ClimbingActivity{}
 
-	err := dal.FindUsers(users).Error
+	err := dal.FindPendingActivitiesByUser(&activities, utils.GetUser(c).ID).Error
+	if err != nil {
+		return fiber.NewError(fiber.StatusConflict, err.Error())
+	}
+
+	userMap, err := getUserMap()
+	if err != nil {
+		return err
+	}
+
+	res := make([]*types.ClimbingActivity, len(activities))
+	for i, activity := range activities {
+		res[i] = mapActivityFromDal(&activity, userMap)
+	}
+
+	accept := c.Accepts("html", "json")
+	if accept == "json" {
+		return c.JSON(res)
+	}
+
+	return c.Render("climbingactivities/pending", fiber.Map{
+		"ClimbingActivities": &res,
+	})
+}
+
+func getUserMap() (map[uint64]types.User, error) {
+	dalUsers := &[]dal.User{}
+
+	err := dal.FindUsers(dalUsers).Error
 	if err != nil {
 		return nil, fiber.NewError(fiber.StatusConflict, err.Error())
 	}
 
+	users := []types.User{}
+	for _, u := range *dalUsers {
+		users = append(users, *types.UserFromDal(&u, nil))
+	}
+
 	userMap := make(map[uint64]types.User)
-	for i, user := range *users {
-		userMap[user.ID] = (*users)[i]
+	for i, user := range users {
+		userMap[user.ID] = (users)[i]
 
 	}
 	return userMap, nil
@@ -159,7 +192,8 @@ func mapActivityFromDal(activity *dal.ClimbingActivity, userMap map[uint64]types
 		Participants:    participants,
 		CreatedAt:       activity.CreatedAt,
 		UpdatedAt:       activity.UpdatedAt,
-		User:            activity.User,
+		UserId:          activity.User,
+		User:            userMap[*activity.User],
 		ParticipantsIDs: activity.Participants,
 	}
 }

@@ -1,66 +1,30 @@
 package dal
 
 import (
-	"database/sql/driver"
-	"errors"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/mogensen/logbook/pkg/database"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
-
-type Participants []uint64
-
-func (o *Participants) Scan(src any) error {
-	bytes, ok := src.(string)
-	if !ok {
-		return errors.New("src value cannot cast to []byte")
-	}
-	ids := strings.SplitSeq(string(bytes), ",")
-	for v := range ids {
-		if v == "" {
-			continue
-		}
-		id, err := strconv.ParseUint(v, 10, 32)
-		if err != nil {
-			return err
-		}
-		*o = append(*o, id)
-	}
-
-	return nil
-}
-
-func (o Participants) Value() (driver.Value, error) {
-	if len(o) == 0 {
-		return nil, nil
-	}
-	strs := make([]string, len(o))
-	for i, v := range o {
-		strs[i] = strconv.FormatUint(v, 10)
-	}
-	return strings.Join(strs, ","), nil
-}
 
 // ClimbingActivity struct defines the Climbing Activity Model
 type ClimbingActivity struct {
 	gorm.Model
-	ID           uuid.UUID    `gorm:"not null"`
-	User         *uint64      `gorm:"index,not null"`
-	Date         time.Time    `gorm:"not null"`
-	Lat          float64      `gorm:"not null"`
-	Lng          float64      `gorm:"not null"`
-	Location     string       `gorm:"not null"`
-	Type         string       `gorm:"not null"`
-	OtherType    string       `gorm:"not null default ''"`
-	Role         string       `gorm:"not null"`
-	Comment      string       `gorm:"not null"`
-	Participants Participants `gorm:"type:VARCHAR(1024)"`
-	CreatedAt    time.Time    `gorm:"not null"`
-	UpdatedAt    time.Time    `gorm:"not null"`
+	ID           uuid.UUID                   `gorm:"not null"`
+	User         *uint64                     `gorm:"index,not null"`
+	Date         time.Time                   `gorm:"not null"`
+	Lat          float64                     `gorm:"not null"`
+	Lng          float64                     `gorm:"not null"`
+	Location     string                      `gorm:"not null"`
+	Type         string                      `gorm:"not null"`
+	OtherType    string                      `gorm:"not null default ''"`
+	Role         string                      `gorm:"not null"`
+	Comment      string                      `gorm:"not null"`
+	Participants datatypes.JSONSlice[uint64] `gorm:"type:json"`
+	CreatedAt    time.Time                   `gorm:"not null"`
+	UpdatedAt    time.Time                   `gorm:"not null"`
 }
 
 // CreateActivity create a Activity entry in the Activity's table
@@ -91,4 +55,11 @@ func DeleteClimbingActivity(ClimbingActivityIden interface{}, userIden uint64) *
 // UpdateClimbingActivity allows to update the ClimbingActivity with the given ClimbingActivityID and userID
 func UpdateClimbingActivity(ClimbingActivityIden interface{}, userIden interface{}, data interface{}) *gorm.DB {
 	return database.DB.Model(&ClimbingActivity{}).Where("id = ? AND user = ?", ClimbingActivityIden, userIden).Updates(data)
+}
+
+// FindPendingActivitiesByUser finds any activities created by another user but with the current user as participant
+func FindPendingActivitiesByUser(dest interface{}, userIden uint64) *gorm.DB {
+	return database.DB.Model(&ClimbingActivity{}).Order("date DESC").
+		Where(datatypes.JSONArrayQuery("participants").Contains(userIden)).
+		Find(dest, "user != ?", userIden)
 }

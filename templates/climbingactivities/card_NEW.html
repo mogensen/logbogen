@@ -23,7 +23,7 @@
         nær {{ .Location }}
 
         {{ if .USER.ID != .UserID }}
-        <br />.createdby {{ .User.Name }}
+        <br />Oprettet af {{ .User.Name }}
         {{end}}
 
         <p class="text-muted small text-truncate">{{ .Date }}</p>

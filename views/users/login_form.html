@@ -18,6 +18,11 @@
                     {{ .error }}
                 </div>
                 {{ end }}
+                {{ if .info }}
+                <div class="alert alert-success" role="alert">
+                    {{ .info }}
+                </div>
+                {{ end }}
 
                 <button type="submit" class="btn btn-primary login-btn btn-block">Login</button>
                 <div class="clearfix">
