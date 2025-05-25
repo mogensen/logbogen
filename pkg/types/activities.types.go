@@ -45,12 +45,12 @@ func MapClimbingType(t string) ClimbingType {
 var ClimbingTypes = []ClimbingType{Tree, Rock, Boulder, Ice, HighRope, Wall, Other}
 var Names = map[ClimbingType]string{
 	Tree:     "Træklatring",
-	Rock:     "Klippklatring",
+	Rock:     "Klippeklatring",
 	Boulder:  "Bouldering",
 	Ice:      "Isklatring",
-	HighRope: "Høje Seil",
+	HighRope: "High Rope",
 	Wall:     "Vægklatring",
-	Other:    "Andet",
+	Other:    "Anden",
 }
 
 // ClimbingActivity struct contains the ClimbingActivity field which should be returned in a

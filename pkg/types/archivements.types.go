@@ -13,5 +13,5 @@ func (a Achievement) ImageSlug() string {
 }
 
 func (a Achievement) Name() string {
-	return fmt.Sprintf("%s Level %d", a.ClimbType, a.Level)
+	return fmt.Sprintf("%s Level %d", Names[a.ClimbType], a.Level)
 }

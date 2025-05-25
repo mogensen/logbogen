@@ -200,6 +200,12 @@ div.userInfo p {
     width: 50px;
   }
 }
-body {
-  padding-bottom: 50px;
+
+main {
+  padding-top: 0.1rem;
+  padding-bottom: 1rem;
+}
+
+.main-container {
+  padding: 3rem 1.5rem;
 }

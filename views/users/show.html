@@ -1,42 +1,27 @@
-<div class="card">
+<div class="d-md-none">
+
   <div class="card-body">
-    <div class="d-md-none">
+    <center class="">
+      {{ template "users/profile_image" . }}
+      <h1 class="card-title m-t-10">{{ .Name }}</h1>
+    </center>
+  </div>
+  <div class="card-body">
+    {{ template "achievements/small" . }}
+  </div>
+</div>
 
-      <div class="card-body">
-        <center class="">
-          {{ template "users/profile_image" . }}
-          <h1 class="card-title m-t-10">{{ .Name }}</h1>
-        </center>
-      </div>
-
-      <div class="card-body">
-        <p class="text-truncate">{{ .Email }}</p>
-      </div>
-      <div class="card-body">
-        <!-- { { template "achievements/small" . } } -->
-      </div>
+<div class="d-none d-md-block">
+  <div class="row">
+    <div class="col-auto">
+        {{ template "users/profile_image" . }}
     </div>
-
-    <div class="d-none d-md-block">
+    <div class="col-sm-6">
       <div class="page-header">
         <h1>{{ .Name }}</h1>
       </div>
-
-      <div class="row">
-        <div class="col-auto">
-            {{ template "users/profile_image" . }}
-        </div>
-        <div class="col-sm-6">
-          <p class="text-truncate">{{ .Email }}</p>
-          {{ template "achievements/small" . }}
-        </div>
-      </div>
-
+      {{ template "achievements/small" . }}
     </div>
-    <div class="row">
-        <div class="col">
-          <div id="user-show-map"></div>
-        </div>
-      </div>
   </div>
+
 </div>

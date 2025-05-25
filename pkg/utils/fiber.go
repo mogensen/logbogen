@@ -1,10 +1,14 @@
 package utils
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"html/template"
 	"log/slog"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -109,5 +113,11 @@ func UserImage(user types.User) string {
 		hash += int(char)
 	}
 	color := colors[hash%len(colors)]
-	return fmt.Sprintf("https://ui-avatars.com/api/?name=%s&background=%s", user.Name, color)
+
+	fallBack := fmt.Sprintf("https://ui-avatars.com/api/%s/256/%s", user.Name, color)
+	encoded := url.QueryEscape(fallBack)
+	hasher := md5.Sum([]byte(strings.TrimSpace(user.Email)))
+	emailHash := hex.EncodeToString(hasher[:])
+
+	return fmt.Sprintf("https://www.gravatar.com/avatar/%s?d=%s&s=200", emailHash, encoded)
 }
