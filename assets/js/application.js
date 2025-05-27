@@ -5,6 +5,34 @@
 // require("leaflet-easybutton/src/easy-button.js");
 // require("select2/dist/js/select2.full.js");
 
+async function loadUsers() {
+    try {
+        const response = await fetch('/users/list', {
+            headers: {
+              'Accept': 'application/json'
+            }});
+        if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+        }
+
+        return await fetch('/users/list', {
+            headers: {
+              'Accept': 'application/json'
+            }})
+        .then (response => response.json())
+        .then(data => data.map(function (item) {
+            return {
+                id: item.id,
+                text: item.name,
+            };
+        }))
+        .catch(function(error){console.log(error);});
+    } catch (error) {
+        console.error(error.message);
+        return [];
+    }
+}
+
 
 $(() => {
     $.fn.select2.defaults.set("theme", "classic");
@@ -17,30 +45,18 @@ $(() => {
 
 
     $(() => {
-        $('#climbingactivity-participants').select2({
-            minimumInputLength: 3,
-            ajax: {
-                url: '/users/list',
-                dataType: 'json',
-                // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
-                processResults: function (data) {
-                    // Transform: [{"id":1,"name":"Frederik Mogensen","email":"frede@server-1.dk"},{"id":2,"name":"Tine Stenum","email":"tine@mail.com"}]
-                    // into: {  "results": [{"id":1,"text":"Frederik Mogensen"},{"id":2,"text":"Tine Stenum"}], {  "pagination": {    "more": true  } }
 
-                    res = data.map(function (item) {
-                        return {
-                            id: item.id,
-                            text: item.name + " (" + item.email + ")",
-                        };
-                    });
-                    console.log(res);
+        if ($('#climbingactivity-participants').length == 0) {
+            return;
+        }
 
-                    // Transforms the top-level key of the response object from 'items' to 'results'
-                    return {
-                        results: res
-                    };
-                },
-            }
+        var data = loadUsers();
+        data.then(data => {
+            $('#climbingactivity-participants').select2({
+                minimumInputLength: 3,
+                data: data,
+                placeholder: "Search for users",
+            });
         });
     })
 

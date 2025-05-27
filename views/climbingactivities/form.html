@@ -25,8 +25,8 @@
     <div class="form-group">
         <label for="climbingactivity-type" class="form-label mt-4">Type:</label>
         <select id="climbingactivity-type" name="type" class="form-control">
-            {{ range .ClimbingTypes }}
-            <option value="{{ . }}" {{if eq . $activity.Type}}selected{{end}}>{{ . }}</option>
+            {{ range $key, $name := .ClimbingTypes }}
+            <option value="{{ $key }}" {{if eq $key $activity.Type}}selected{{end}}>{{ $name }}</option>
             {{end}}
         </select>
     </div>

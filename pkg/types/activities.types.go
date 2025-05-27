@@ -43,7 +43,7 @@ func MapClimbingType(t string) ClimbingType {
 
 // ClimbingTypes is all the avaiable types of climbing
 var ClimbingTypes = []ClimbingType{Tree, Rock, Boulder, Ice, HighRope, Wall, Other}
-var Names = map[ClimbingType]string{
+var ClimbingTypeNames = map[ClimbingType]string{
 	Tree:     "Træklatring",
 	Rock:     "Klippeklatring",
 	Boulder:  "Bouldering",
@@ -76,7 +76,7 @@ func (c *ClimbingActivity) TypeStr() string {
 	if c.Type == Other {
 		return c.OtherType
 	}
-	return Names[c.Type]
+	return ClimbingTypeNames[c.Type]
 
 }
 

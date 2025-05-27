@@ -128,7 +128,18 @@ func GetUsers(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
 
-	return ctx.JSON(users)
+	currentUser := utils.GetUser(ctx)
+
+	res := make([]*types.UserResponse, 0, len(*users))
+	for _, v := range *users {
+		user := v
+		if v.ID == currentUser.ID {
+			continue // Skip the current user
+		}
+		res = append(res, &user)
+	}
+
+	return ctx.JSON(res)
 }
 
 func GetUser(ctx *fiber.Ctx) error {

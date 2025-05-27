@@ -17,7 +17,7 @@ import (
 func CreateClimbingActivityPage(c *fiber.Ctx) error {
 	// Render the create climbing activity page
 	return c.Render("climbingactivities/create", fiber.Map{
-		"ClimbingTypes": types.ClimbingTypes,
+		"ClimbingTypes": types.ClimbingTypeNames,
 		"ClimbingActivity": &types.ClimbingActivity{
 			Date: types.Date(time.Now()),
 		},
@@ -174,7 +174,7 @@ func EditClimbingActivity(c *fiber.Ctx) error {
 
 	return c.Render("climbingactivities/edit", fiber.Map{
 		"ClimbingActivity": res,
-		"ClimbingTypes":    types.ClimbingTypes,
+		"ClimbingTypes":    types.ClimbingTypeNames,
 	})
 }
 
@@ -276,7 +276,7 @@ func CloneClimbingActivity(c *fiber.Ctx) error {
 
 	return c.Render("climbingactivities/create", fiber.Map{
 		"ClimbingActivity": res,
-		"ClimbingTypes":    types.ClimbingTypes,
+		"ClimbingTypes":    types.ClimbingTypeNames,
 	})
 }
 
