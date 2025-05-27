@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -122,27 +123,6 @@ func GetPendingActivitiesForUser(c *fiber.Ctx) error {
 	})
 }
 
-func getUserMap() (map[uint64]types.User, error) {
-	dalUsers := &[]dal.User{}
-
-	err := dal.FindUsers(dalUsers).Error
-	if err != nil {
-		return nil, fiber.NewError(fiber.StatusConflict, err.Error())
-	}
-
-	users := []types.User{}
-	for _, u := range *dalUsers {
-		users = append(users, *types.UserFromDal(&u, nil))
-	}
-
-	userMap := make(map[uint64]types.User)
-	for i, user := range users {
-		userMap[user.ID] = (users)[i]
-
-	}
-	return userMap, nil
-}
-
 // GetClimbingActivity return a single ClimbingActivity
 func GetClimbingActivity(c *fiber.Ctx) error {
 	activityID := c.Params("ActivityID")
@@ -168,34 +148,6 @@ func GetClimbingActivity(c *fiber.Ctx) error {
 	return c.Render("climbingactivities/show", fiber.Map{
 		"ClimbingActivity": res,
 	})
-}
-
-func mapActivityFromDal(activity *dal.ClimbingActivity, userMap map[uint64]types.User) *types.ClimbingActivity {
-
-	participants := make([]types.User, len(activity.Participants))
-	for i, participant := range activity.Participants {
-		if user, ok := userMap[participant]; ok {
-			participants[i] = user
-		}
-	}
-
-	return &types.ClimbingActivity{
-		ID:              activity.ID,
-		Date:            types.Date(activity.Date),
-		Lat:             activity.Lat,
-		Lng:             activity.Lng,
-		Location:        activity.Location,
-		Type:            types.ClimbingType(activity.Type),
-		OtherType:       activity.OtherType,
-		Role:            activity.Role,
-		Comment:         activity.Comment,
-		Participants:    participants,
-		CreatedAt:       activity.CreatedAt,
-		UpdatedAt:       activity.UpdatedAt,
-		UserId:          activity.User,
-		User:            userMap[*activity.User],
-		ParticipantsIDs: activity.Participants,
-	}
 }
 
 // EditClimbingActivity return a single ClimbingActivity
@@ -285,4 +237,108 @@ func UpdateClimbingActivity(c *fiber.Ctx) error {
 	}
 
 	return c.Redirect("/activities/" + activityID)
+}
+
+// CloneClimbingActivity clones a ClimbingActivity
+func CloneClimbingActivity(c *fiber.Ctx) error {
+	activityID := c.Params("ActivityID")
+
+	if activityID == "" {
+		return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid ActivityID")
+	}
+
+	activity := &dal.ClimbingActivity{}
+
+	err := dal.FindClimbingActivityToClone(activity, activityID, utils.GetUser(c).ID).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return fiber.NewError(fiber.StatusNotFound, "ClimbingActivity not found")
+	}
+
+	// Clone the activity
+	clonedActivity := &dal.ClimbingActivity{}
+	clonedActivity.Date = activity.Date
+	clonedActivity.Lat = activity.Lat
+	clonedActivity.Lng = activity.Lng
+	clonedActivity.Location = activity.Location
+	clonedActivity.Comment = activity.Comment
+	clonedActivity.Type = activity.Type
+	clonedActivity.OtherType = activity.OtherType
+	clonedActivity.Role = activity.Role
+	clonedActivity.Participants = participantsForClone(activity.Participants, utils.GetUser(c).ID, *activity.User)
+	clonedActivity.User = &utils.GetUser(c).ID
+
+	userMap, err := getUserMap()
+	if err != nil {
+		return err
+	}
+
+	res := mapActivityFromDal(clonedActivity, userMap)
+
+	return c.Render("climbingactivities/create", fiber.Map{
+		"ClimbingActivity": res,
+		"ClimbingTypes":    types.ClimbingTypes,
+	})
+}
+
+func participantsForClone(participants []uint64, currentUser uint64, originalUser uint64) []uint64 {
+	// Add original user as participant
+	res := []uint64{originalUser}
+
+	// Remove self from participants
+	for _, r := range participants {
+		uID := r
+		if uID != currentUser {
+			res = append(res, uID)
+		}
+	}
+	slog.Error("participantsForClone", "res", res, "currentUser", currentUser, "originalUser", originalUser)
+	return res
+}
+
+func getUserMap() (map[uint64]types.User, error) {
+	dalUsers := &[]dal.User{}
+
+	err := dal.FindUsers(dalUsers).Error
+	if err != nil {
+		return nil, fiber.NewError(fiber.StatusConflict, err.Error())
+	}
+
+	users := []types.User{}
+	for _, u := range *dalUsers {
+		users = append(users, *types.UserFromDal(&u, nil))
+	}
+
+	userMap := make(map[uint64]types.User)
+	for i, user := range users {
+		userMap[user.ID] = (users)[i]
+
+	}
+	return userMap, nil
+}
+
+func mapActivityFromDal(activity *dal.ClimbingActivity, userMap map[uint64]types.User) *types.ClimbingActivity {
+	participants := make([]types.User, len(activity.Participants))
+	for i, participant := range activity.Participants {
+		if user, ok := userMap[participant]; ok {
+			participants[i] = user
+		}
+	}
+
+	return &types.ClimbingActivity{
+		ID:              activity.ID,
+		Date:            types.Date(activity.Date),
+		Lat:             activity.Lat,
+		Lng:             activity.Lng,
+		Location:        activity.Location,
+		Type:            types.ClimbingType(activity.Type),
+		OtherType:       activity.OtherType,
+		Role:            activity.Role,
+		Comment:         activity.Comment,
+		Participants:    participants,
+		CreatedAt:       activity.CreatedAt,
+		UpdatedAt:       activity.UpdatedAt,
+		UserId:          activity.User,
+		User:            userMap[*activity.User],
+		ParticipantsIDs: activity.Participants,
+	}
 }

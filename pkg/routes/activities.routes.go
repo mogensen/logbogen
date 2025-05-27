@@ -18,4 +18,6 @@ func ActivitiesRoutes(app fiber.Router) {
 	r.Get("/:ActivityID/edit", services.EditClimbingActivity)
 	r.Post("/:ActivityID", services.UpdateClimbingActivity)
 	r.Post("/:ActivityID/delete", services.DeleteClimbingActivity)
+
+	r.Get("/clone/:ActivityID", services.CloneClimbingActivity)
 }
