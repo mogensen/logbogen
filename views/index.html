@@ -2,10 +2,9 @@
 	{{ template "users/login_form" . }}
 {{ else }}
 	{{ template "users/show" .USER }}
-{{ end }}
-
-<div class="row">
-	<div class="col">
-	  <div id="user-show-map"></div>
+	<div class="row">
+		<div class="col">
+		  <div id="user-show-map"></div>
+		</div>
 	</div>
-</div>
+{{ end }}

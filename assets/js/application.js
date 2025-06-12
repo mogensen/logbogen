@@ -91,6 +91,31 @@ $(() => {
             id: 'activity-form-map',
         }).addTo(map);
 
+        // Add geocoder control
+        L.Control.geocoder({
+            defaultMarkGeocode: false,
+            placeholder: 'Search for a location...',
+            errorMessage: 'Nothing found.',
+            showResultIcons: true,
+            expand: 'touch',
+            position: 'topleft'  // Position it on the left side
+        }).on('markgeocode', function(e) {
+            var bbox = e.geocode.bbox;
+            var poly = L.polygon([
+                bbox.getSouthEast(),
+                bbox.getNorthEast(),
+                bbox.getNorthWest(),
+                bbox.getSouthWest()
+            ]);
+            map.fitBounds(poly.getBounds());
+
+            // Update the marker position and form fields
+            var center = poly.getBounds().getCenter();
+            $('#climbingactivity-lat').val(center.lat);
+            $('#climbingactivity-lng').val(center.lng);
+            updateMarker(center.lat, center.lng);
+        }).addTo(map);
+
         function locate(control) {
             control.state("loading");
             control._map.on('locationfound', function (e) {
