@@ -40,7 +40,14 @@
     <div class="form-group">
         <label for="climbingactivity-role" class="form-label mt-4">Role:</label>
         <input type="text" class="form-control" id="climbingactivity-role" name="role"
-            placeholder="Instruktør, deltager" value="{{.ClimbingActivity.Role}}">
+            placeholder="Instruktør, deltager" value="{{.ClimbingActivity.Role}}" list="role-options">
+        <datalist id="role-options">
+            <option value="Instruktør">
+            <option value="Deltager">
+            <option value="Assistent">
+            <option value="Tilskuer">
+            <option value="Fotograf">
+        </datalist>
     </div>
 
     <div>
