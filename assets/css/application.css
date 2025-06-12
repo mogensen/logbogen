@@ -1,4 +1,3 @@
-
 .login-form {
   width: 400px;
   margin: 30px auto;
@@ -208,4 +207,28 @@ main {
 
 .main-container {
   padding: 3rem 1.5rem;
+}
+
+/* Select2 styling for climbingactivity-participants */
+
+.select2-container--default {
+  padding: 0 !important;
+}
+
+.select2-container--default .select2-selection--multiple {
+  border: var(--bs-border-width) solid #333 !important;
+  border-radius: 55px 225px 15px 25px / 25px 25px 35px 355px !important;
+  padding: 5px !important;
+}
+.select2-container .select2-search--inline .select2-search__field {
+  font-family: Neucha, -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  height: 25px !important;
+}
+
+.select2-container--default.select2-container--focus .select2-selection--multiple {
+  color:var(--bs-body-color)  !important;
+  background-color:var(--bs-body-bg) !important;
+  border-color:#333 !important;
+  outline:0 !important;
+  box-shadow:0 0 0 .25rem rgba(51,51,51,.25) !important;
 }

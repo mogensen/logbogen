@@ -35,7 +35,7 @@ async function loadUsers() {
 
 
 $(() => {
-    $.fn.select2.defaults.set("theme", "classic");
+    $.fn.select2.defaults.set("theme", "default");
 
     const zoomLevel = 12;
     const defaultIcon = new L.icon({
@@ -55,7 +55,7 @@ $(() => {
             $('#climbingactivity-participants').select2({
                 minimumInputLength: 3,
                 data: data,
-                placeholder: "Search for users",
+                placeholder: "Andre deltagere...",
             });
         });
     })
