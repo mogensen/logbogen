@@ -34,9 +34,10 @@ const (
 	HighRope ActivityType = "highrope"
 	Wall     ActivityType = "wall"
 	// Sailing Types
-	Kayak ActivityType = "kayak"
-	Canoe ActivityType = "canoe"
-	Sail  ActivityType = "sail"
+	Kayak       ActivityType = "kayak"
+	Canoe       ActivityType = "canoe"
+	Sail        ActivityType = "sail"
+	PaddleBoard ActivityType = "paddle-board"
 	// Other
 	Other ActivityType = "other"
 )
@@ -52,25 +53,27 @@ var Categories = map[ActivityCategory]map[ActivityType]string{
 		Other:    ActivityTypeNames[Other],
 	},
 	Sailing: {
-		Kayak: ActivityTypeNames[Kayak],
-		Canoe: ActivityTypeNames[Canoe],
-		Sail:  ActivityTypeNames[Sail],
-		Other: ActivityTypeNames[Other],
+		Kayak:       ActivityTypeNames[Kayak],
+		Canoe:       ActivityTypeNames[Canoe],
+		Sail:        ActivityTypeNames[Sail],
+		PaddleBoard: ActivityTypeNames[PaddleBoard],
+		Other:       ActivityTypeNames[Other],
 	},
 }
 
 // ActivityTypeNames is a map of activity types to their names
 var ActivityTypeNames = map[ActivityType]string{
-	Tree:     "Træklatring",
-	Rock:     "Klippeklatring",
-	Boulder:  "Bouldering",
-	Ice:      "Isklatring",
-	HighRope: "High Rope",
-	Wall:     "Vægklatring",
-	Kayak:    "Kajak",
-	Canoe:    "Kano",
-	Sail:     "Sejlbåd",
-	Other:    "Anden",
+	Tree:        "Træklatring",
+	Rock:        "Klippeklatring",
+	Boulder:     "Bouldering",
+	Ice:         "Isklatring",
+	HighRope:    "High Rope",
+	Wall:        "Vægklatring",
+	Kayak:       "Kajak",
+	Canoe:       "Kano",
+	Sail:        "Sejlbåd",
+	PaddleBoard: "Paddleboard",
+	Other:       "Anden",
 }
 
 // Activity struct contains all activity fields

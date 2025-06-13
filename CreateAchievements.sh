@@ -4,7 +4,7 @@ set -e
 CONVERT="docker run -u 1000 --rm -v $PWD/assets/images/:/imgs --entrypoint convert emiketic/image-processing"
 COMPOSITE="docker run -u 1000 --rm -v $PWD/assets/images/:/imgs --entrypoint composite emiketic/image-processing"
 
-declare -a ActivityArray=("boulder" "highrope" "ice" "other" "rock" "tree" "wall" "sail" "kayak" "canoe")
+declare -a ActivityArray=("boulder" "highrope" "ice" "other" "rock" "tree" "wall" "sail" "kayak" "canoe" "paddle-board")
 
 # Create star PNG
 $CONVERT -background none -size 1024x1024 /imgs/stars/star.svg  /imgs/stars/star.png
