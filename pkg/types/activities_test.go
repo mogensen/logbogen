@@ -4,7 +4,7 @@ import "testing"
 
 func TestActivityTypeMappings(t *testing.T) {
 	// Test that all ActivityType constants have a name in ActivityTypeNames
-	for _, activityType := range allActivityTypes {
+	for _, activityType := range AllActivityTypes {
 		if name, exists := ActivityTypeNames[activityType]; !exists {
 			t.Errorf("ActivityType %s is missing from ActivityTypeNames map", activityType)
 		} else if name == "" {
@@ -13,7 +13,7 @@ func TestActivityTypeMappings(t *testing.T) {
 	}
 
 	// Test that all ActivityType constants are mapped in Categories
-	for _, activityType := range allActivityTypes {
+	for _, activityType := range AllActivityTypes {
 		found := false
 		for _, categoryMap := range Categories {
 			if _, exists := categoryMap[activityType]; exists {

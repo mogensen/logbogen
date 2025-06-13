@@ -5,25 +5,25 @@ import (
 )
 
 func Archivements(activities []*types.Activity) []types.Achievement {
-	activityCounts := make(map[types.ActivityType]int)
+	activityCounts := make(map[string]int)
 
 	// Count the number of activities for each climb type
 	for _, activity := range activities {
-		activityCounts[activity.Type]++
+		activityCounts[activity.Type.ID]++
 	}
 
 	// Create a slice to store the achievements
 	var achievements []types.Achievement
 
-	for id := range types.ActivityTypeNames {
-		if counts, ok := activityCounts[id]; ok {
+	for _, a := range types.AllActivityTypes {
+		if counts, ok := activityCounts[a.ID]; ok {
 			achievements = append(achievements, types.Achievement{
 				Level: int(counts/5) + 1,
-				Type:  id,
+				Type:  a,
 			})
 		} else {
 			achievements = append(achievements, types.Achievement{
-				Type:  id,
+				Type:  a,
 				Level: 0,
 			})
 		}

@@ -36,7 +36,7 @@ $(() => {
             data.forEach(function (row) {
 
                 var icon = new L.icon({
-                    iconUrl: '/images/activities/' + row.type.toLowerCase() + '.svg',
+                    iconUrl: '/images/activities/' + row.type.ID + '.svg',
                     iconSize: [35, 35],
                     iconAnchor: [22, 35]
                 });
@@ -74,14 +74,8 @@ $(() => {
         var dt = new Date(row.date);
         var month = dt.toLocaleString(lang, { month: 'long' });
         var year = dt.toLocaleString(lang, { year: 'numeric' });
-        return row.type.charAt(0).toUpperCase() + row.type.slice(1).toLowerCase() + " climbing " + month + " " + year;
+        return row.type.Name + " " + month + " " + year;
     }
-
-
-    
-
-
-
 
     function getCookie(name) {
         var nameEQ = name + "=";

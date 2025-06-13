@@ -186,7 +186,7 @@ $(() => {
         const currentCategory = categoryGroup.data('current') || "climbing";
         
         try {
-            const response = await fetch('/activities/types');
+            const response = await fetch('/activities/categories');
             if (!response.ok) {
                 throw new Error('Failed to fetch categories');
             }
@@ -197,16 +197,16 @@ $(() => {
             categoryGroup.empty();
             
             // Add new radio buttons for each category
-            Object.entries(categories).forEach(([category, types]) => {
-                const radioId = `category-${category}`;
+            categories.forEach(category => {
+                const radioId = `category-${category.ID}`;
                 const radioHtml = `
                 <div class="category-radio-parent">
-                    <input type="radio" class="btn-check category-radio" name="category" id="${radioId}" value="${category}"
-                        autocomplete="off" ${category === currentCategory ? 'checked' : ''}>
+                    <input type="radio" class="btn-check category-radio" name="category" id="${radioId}" value="${category.ID}"
+                        autocomplete="off" ${category.ID === currentCategory ? 'checked' : ''}>
                     <label class="btn btn-outline-primary category-label" for="${radioId}">
-                        <img src="/images/categories/${category}.png" alt="${category}" class="category-image">
+                        <img src="/images/categories/${category.ID}.png" alt="${category.Name}" class="category-image">
                         <br />
-                        <span>${category === 'climbing' ? 'Klatring' : 'Sejlads'}</span>
+                        <span>${category.Name}</span>
                     </label>
                 </div>
                 `;
@@ -241,16 +241,16 @@ $(() => {
             typeGroup.empty();
             
             // Add new radio buttons with images
-            Object.entries(types).forEach(([value, name]) => {
-                const radioId = `type-${value}`;
+            types.forEach(type => {
+                const radioId = `type-${type.ID}`;
                 const radioHtml = `
                 <div class="type-radio-parent">
-                    <input type="radio" class="btn-check type-radio form-check-input" name="type" id="${radioId}" value="${value}"
-                        autocomplete="off" ${value === currentType ? 'checked' : ''} required>
+                    <input type="radio" class="btn-check type-radio form-check-input" name="type" id="${radioId}" value="${type.ID}"
+                        autocomplete="off" ${type.ID === currentType ? 'checked' : ''} required>
                     <label class="btn btn-outline-primary type-label form-check-label" for="${radioId}">
-                        <img src="/images/activities/${value}.svg" alt="${name}" class="category-image">
+                        <img src="/images/activities/${type.ID}.svg" alt="${type.Name}" class="category-image">
                         <br />
-                        <span>${name}</span>
+                        <span>${type.Name}</span>
                     </label>
                 </div>
                 `;
@@ -268,9 +268,11 @@ $(() => {
     $(document).on('change', 'input[name="category"]', updateTypeOptions);
 
     function updateOtherType() {
-        if ($("input[name='type']:checked").val() === "other") {
+        if ($("input[name='category']:checked").val() === "other") {
+            $("#activity-type-group").parent().slideUp();
             $("#activity-othertype-group").slideDown();
         } else {
+            $("#activity-type-group").parent().slideDown();
             $("#activity-othertype-group").slideUp();
         }
     }

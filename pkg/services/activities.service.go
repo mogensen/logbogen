@@ -16,7 +16,6 @@ import (
 func CreateActivityPage(c *fiber.Ctx) error {
 	// Render the create activity page
 	return c.Render("activities/create", fiber.Map{
-		"ActivityTypes": types.ActivityTypeNames,
 		"Activity": &types.Activity{
 			Date: types.Date(time.Now()),
 		},
@@ -40,14 +39,14 @@ func CreateActivity(c *fiber.Ctx) error {
 		Lat:          b.Activity.Lat,
 		Lng:          b.Activity.Lng,
 		Location:     b.Activity.Location,
-		Category:     string(b.Activity.Category),
+		Category:     b.Activity.CategoryID,
 		Role:         b.Activity.Role,
 		Comment:      b.Activity.Comment,
 		Participants: b.Activity.ParticipantsIDs,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 		User:         &utils.GetUser(c).ID,
-		Type:         b.Activity.Type.String(),
+		Type:         b.Activity.TypeID,
 		OtherType:    b.Activity.OtherType,
 	}
 
@@ -175,10 +174,7 @@ func EditActivity(c *fiber.Ctx) error {
 
 	res := mapActivityFromDal(activity, userMap)
 
-	return c.Render("activities/edit", fiber.Map{
-		"Activity":      res,
-		"ActivityTypes": types.ActivityTypeNames,
-	})
+	return c.Render("activities/edit", fiber.Map{"Activity": res})
 }
 
 // DeleteActivity deletes a single Activity
@@ -222,13 +218,13 @@ func UpdateActivity(c *fiber.Ctx) error {
 		Lat:          b.Activity.Lat,
 		Lng:          b.Activity.Lng,
 		Location:     b.Activity.Location,
-		Category:     string(b.Activity.Category),
+		Category:     b.Activity.Category.ID,
 		Role:         b.Activity.Role,
 		Comment:      b.Activity.Comment,
 		Participants: b.Activity.ParticipantsIDs,
 		UpdatedAt:    time.Now(),
 		User:         &utils.GetUser(c).ID,
-		Type:         b.Activity.Type.String(),
+		Type:         b.Activity.TypeID,
 		OtherType:    b.Activity.OtherType,
 	}
 
@@ -322,8 +318,10 @@ func mapActivityFromDal(activity *dal.Activity, userMap map[uint64]types.User) *
 		Lat:             activity.Lat,
 		Lng:             activity.Lng,
 		Location:        activity.Location,
-		Category:        types.ActivityCategory(activity.Category),
-		Type:            types.ActivityType(activity.Type),
+		CategoryID:      activity.Category,
+		Category:        *types.CategoryByID(activity.Category),
+		Type:            *types.ActivityTypeByID(activity.Type),
+		TypeID:          activity.Type,
 		OtherType:       activity.OtherType,
 		Role:            activity.Role,
 		Comment:         activity.Comment,
@@ -340,13 +338,20 @@ func GetActivityTypes(c *fiber.Ctx) error {
 	category := c.Query("category")
 	if category == "" {
 		// If no category is specified, return all categories and their types
-		return c.JSON(types.Categories)
+		return c.JSON(types.AllActivityTypes)
 	}
 
-	res, ok := types.Categories[types.ActivityCategory(category)]
-	if !ok {
-		return fiber.NewError(fiber.StatusBadRequest, "Invalid category")
+	categoryTypes := make([]types.ActivityType, 0, len(types.AllActivityTypes))
+	for _, activityType := range types.AllActivityTypes {
+		if activityType.Category == category {
+			categoryTypes = append(categoryTypes, activityType)
+		}
 	}
 
-	return c.JSON(res)
+	return c.JSON(categoryTypes)
+}
+
+// GetActivityCategories returns all available activity categories
+func GetActivityCategories(c *fiber.Ctx) error {
+	return c.JSON(types.AllActivityCategories)
 }

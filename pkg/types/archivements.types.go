@@ -9,9 +9,9 @@ type Achievement struct {
 }
 
 func (a Achievement) ImageSlug() string {
-	return fmt.Sprintf("achievements/%s-%d.png", a.Type, a.Level)
+	return fmt.Sprintf("achievements/%s-%d.png", a.Type.ID, a.Level)
 }
 
 func (a Achievement) Name() string {
-	return fmt.Sprintf("%s Level %d", ActivityTypeNames[a.Type], a.Level)
+	return fmt.Sprintf("%s Level %d", a.Type.Name, a.Level)
 }

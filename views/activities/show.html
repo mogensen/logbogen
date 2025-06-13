@@ -1,9 +1,9 @@
 <!-- Large devices -->
 <div class="d-none d-lg-block">
   <div class="py-4 mb-2">
-    <img src="/images/activities/{{ .Activity.Type }}.svg" class="activity_icon_img">
-      <h3 class="d-inline-block">{{ .Activity.Title }}</h3>
-      <h4 class="d-inline-block">- {{ .Activity.Role }}</h4>
+    <img src="/images/activities/{{ .Activity.Type.ID }}.svg" class="activity_icon_img">
+    <h3 class="d-inline-block">{{ .Activity.Title }}</h3>
+    <h4 class="d-inline-block">- {{ .Activity.Role }}</h4>
   </div>
 </div>
 
@@ -11,11 +11,11 @@
 <!-- Small devices -->
 <div class="d-lg-none">
   <div class="py-4 mb-2">
-    <img src="/images/activities/{{ .Activity.Type}}.svg" class="activity_icon_img">
+    <img src="/images/activities/{{ .Activity.Type.ID }}.svg" class="activity_icon_img">
     <h3 class="d-inline-block">{{ .Activity.TypeStr }}</h3>
-      <br>
-      <h4 class="d-inline-block">nær {{ .Activity.Location }}</h4>
-      <h5 class="d-inline-block">- {{ .Activity.Role }}</h5>
+    <br>
+    <h4 class="d-inline-block">nær {{ .Activity.Location }}</h4>
+    <h5 class="d-inline-block">- {{ .Activity.Role }}</h5>
   </div>
 </div>
 
@@ -24,30 +24,32 @@
 
 <div class="container pb-2">
   <div class="btn-group" role="group" aria-label="Basic example">
-    <a href="/activities/list" class=" col btn btn-info">      Tilbage    </a>
+    <a href="/activities/list" class=" col btn btn-info"> Tilbage </a>
     <a href="/activities/{{ .Activity.ID }}/edit" class="col btn btn-warning">Rediger</a>
-    <button type="button" data-record-id="{{ .Activity.ID }}" data-record-title="{{ .Activity.Title }}" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirm-delete">Slet</button>
+    <button type="button" data-record-id="{{ .Activity.ID }}" data-record-title="{{ .Activity.Title }}"
+      class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirm-delete">Slet</button>
 
   </div>
 </div>
 
-<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+  aria-hidden="true">
   <div class="modal-dialog">
-      <div class="modal-content">
-          <div class="modal-header">
-              <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
-          </div>
-          <div class="modal-body">
-              <p>Du er ved at slette</p>
-              <b><i class="title"></i></b>
-              <br/>
-              <p>Er du sikker?</p>
-          </div>
-          <div class="modal-footer">
-              <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-danger btn-ok">Slet</button>
-          </div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
       </div>
+      <div class="modal-body">
+        <p>Du er ved at slette</p>
+        <b><i class="title"></i></b>
+        <br />
+        <p>Er du sikker?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger btn-ok">Slet</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -55,7 +57,7 @@
 <div class="card border-secondary mb-3">
   <div class="card-body">
     <h4 class="card-title">Dato</h4>
-    <hr/>
+    <hr />
     <p class="d-inline-block">{{ fmtDateHuman .Activity.Date }}</p>
   </div>
 </div>
@@ -69,7 +71,7 @@
 <div class="card border-secondary mb-3">
   <div class="card-body">
     <h4 class="card-title">Kommentar</h4>
-    <hr/>
+    <hr />
     <p class="d-inline-block">{{ .Activity.Comment }}</p>
   </div>
 </div>
@@ -77,11 +79,11 @@
 <div class="card border-primary mb-3">
   <div class="card-body">
     <h4 class="card-title">Andre Deltagere</h4>
-    <hr/>
+    <hr />
     <div class="card-body contacts_body">
       <ul class="contacts">
         {{range .Activity.Participants }}
-          {{template "users/card" .}}
+        {{template "users/card" .}}
         {{ end}}
       </ul>
     </div>

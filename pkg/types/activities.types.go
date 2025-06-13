@@ -6,107 +6,96 @@ import (
 	"github.com/google/uuid"
 )
 
-// ActivityCategory defines the category of an activity
-type ActivityCategory string
-
 const (
-	Climbing ActivityCategory = "climbing"
-	Sailing  ActivityCategory = "sailing"
+	Climbing string = "climbing"
+	Sailing  string = "sailing"
+	Other    string = "other"
 )
 
-// ActivityType is used to define a type of activity
-type ActivityType string
-
-func (a ActivityType) String() string {
-	return string(a)
+type ActivityCategory struct {
+	ID   string
+	Name string
 }
 
-func (a ActivityType) Name() string {
-	return ActivityTypeNames[a]
+type ActivityType struct {
+	ID       string
+	Name     string
+	Category string
 }
 
-const (
-	// Climbing Types
-	Tree     ActivityType = "tree"
-	Rock     ActivityType = "rock"
-	Boulder  ActivityType = "boulder"
-	Ice      ActivityType = "ice"
-	HighRope ActivityType = "highrope"
-	Wall     ActivityType = "wall"
-	// Sailing Types
-	Kayak       ActivityType = "kayak"
-	Canoe       ActivityType = "canoe"
-	Sail        ActivityType = "sail"
-	PaddleBoard ActivityType = "paddle-board"
-	// Other
-	Other ActivityType = "other"
-)
-
-// allActivityTypes is a single source of truth for all ActivityType constants
-var allActivityTypes = []ActivityType{
-	Tree, Rock, Boulder, Ice, HighRope, Wall,
-	Kayak, Canoe, Sail, PaddleBoard, Other,
+var AllActivityCategories = []ActivityCategory{
+	{ID: Climbing, Name: "Klatring"},
+	{ID: Sailing, Name: "Søfart"},
+	{ID: Other, Name: "Andet"},
 }
 
-var Categories = map[ActivityCategory]map[ActivityType]string{
-	Climbing: {
-		Tree:     ActivityTypeNames[Tree],
-		Rock:     ActivityTypeNames[Rock],
-		Boulder:  ActivityTypeNames[Boulder],
-		Ice:      ActivityTypeNames[Ice],
-		HighRope: ActivityTypeNames[HighRope],
-		Wall:     ActivityTypeNames[Wall],
-		Other:    ActivityTypeNames[Other],
-	},
-	Sailing: {
-		Kayak:       ActivityTypeNames[Kayak],
-		Canoe:       ActivityTypeNames[Canoe],
-		Sail:        ActivityTypeNames[Sail],
-		PaddleBoard: ActivityTypeNames[PaddleBoard],
-		Other:       ActivityTypeNames[Other],
-	},
+// AllActivityTypes is a single source of truth for all ActivityType constants
+var AllActivityTypes = []ActivityType{
+	{ID: "tree", Name: "Træklatring", Category: Climbing},
+	{ID: "rock", Name: "Klippeklatring", Category: Climbing},
+	{ID: "boulder", Name: "Bouldering", Category: Climbing},
+	{ID: "ice", Name: "Isklatring", Category: Climbing},
+	{ID: "highrope", Name: "High Rope", Category: Climbing},
+	{ID: "wall", Name: "Vægklatring", Category: Climbing},
+	{ID: "kayak", Name: "Kajak", Category: Sailing},
+	{ID: "canoe", Name: "Kano", Category: Sailing},
+	{ID: "sail", Name: "Sejlbåd", Category: Sailing},
+	{ID: "paddle-board", Name: "Paddleboard", Category: Sailing},
 }
 
-// ActivityTypeNames is a map of activity types to their names
-var ActivityTypeNames = map[ActivityType]string{
-	Tree:        "Træklatring",
-	Rock:        "Klippeklatring",
-	Boulder:     "Bouldering",
-	Ice:         "Isklatring",
-	HighRope:    "High Rope",
-	Wall:        "Vægklatring",
-	Kayak:       "Kajak",
-	Canoe:       "Kano",
-	Sail:        "Sejlbåd",
-	PaddleBoard: "Paddleboard",
-	Other:       "Anden",
+func CategoryByID(id string) *ActivityCategory {
+	for _, c := range AllActivityCategories {
+		if c.ID == id {
+			return &c
+		}
+	}
+	return nil
+}
+
+func ActivityTypeByID(id string) *ActivityType {
+	for _, t := range AllActivityTypes {
+		if t.ID == id {
+			return &t
+		}
+	}
+	return &ActivityType{
+		ID:       Other,
+		Name:     "Andet",
+		Category: Other,
+	}
 }
 
 // Activity struct contains all activity fields
 type Activity struct {
-	ID              uuid.UUID        `json:"id" form:"id"`
-	UserId          *uint64          `form:"user"`
-	User            User             `json:"user"`
-	Date            Date             `json:"date" form:"date"`
-	Lat             float64          `json:"lat" form:"lat"`
-	Lng             float64          `json:"lng" form:"lng"`
-	Location        string           `json:"location" form:"location"`
-	Category        ActivityCategory `json:"category" form:"category"`
-	Type            ActivityType     `json:"type" form:"type" validate:"required"`
-	OtherType       string           `json:"otherType" form:"otherType" validate:"required_if=Type other"`
-	Role            string           `json:"role" form:"role"`
-	Comment         string           `json:"comment" form:"comment"`
-	ParticipantsIDs []uint64         `form:"participants"`
-	Participants    []User           `json:"participants"`
-	CreatedAt       time.Time        `json:"createdAt" form:"createdAt"`
-	UpdatedAt       time.Time        `json:"updatedAt" form:"updatedAt"`
+	ID       uuid.UUID `json:"id" form:"id"`
+	UserId   *uint64   `form:"user"`
+	User     User      `json:"user"`
+	Date     Date      `json:"date" form:"date"`
+	Lat      float64   `json:"lat" form:"lat"`
+	Lng      float64   `json:"lng" form:"lng"`
+	Location string    `json:"location" form:"location"`
+
+	CategoryID string           `form:"category" validate:"required"`
+	Category   ActivityCategory `json:"category"`
+
+	TypeID string       `form:"type" validate:"required_unless=CategoryID other"`
+	Type   ActivityType `json:"type"`
+
+	OtherType string `json:"otherType" form:"otherType" validate:"required_if=Type other"`
+
+	Role            string    `json:"role" form:"role"`
+	Comment         string    `json:"comment" form:"comment"`
+	ParticipantsIDs []uint64  `form:"participants"`
+	Participants    []User    `json:"participants"`
+	CreatedAt       time.Time `json:"createdAt" form:"createdAt"`
+	UpdatedAt       time.Time `json:"updatedAt" form:"updatedAt"`
 }
 
 func (a *Activity) TypeStr() string {
-	if a.Type == Other {
+	if a.Category.ID == Other {
 		return a.OtherType
 	}
-	return ActivityTypeNames[a.Type]
+	return a.Type.Name
 }
 
 func (a *Activity) Title() string {

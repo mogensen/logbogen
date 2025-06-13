@@ -24,7 +24,7 @@
     <div class="form-group">
         <label for="category-radio" class="form-label mt-4">Aktivitets kategori</label>
         <br />
-        <div class="btn-group" role="group" aria-label="Basic radio toggle button group" id="category-group" data-current="{{.Activity.Category}}">
+        <div class="btn-group" role="group" aria-label="Basic radio toggle button group" id="category-group" data-current="{{.Activity.Category.ID}}">
             <!-- Categories will be dynamically added here -->
         </div>
     </div>
@@ -33,7 +33,7 @@
         <label for="activity-type" class="form-label mt-4">Aktivitets type</label>
         <br />
         <div class="btn-group category-radio-group  position-relative form-checks input-group has-validation" role="group" aria-label="Basic radio toggle button group"
-            id="activity-type-group" data-current="{{.Activity.Type}}">
+            id="activity-type-group" data-current="{{.Activity.Type.ID}}">
             <!-- Radio buttons will be dynamically added here -->
         </div>
     </div>

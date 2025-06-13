@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"time"
@@ -14,6 +15,24 @@ type MsgResponse struct {
 }
 
 type Date time.Time
+
+func (ct Date) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + time.Time(ct).Format("2006-01-02") + `"`), nil
+}
+
+func (ct *Date) UnmarshalJSON(data []byte) error {
+	var s string
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return err
+	}
+	t, err := time.Parse("2006-01-02", s)
+	if err != nil {
+		return err
+	}
+	*ct = Date(t)
+	return nil
+}
 
 // String() returns the time in string
 func (ct *Date) String() string {

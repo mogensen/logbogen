@@ -10,6 +10,7 @@ import (
 func ActivitiesRoutes(app fiber.Router) {
 	r := app.Group("/activities").Use(middleware.Auth)
 	r.Get("/types", services.GetActivityTypes)
+	r.Get("/categories", services.GetActivityCategories)
 
 	r.Get("/create", services.CreateActivityPage)
 	r.Post("/create", services.CreateActivity)
