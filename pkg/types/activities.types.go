@@ -42,6 +42,12 @@ const (
 	Other ActivityType = "other"
 )
 
+// allActivityTypes is a single source of truth for all ActivityType constants
+var allActivityTypes = []ActivityType{
+	Tree, Rock, Boulder, Ice, HighRope, Wall,
+	Kayak, Canoe, Sail, PaddleBoard, Other,
+}
+
 var Categories = map[ActivityCategory]map[ActivityType]string{
 	Climbing: {
 		Tree:     ActivityTypeNames[Tree],

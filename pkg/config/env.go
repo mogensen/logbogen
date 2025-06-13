@@ -13,7 +13,7 @@ var (
 	// DB returns the name of the sqlite database
 	DB = getEnv("DB", "fiber.db")
 	// TOKENKEY returns the jwt token secret
-	TOKENKEY = getEnv("TOKEN_KEY", "")
+	TOKENKEY = getEnv("TOKEN_KEY", "test-key")
 	// TOKENEXP returns the jwt token expiration duration.
 	// Should be time.ParseDuration string. Source: https://golang.org/pkg/time/#ParseDuration
 	// default: 10h
