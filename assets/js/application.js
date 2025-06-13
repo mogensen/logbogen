@@ -176,12 +176,52 @@ $(() => {
 });
 
 $(() => {
-    if ($('.category-radio').length == 0) {
+    if ($('#activity-form').length == 0) {
         return;
     }
 
+    async function loadCategories() {
+        console.log("loadCategories");
+        const categoryGroup = $("#category-group");
+        const currentCategory = categoryGroup.data('current') || "climbing";
+        
+        try {
+            const response = await fetch('/activities/types');
+            if (!response.ok) {
+                throw new Error('Failed to fetch categories');
+            }
+            
+            const categories = await response.json();
+            
+            // Clear existing radio buttons
+            categoryGroup.empty();
+            
+            // Add new radio buttons for each category
+            Object.entries(categories).forEach(([category, types]) => {
+                const radioId = `category-${category}`;
+                const radioHtml = `
+                <div class="category-radio-parent">
+                    <input type="radio" class="btn-check category-radio" name="category" id="${radioId}" value="${category}"
+                        autocomplete="off" ${category === currentCategory ? 'checked' : ''}>
+                    <label class="btn btn-outline-primary category-label" for="${radioId}">
+                        <img src="/images/categories/${category}.png" alt="${category}" class="category-image">
+                        <br />
+                        <span>${category === 'climbing' ? 'Klatring' : 'Sejlads'}</span>
+                    </label>
+                </div>
+                `;
+                categoryGroup.append(radioHtml);
+            });
+            
+            // Initial update of types
+            updateTypeOptions();
+        } catch (error) {
+            console.error('Error loading categories:', error);
+        }
+    }
+
     async function updateTypeOptions() {
-        const category = $("input[name='category']:checked").attr('id');
+        const category = $("input[name='category']:checked").val();
         const typeGroup = $("#activity-type-group");
         const currentType = typeGroup.data('current') || $("input[name='type']:checked").val();
         
@@ -221,7 +261,7 @@ $(() => {
     }
 
     // Update types when category changes
-    $("input[name='category']").on('change', updateTypeOptions);
+    $(document).on('change', 'input[name="category"]', updateTypeOptions);
 
     function updateOtherType() {
         if ($("input[name='type']:checked").val() === "other") {
@@ -234,8 +274,11 @@ $(() => {
     // Update other type field when type changes
     $(document).on('change', 'input[name="type"]', updateOtherType);
 
+    // Initial load of categories
+    loadCategories();
     // Initial update
     updateTypeOptions();
+
 });
 
 

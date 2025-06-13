@@ -336,27 +336,14 @@ func mapActivityFromDal(activity *dal.Activity, userMap map[uint64]types.User) *
 func GetActivityTypes(c *fiber.Ctx) error {
 	category := c.Query("category")
 	if category == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "Category is required")
+		// If no category is specified, return all categories and their types
+		return c.JSON(types.Categories)
 	}
 
-	var res []types.ActivityType
-	switch types.ActivityCategory(category) {
-	case types.Climbing:
-		res = []types.ActivityType{types.Tree, types.Rock, types.Boulder, types.Ice, types.HighRope, types.Wall}
-	case types.Sailing:
-		res = []types.ActivityType{types.Kayak, types.Canoe, types.Sail}
-	default:
+	res, ok := types.Categories[types.ActivityCategory(category)]
+	if !ok {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid category")
 	}
 
-	// Add the "other" type to both categories
-	res = append(res, types.Other)
-
-	// Create a map of type to name
-	typeMap := make(map[string]string)
-	for _, t := range res {
-		typeMap[string(t)] = types.ActivityTypeNames[t]
-	}
-
-	return c.JSON(typeMap)
+	return c.JSON(res)
 }

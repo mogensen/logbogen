@@ -1,6 +1,6 @@
 {{ $activity := .Activity }}
 
-<formset>
+<formset id="activity-form">
     <input type="hidden" id="csrf" name="csrf" value="{{ .csrf }}">
     {{ if .error }}
     <div class="alert alert-danger" role="alert">
@@ -22,29 +22,10 @@
 
 
     <div class="form-group">
-
         <label for="category-radio" class="form-label mt-4">Aktivitets kategori</label>
         <br />
-        <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
-            <div class="category-radio-parent">
-                <input type="radio" class="btn-check category-radio" name="category" id="climbing" value="climbing"
-                    autocomplete="off" {{if eq .Activity.Category "climbing" }}checked{{end}}>
-                <label class="btn btn-outline-primary category-label" for="climbing">
-                    <img src="/images/activities/boulder.svg" alt="klatring" class="category-image">
-                    <br />
-                    <span>Klatring</span>
-                </label>
-            </div>
-            <div class="category-radio-parent">
-
-                <input type="radio" class="btn-check category-radio" name="category" id="sailing" value="sailing"
-                    autocomplete="off" {{if eq .Activity.Category "sailing" }}checked{{end}}>
-                <label class="btn btn-outline-primary category-label" for="sailing">
-                    <img src="/images/activities/sail.svg" alt="sejlads" class="category-image">
-                    <br />
-                    <span>Sejlads</span>
-                </label>
-            </div>
+        <div class="btn-group" role="group" aria-label="Basic radio toggle button group" id="category-group" data-current="{{.Activity.Category}}">
+            <!-- Categories will be dynamically added here -->
         </div>
     </div>
 

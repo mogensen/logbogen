@@ -41,6 +41,24 @@ const (
 	Other ActivityType = "other"
 )
 
+var Categories = map[ActivityCategory]map[ActivityType]string{
+	Climbing: {
+		Tree:     ActivityTypeNames[Tree],
+		Rock:     ActivityTypeNames[Rock],
+		Boulder:  ActivityTypeNames[Boulder],
+		Ice:      ActivityTypeNames[Ice],
+		HighRope: ActivityTypeNames[HighRope],
+		Wall:     ActivityTypeNames[Wall],
+		Other:    ActivityTypeNames[Other],
+	},
+	Sailing: {
+		Kayak: ActivityTypeNames[Kayak],
+		Canoe: ActivityTypeNames[Canoe],
+		Sail:  ActivityTypeNames[Sail],
+		Other: ActivityTypeNames[Other],
+	},
+}
+
 // ActivityTypeNames is a map of activity types to their names
 var ActivityTypeNames = map[ActivityType]string{
 	Tree:     "Træklatring",
