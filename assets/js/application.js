@@ -176,13 +176,13 @@ $(() => {
 });
 
 $(() => {
-    if ($('#activity-category').length == 0) {
+    if ($('.category-radio').length == 0) {
         return;
     }
 
     async function updateTypeOptions() {
-        
-        const category = $("#activity-category").val();
+        const category = $("input[name='category']:checked").attr('id');
+        console.log(category);
         const typeSelect = $("#activity-type");
         const currentType = typeSelect.val();  // Store current type before clearing
         
@@ -199,7 +199,7 @@ $(() => {
             
             // Add new options
             Object.entries(types).forEach(([value, name]) => {
-                    typeSelect.append(`<option value="${value}">${name}</option>`);
+                typeSelect.append(`<option value="${value}">${name}</option>`);
             });
             
             // If the current type exists in the new options, keep it selected
@@ -215,12 +215,9 @@ $(() => {
     }
 
     // Update types when category changes
-    $("#activity-category").on('change', updateTypeOptions);
-    
+    $("input[name='category']").on('change', updateTypeOptions);
 
     function updateOther() {
-        console.log("updateOther");
-        console.log($("#activity-type").val());
         if ($("#activity-type").val() == "other") {
             $("#activity-othertype").parent(".form-group").slideDown();
         } else {
@@ -232,8 +229,6 @@ $(() => {
 
     // Initial update
     updateTypeOptions();
-
-    // Initial update
     updateOther();
 });
 

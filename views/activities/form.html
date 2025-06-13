@@ -11,42 +11,55 @@
 
     <div>
         <label for="activity-date" class="form-label mt-4">Date:</label>
-        <input type="date" class="form-control" id="activity-date" name="date"
-            value="{{fmtDate .Activity.Date}}" required><br>
+        <input type="date" class="form-control" id="activity-date" name="date" value="{{fmtDate .Activity.Date}}"
+            required><br>
     </div>
 
     <div id="activity-form-map" data-lat="{{.Activity.Lat}}" data-lng="{{.Activity.Lng}}"></div>
 
-    <input type="hidden" class="form-control" id="activity-lat" name="lat" value="{{.Activity.Lat}}"
-        required><br>
-    <input type="hidden" class="form-control" id="activity-lng" name="lng" value="{{.Activity.Lng}}"
-        required><br>
+    <input type="hidden" class="form-control" id="activity-lat" name="lat" value="{{.Activity.Lat}}" required><br>
+    <input type="hidden" class="form-control" id="activity-lng" name="lng" value="{{.Activity.Lng}}" required><br>
+
 
     <div class="form-group">
-        <label for="activity-category" class="form-label mt-4">Category:</label>
-        <select id="activity-category" name="category" class="form-control" required>
-            <option value="climbing" {{if eq .Activity.Category "climbing"}}selected{{end}}>Climbing</option>
-            <option value="sailing" {{if eq .Activity.Category "sailing"}}selected{{end}}>Sailing</option>
-        </select>
+        <label for="category-radio" class="form-label mt-4">Aktivitets kategori</label>
+        <br/>
+        <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+            <input type="radio" class="btn-check category-radio" name="category" id="climbing" value="climbing"
+                autocomplete="off" {{if eq .Activity.Category "climbing" }}checked{{end}}>
+            <label class="btn btn-outline-primary category-label" for="climbing">
+                <img src="/images/activities/boulder.svg" alt="klatring" class="category-image">
+                <br />
+                <span>Klatring</span>
+            </label>
+
+            <input type="radio" class="btn-check category-radio" name="category" id="sailing" value="sailing"
+                autocomplete="off" {{if eq .Activity.Category "sailing" }}checked{{end}}>
+            <label class="btn btn-outline-primary category-label" for="sailing">
+                <img src="/images/activities/sail.svg" alt="sejlads" class="category-image">
+                <br />
+                <span>Sejlads</span>
+            </label>
+        </div>
     </div>
 
     <div class="form-group">
-        <label for="activity-type" class="form-label mt-4">Type:</label>
+        <label for="activity-type" class="form-label mt-4">Aktivitets type</label>
         <select id="activity-type" name="type" class="form-control">
             <option value="{{ $.Activity.Type }}" selected>{{ $.Activity.Type.Name }}</option>
         </select>
     </div>
 
-    <div class="form-group" {{if eq .Activity.Type "other"}}style="display: none;"{{end}}>
-        <label for="activity-othertype" class="form-label mt-4">Anden Type:</label>
+    <div class="form-group" {{if eq .Activity.Type "other" }}style="display: none;" {{end}}>
+        <label for="activity-othertype" class="form-label mt-4">Anden type</label>
         <input type="text" class="form-control" id="activity-othertype" name="otherType"
             value="{{.Activity.OtherType}}">
     </div>
 
     <div class="form-group">
-        <label for="activity-role" class="form-label mt-4">Role:</label>
-        <input type="text" class="form-control" id="activity-role" name="role"
-            placeholder="Instruktør, deltager" value="{{.Activity.Role}}" list="role-options">
+        <label for="activity-role" class="form-label mt-4">Role</label>
+        <input type="text" class="form-control" id="activity-role" name="role" placeholder="Instruktør, deltager"
+            value="{{.Activity.Role}}" list="role-options">
         <datalist id="role-options">
             <option value="Instruktør">
             <option value="Deltager">
@@ -57,20 +70,19 @@
     </div>
 
     <div>
-        <label for="activity-comment" class="form-label mt-4">Kommentar:</label>
-        <textarea class="form-control" id="activity-comment" name="comment"
-            rows="10">{{.Activity.Comment}}</textarea>
+        <label for="activity-comment" class="form-label mt-4">Kommentar</label>
+        <textarea class="form-control" id="activity-comment" name="comment" rows="10">{{.Activity.Comment}}</textarea>
     </div>
 
     <div>
-        <label for="activity-participants" class="form-label mt-4">Deltagere:</label>
+        <label for="activity-participants" class="form-label mt-4">Andre Deltagere</label>
         <select id="activity-participants" name="participants" class="form-control" multiple="multiple">
             {{ range .Activity.Participants }}
             <option value="{{ .ID }}" selected>{{ .Name }}</option>
             {{end}}
         </select>
     </div>
-    <br/>
+    <br />
 
     <button class="btn btn-success" role="submit">Save</button>
 </formset>

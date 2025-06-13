@@ -232,3 +232,32 @@ main {
   outline:0 !important;
   box-shadow:0 0 0 .25rem rgba(51,51,51,.25) !important;
 }
+
+.category-label:hover {
+    border-color: #666;
+    transform: translateY(-2px);
+}
+
+
+.category-image {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 0.5rem;
+}
+
+.category-label span {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 575px) {
+    .category-radio-group {
+        flex-direction: column;
+    }
+
+    .category-image {
+        width: 48px;
+        height: 48px;
+    }
+}
