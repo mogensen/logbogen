@@ -224,6 +224,10 @@ $(() => {
         const category = $("input[name='category']:checked").val();
         const typeGroup = $("#activity-type-group");
         const currentType = typeGroup.data('current') || $("input[name='type']:checked").val();
+
+        if (category == undefined) {
+            return;
+        }
         
         try {
             const response = await fetch(`/activities/types?category=${category}`);
@@ -241,9 +245,9 @@ $(() => {
                 const radioId = `type-${value}`;
                 const radioHtml = `
                 <div class="type-radio-parent">
-                    <input type="radio" class="btn-check type-radio" name="type" id="${radioId}" value="${value}"
-                        autocomplete="off" ${value === currentType ? 'checked' : ''}>
-                    <label class="btn btn-outline-primary type-label" for="${radioId}">
+                    <input type="radio" class="btn-check type-radio form-check-input" name="type" id="${radioId}" value="${value}"
+                        autocomplete="off" ${value === currentType ? 'checked' : ''} required>
+                    <label class="btn btn-outline-primary type-label form-check-label" for="${radioId}">
                         <img src="/images/activities/${value}.svg" alt="${name}" class="category-image">
                         <br />
                         <span>${name}</span>
@@ -305,3 +309,24 @@ $(() => {
         $('.btn-ok', this).data('recordId', data.recordId);
     });
 });
+
+// Example starter JavaScript for disabling form submissions if there are invalid fields
+(function () {
+    'use strict'
+  
+    // Fetch all the forms we want to apply custom Bootstrap validation styles to
+    var forms = document.querySelectorAll('.needs-validation')
+  
+    // Loop over them and prevent submission
+    Array.prototype.slice.call(forms)
+      .forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+          if (!form.checkValidity()) {
+            event.preventDefault()
+            event.stopPropagation()
+          }
+  
+          form.classList.add('was-validated')
+        }, false)
+      })
+  })()

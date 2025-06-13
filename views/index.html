@@ -1,6 +1,16 @@
 {{ if not .LoggedIn }}
 	{{ template "users/login_form" . }}
 {{ else }}
+	<div class="py-4 mb-2 d-flex justify-content-between">
+		<div>
+			<h1 class="d-inline-block">Velkommen</h1>
+		</div>
+		<div>
+			<a href="/activities/create" class="btn btn-primary">
+				<i class="fas fa-clipboard-check"></i>&nbsp; Log ny aktivitet
+			</a>
+		</div>
+	</div>
 	{{ template "users/show" .USER }}
 	<div class="row">
 		<div class="col">

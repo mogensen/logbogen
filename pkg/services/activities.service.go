@@ -28,7 +28,10 @@ func CreateActivity(c *fiber.Ctx) error {
 	b := new(types.CreateDTO)
 
 	if err := utils.ParseBodyAndValidate(c, b); err != nil {
-		return err
+		return c.Render("activities/create", fiber.Map{
+			"Activity": b.Activity,
+			"error":    err.Message,
+		})
 	}
 
 	activity := &dal.Activity{
