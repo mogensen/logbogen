@@ -238,7 +238,6 @@ main {
     transform: translateY(-2px);
 }
 
-
 .category-image {
     width: 64px;
     height: 64px;
@@ -250,14 +249,23 @@ main {
     font-weight: 500;
 }
 
-/* Responsive adjustments */
-@media (max-width: 575px) {
-    .category-radio-group {
-        flex-direction: column;
-    }
+/* Category radio group styling */
+.category-radio-group {
+    display: flex;
+    flex-wrap: wrap;
+}
 
-    .category-image {
-        width: 48px;
-        height: 48px;
-    }
+.category-radio-group .category-image {
+    width:48px;
+    height:48px;
+    margin-bottom: 0.5rem;
+}
+
+.type-radio-parent, .category-radio-parent {
+  margin: 0px;
+  padding: 0px;
+}
+
+.type-label, .category-label {
+  width: 120px;
 }

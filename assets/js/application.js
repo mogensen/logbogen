@@ -182,9 +182,8 @@ $(() => {
 
     async function updateTypeOptions() {
         const category = $("input[name='category']:checked").attr('id');
-        console.log(category);
-        const typeSelect = $("#activity-type");
-        const currentType = typeSelect.val();  // Store current type before clearing
+        const typeGroup = $("#activity-type-group");
+        const currentType = typeGroup.data('current') || $("input[name='type']:checked").val();
         
         try {
             const response = await fetch(`/activities/types?category=${category}`);
@@ -194,21 +193,28 @@ $(() => {
             
             const types = await response.json();
             
-            // Clear existing options
-            typeSelect.find("option").remove();
+            // Clear existing radio buttons
+            typeGroup.empty();
             
-            // Add new options
+            // Add new radio buttons with images
             Object.entries(types).forEach(([value, name]) => {
-                typeSelect.append(`<option value="${value}">${name}</option>`);
+                const radioId = `type-${value}`;
+                const radioHtml = `
+                <div class="type-radio-parent">
+                    <input type="radio" class="btn-check type-radio" name="type" id="${radioId}" value="${value}"
+                        autocomplete="off" ${value === currentType ? 'checked' : ''}>
+                    <label class="btn btn-outline-primary type-label" for="${radioId}">
+                        <img src="/images/activities/${value}.svg" alt="${name}" class="category-image">
+                        <br />
+                        <span>${name}</span>
+                    </label>
+                </div>
+                `;
+                typeGroup.append(radioHtml);
             });
             
-            // If the current type exists in the new options, keep it selected
-            if (Object.keys(types).includes(currentType)) {
-                typeSelect.val(currentType);
-            } else if (currentType !== "other") {
-                // If current type doesn't exist in new options, select the first one
-                typeSelect.val(Object.keys(types)[0]);
-            }
+            // Update other type field visibility
+            updateOtherType();
         } catch (error) {
             console.error('Error updating activity types:', error);
         }
@@ -217,19 +223,19 @@ $(() => {
     // Update types when category changes
     $("input[name='category']").on('change', updateTypeOptions);
 
-    function updateOther() {
-        if ($("#activity-type").val() == "other") {
-            $("#activity-othertype").parent(".form-group").slideDown();
+    function updateOtherType() {
+        if ($("input[name='type']:checked").val() === "other") {
+            $("#activity-othertype-group").slideDown();
         } else {
-            $("#activity-othertype").parent(".form-group").slideUp();
+            $("#activity-othertype-group").slideUp();
         }
     }
 
-    $("#activity-type").on('change', updateOther);
+    // Update other type field when type changes
+    $(document).on('change', 'input[name="type"]', updateOtherType);
 
     // Initial update
     updateTypeOptions();
-    updateOther();
 });
 
 

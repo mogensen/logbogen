@@ -22,35 +22,42 @@
 
 
     <div class="form-group">
-        <label for="category-radio" class="form-label mt-4">Aktivitets kategori</label>
-        <br/>
-        <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
-            <input type="radio" class="btn-check category-radio" name="category" id="climbing" value="climbing"
-                autocomplete="off" {{if eq .Activity.Category "climbing" }}checked{{end}}>
-            <label class="btn btn-outline-primary category-label" for="climbing">
-                <img src="/images/activities/boulder.svg" alt="klatring" class="category-image">
-                <br />
-                <span>Klatring</span>
-            </label>
 
-            <input type="radio" class="btn-check category-radio" name="category" id="sailing" value="sailing"
-                autocomplete="off" {{if eq .Activity.Category "sailing" }}checked{{end}}>
-            <label class="btn btn-outline-primary category-label" for="sailing">
-                <img src="/images/activities/sail.svg" alt="sejlads" class="category-image">
-                <br />
-                <span>Sejlads</span>
-            </label>
+        <label for="category-radio" class="form-label mt-4">Aktivitets kategori</label>
+        <br />
+        <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+            <div class="category-radio-parent">
+                <input type="radio" class="btn-check category-radio" name="category" id="climbing" value="climbing"
+                    autocomplete="off" {{if eq .Activity.Category "climbing" }}checked{{end}}>
+                <label class="btn btn-outline-primary category-label" for="climbing">
+                    <img src="/images/activities/boulder.svg" alt="klatring" class="category-image">
+                    <br />
+                    <span>Klatring</span>
+                </label>
+            </div>
+            <div class="category-radio-parent">
+
+                <input type="radio" class="btn-check category-radio" name="category" id="sailing" value="sailing"
+                    autocomplete="off" {{if eq .Activity.Category "sailing" }}checked{{end}}>
+                <label class="btn btn-outline-primary category-label" for="sailing">
+                    <img src="/images/activities/sail.svg" alt="sejlads" class="category-image">
+                    <br />
+                    <span>Sejlads</span>
+                </label>
+            </div>
         </div>
     </div>
 
     <div class="form-group">
         <label for="activity-type" class="form-label mt-4">Aktivitets type</label>
-        <select id="activity-type" name="type" class="form-control">
-            <option value="{{ $.Activity.Type }}" selected>{{ $.Activity.Type.Name }}</option>
-        </select>
+        <br />
+        <div class="btn-group category-radio-group" role="group" aria-label="Basic radio toggle button group"
+            id="activity-type-group" data-current="{{.Activity.Type}}">
+            <!-- Radio buttons will be dynamically added here -->
+        </div>
     </div>
 
-    <div class="form-group" {{if eq .Activity.Type "other" }}style="display: none;" {{end}}>
+    <div class="form-group" id="activity-othertype-group" style="display: none;">
         <label for="activity-othertype" class="form-label mt-4">Anden type</label>
         <input type="text" class="form-control" id="activity-othertype" name="otherType"
             value="{{.Activity.OtherType}}">
