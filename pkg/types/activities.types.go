@@ -1,100 +1,97 @@
 package types
 
 import (
-	"slices"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-// ClimbingType is used to define a type of climbing
-type ClimbingType string
+// ActivityCategory defines the category of an activity
+type ActivityCategory string
 
-func (c ClimbingType) String() string {
-	return string(c)
+const (
+	Climbing ActivityCategory = "climbing"
+	Sailing  ActivityCategory = "sailing"
+)
+
+// ActivityType is used to define a type of activity
+type ActivityType string
+
+func (a ActivityType) String() string {
+	return string(a)
+}
+
+func (a ActivityType) Name() string {
+	return ActivityTypeNames[a]
 }
 
 const (
-	// Tree Climbing
-	Tree ClimbingType = "tree"
-	// Rock Climbing
-	Rock ClimbingType = "rock"
-	// Boulder Climbing
-	Boulder ClimbingType = "boulder"
-	// Ice Climbing
-	Ice ClimbingType = "ice"
-	// HighRope Climbing
-	HighRope ClimbingType = "highrope"
-	// Wall Climbing
-	Wall ClimbingType = "wall"
-	// Other Climbing
-	Other ClimbingType = "other"
+	// Climbing Types
+	Tree     ActivityType = "tree"
+	Rock     ActivityType = "rock"
+	Boulder  ActivityType = "boulder"
+	Ice      ActivityType = "ice"
+	HighRope ActivityType = "highrope"
+	Wall     ActivityType = "wall"
+	// Sailing Types
+	Kayak ActivityType = "kayak"
+	Canoe ActivityType = "canoe"
+	Sail  ActivityType = "sail"
+	// Other
+	Other ActivityType = "other"
 )
 
-func MapClimbingType(t string) ClimbingType {
-	lower := ClimbingType(strings.ToLower(t))
-	if slices.Contains(ClimbingTypes, lower) {
-		return lower
-	}
-	// If the type is not found, return Other
-	return Other
-}
-
-// ClimbingTypes is all the avaiable types of climbing
-var ClimbingTypes = []ClimbingType{Tree, Rock, Boulder, Ice, HighRope, Wall, Other}
-var ClimbingTypeNames = map[ClimbingType]string{
+// ActivityTypeNames is a map of activity types to their names
+var ActivityTypeNames = map[ActivityType]string{
 	Tree:     "Træklatring",
 	Rock:     "Klippeklatring",
 	Boulder:  "Bouldering",
 	Ice:      "Isklatring",
 	HighRope: "High Rope",
 	Wall:     "Vægklatring",
+	Kayak:    "Kajak",
+	Canoe:    "Kano",
+	Sail:     "Sejlbåd",
 	Other:    "Anden",
 }
 
-// ClimbingActivity struct contains the ClimbingActivity field which should be returned in a
-type ClimbingActivity struct {
-	ID              uuid.UUID    `json:"id" form:"id"`
-	UserId          *uint64      `form:"user"`
-	User            User         `json:"user"`
-	Date            Date         `json:"date" form:"date"`
-	Lat             float64      `json:"lat" form:"lat"`
-	Lng             float64      `json:"lng" form:"lng"`
-	Location        string       `json:"location" form:"location"`
-	Type            ClimbingType `json:"type" form:"type"`
-	OtherType       string       `json:"otherType" form:"otherType"`
-	Role            string       `json:"role" form:"role"`
-	Comment         string       `json:"comment" form:"comment"`
-	ParticipantsIDs []uint64     `form:"participants"`
-	Participants    []User       `json:"participants"`
-	CreatedAt       time.Time    `json:"createdAt" form:"createdAt"`
-	UpdatedAt       time.Time    `json:"updatedAt" form:"updatedAt"`
+// Activity struct contains all activity fields
+type Activity struct {
+	ID              uuid.UUID        `json:"id" form:"id"`
+	UserId          *uint64          `form:"user"`
+	User            User             `json:"user"`
+	Date            Date             `json:"date" form:"date"`
+	Lat             float64          `json:"lat" form:"lat"`
+	Lng             float64          `json:"lng" form:"lng"`
+	Location        string           `json:"location" form:"location"`
+	Category        ActivityCategory `json:"category" form:"category"`
+	Type            ActivityType     `json:"type" form:"type" validate:"required"`
+	OtherType       string           `json:"otherType" form:"otherType" validate:"required_if=Type other"`
+	Role            string           `json:"role" form:"role"`
+	Comment         string           `json:"comment" form:"comment"`
+	ParticipantsIDs []uint64         `form:"participants"`
+	Participants    []User           `json:"participants"`
+	CreatedAt       time.Time        `json:"createdAt" form:"createdAt"`
+	UpdatedAt       time.Time        `json:"updatedAt" form:"updatedAt"`
 }
 
-func (c *ClimbingActivity) TypeStr() string {
-	if c.Type == Other {
-		return c.OtherType
+func (a *Activity) TypeStr() string {
+	if a.Type == Other {
+		return a.OtherType
 	}
-	return ClimbingTypeNames[c.Type]
-
+	return ActivityTypeNames[a.Type]
 }
 
-func (c *ClimbingActivity) Title() string {
-	return c.TypeStr() + " nær " + c.Location
+func (a *Activity) Title() string {
+	return a.TypeStr() + " nær " + a.Location
 }
 
-// CreateDTO struct defines the /ClimbingActivity/create payload
+// CreateDTO struct defines the /Activity/create payload
 type CreateDTO struct {
-	*ClimbingActivity
+	*Activity
 }
 
-// ClimbingActivityCreate struct defines the /ClimbingActivity/create
-type ClimbingActivityCreate struct {
-	ClimbingActivity *ClimbingActivity `json:"climbingActivity"`
-}
-
-// ClimbingActivities defines the ClimbingActivities list
-type ClimbingActivities struct {
-	ClimbingActivitys *[]ClimbingActivity `json:"climbingActivities"`
+// Activities defines the Activities list
+type Activities struct {
+	Activities *[]Activity `json:"activities"`
 }

@@ -8,10 +8,10 @@ import (
 // User struct defines the user
 type User struct {
 	gorm.Model
-	Name               string             `gorm:"not null"`
-	Email              string             `gorm:"uniqueIndex;not null"`
-	Password           string             `gorm:"not null"`
-	ClimbingActivities []ClimbingActivity `gorm:"foreignKey:User"`
+	Name       string     `gorm:"not null"`
+	Email      string     `gorm:"uniqueIndex;not null"`
+	Password   string     `gorm:"not null"`
+	Activities []Activity `gorm:"foreignKey:User"`
 }
 
 // CreateUser create a user entry in the user's table

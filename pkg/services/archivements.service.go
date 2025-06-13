@@ -4,8 +4,8 @@ import (
 	"github.com/mogensen/logbook/pkg/types"
 )
 
-func Archivements(activities []*types.ClimbingActivity) []types.Achievement {
-	activityCounts := make(map[types.ClimbingType]int)
+func Archivements(activities []*types.Activity) []types.Achievement {
+	activityCounts := make(map[types.ActivityType]int)
 
 	// Count the number of activities for each climb type
 	for _, activity := range activities {
@@ -15,16 +15,16 @@ func Archivements(activities []*types.ClimbingActivity) []types.Achievement {
 	// Create a slice to store the achievements
 	var achievements []types.Achievement
 
-	for _, climbType := range types.ClimbingTypes {
-		if counts, ok := activityCounts[climbType]; ok {
+	for id := range types.ActivityTypeNames {
+		if counts, ok := activityCounts[id]; ok {
 			achievements = append(achievements, types.Achievement{
-				ClimbType: climbType,
-				Level:     int(counts/5) + 1,
+				Level: int(counts/5) + 1,
+				Type:  id,
 			})
 		} else {
 			achievements = append(achievements, types.Achievement{
-				ClimbType: climbType,
-				Level:     0,
+				Type:  id,
+				Level: 0,
 			})
 		}
 	}

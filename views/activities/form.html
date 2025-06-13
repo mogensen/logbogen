@@ -1,0 +1,76 @@
+{{ $activity := .Activity }}
+
+<formset>
+    <input type="hidden" id="csrf" name="csrf" value="{{ .csrf }}">
+    {{ if .error }}
+    <div class="alert alert-danger" role="alert">
+        {{ .error }}
+    </div>
+    {{ end }}
+
+
+    <div>
+        <label for="activity-date" class="form-label mt-4">Date:</label>
+        <input type="date" class="form-control" id="activity-date" name="date"
+            value="{{fmtDate .Activity.Date}}" required><br>
+    </div>
+
+    <div id="activity-form-map" data-lat="{{.Activity.Lat}}" data-lng="{{.Activity.Lng}}"></div>
+
+    <input type="hidden" class="form-control" id="activity-lat" name="lat" value="{{.Activity.Lat}}"
+        required><br>
+    <input type="hidden" class="form-control" id="activity-lng" name="lng" value="{{.Activity.Lng}}"
+        required><br>
+
+    <div class="form-group">
+        <label for="activity-category" class="form-label mt-4">Category:</label>
+        <select id="activity-category" name="category" class="form-control" required>
+            <option value="climbing" {{if eq .Activity.Category "climbing"}}selected{{end}}>Climbing</option>
+            <option value="sailing" {{if eq .Activity.Category "sailing"}}selected{{end}}>Sailing</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="activity-type" class="form-label mt-4">Type:</label>
+        <select id="activity-type" name="type" class="form-control">
+            <option value="{{ $.Activity.Type }}" selected>{{ $.Activity.Type.Name }}</option>
+        </select>
+    </div>
+
+    <div class="form-group" {{if eq .Activity.Type "other"}}style="display: none;"{{end}}>
+        <label for="activity-othertype" class="form-label mt-4">Anden Type:</label>
+        <input type="text" class="form-control" id="activity-othertype" name="otherType"
+            value="{{.Activity.OtherType}}">
+    </div>
+
+    <div class="form-group">
+        <label for="activity-role" class="form-label mt-4">Role:</label>
+        <input type="text" class="form-control" id="activity-role" name="role"
+            placeholder="Instruktør, deltager" value="{{.Activity.Role}}" list="role-options">
+        <datalist id="role-options">
+            <option value="Instruktør">
+            <option value="Deltager">
+            <option value="Assistent">
+            <option value="Tilskuer">
+            <option value="Fotograf">
+        </datalist>
+    </div>
+
+    <div>
+        <label for="activity-comment" class="form-label mt-4">Kommentar:</label>
+        <textarea class="form-control" id="activity-comment" name="comment"
+            rows="10">{{.Activity.Comment}}</textarea>
+    </div>
+
+    <div>
+        <label for="activity-participants" class="form-label mt-4">Deltagere:</label>
+        <select id="activity-participants" name="participants" class="form-control" multiple="multiple">
+            {{ range .Activity.Participants }}
+            <option value="{{ .ID }}" selected>{{ .Name }}</option>
+            {{end}}
+        </select>
+    </div>
+    <br/>
+
+    <button class="btn btn-success" role="submit">Save</button>
+</formset>

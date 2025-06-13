@@ -45,14 +45,13 @@ $(() => {
 
 
     $(() => {
-
-        if ($('#climbingactivity-participants').length == 0) {
+        if ($('#activity-participants').length == 0) {
             return;
         }
 
         var data = loadUsers();
         data.then(data => {
-            $('#climbingactivity-participants').select2({
+            $('#activity-participants').select2({
                 minimumInputLength: 3,
                 data: data,
                 placeholder: "Andre deltagere...",
@@ -111,8 +110,8 @@ $(() => {
 
             // Update the marker position and form fields
             var center = poly.getBounds().getCenter();
-            $('#climbingactivity-lat').val(center.lat);
-            $('#climbingactivity-lng').val(center.lng);
+            $('#activity-lat').val(center.lat);
+            $('#activity-lng').val(center.lng);
             updateMarker(center.lat, center.lng);
         }).addTo(map);
 
@@ -157,8 +156,8 @@ $(() => {
         };
 
         map.on('click', function (e) {
-            $('#climbingactivity-lat').val(e.latlng.lat);
-            $('#climbingactivity-lng').val(e.latlng.lng);
+            $('#activity-lat').val(e.latlng.lat);
+            $('#activity-lng').val(e.latlng.lng);
             updateMarker(e.latlng.lat, e.latlng.lng);
         });
 
@@ -177,23 +176,65 @@ $(() => {
 });
 
 $(() => {
-    function updateOther() {
-        console.log("updateOther");
-        console.log($(this).val());
-        if ($(this).val() == "other") {
-            $("#climbingactivity-othertype").parent(".form-group").slideDown();
-        } else {
-            $("#climbingactivity-othertype").parent(".form-group").slideUp();
+    if ($('#activity-category').length == 0) {
+        return;
+    }
+
+    async function updateTypeOptions() {
+        
+        const category = $("#activity-category").val();
+        const typeSelect = $("#activity-type");
+        const currentType = typeSelect.val();  // Store current type before clearing
+        
+        try {
+            const response = await fetch(`/activities/types?category=${category}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch activity types');
+            }
+            
+            const types = await response.json();
+            
+            // Clear existing options
+            typeSelect.find("option").remove();
+            
+            // Add new options
+            Object.entries(types).forEach(([value, name]) => {
+                    typeSelect.append(`<option value="${value}">${name}</option>`);
+            });
+            
+            // If the current type exists in the new options, keep it selected
+            if (Object.keys(types).includes(currentType)) {
+                typeSelect.val(currentType);
+            } else if (currentType !== "other") {
+                // If current type doesn't exist in new options, select the first one
+                typeSelect.val(Object.keys(types)[0]);
+            }
+        } catch (error) {
+            console.error('Error updating activity types:', error);
         }
     }
 
-    $("#climbingactivity-type").on('change', updateOther);
+    // Update types when category changes
+    $("#activity-category").on('change', updateTypeOptions);
+    
 
-    if ($("#climbingactivity-type").val() == "other") {
-        $("#climbingactivity-othertype").parent(".form-group").show();
-    } else {
-        $("#climbingactivity-othertype").parent(".form-group").hide();
+    function updateOther() {
+        console.log("updateOther");
+        console.log($("#activity-type").val());
+        if ($("#activity-type").val() == "other") {
+            $("#activity-othertype").parent(".form-group").slideDown();
+        } else {
+            $("#activity-othertype").parent(".form-group").slideUp();
+        }
     }
+
+    $("#activity-type").on('change', updateOther);
+
+    // Initial update
+    updateTypeOptions();
+
+    // Initial update
+    updateOther();
 });
 
 

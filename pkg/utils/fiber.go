@@ -91,7 +91,7 @@ func IsSameUser(a, b *uint64) bool {
 	return *a == *b
 }
 
-func ToJSON(v []types.ClimbingActivity) (template.HTML, error) {
+func ToJSON(v []types.Activity) (template.HTML, error) {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return "", err

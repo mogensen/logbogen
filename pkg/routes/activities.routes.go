@@ -6,18 +6,19 @@ import (
 	"github.com/mogensen/logbook/pkg/utils/middleware"
 )
 
-// TodoRoutes contains all routes relative to /todo
+// ActivitiesRoutes contains all routes relative to /activities
 func ActivitiesRoutes(app fiber.Router) {
 	r := app.Group("/activities").Use(middleware.Auth)
+	r.Get("/types", services.GetActivityTypes)
 
-	r.Get("/create", services.CreateClimbingActivityPage)
-	r.Post("/create", services.CreateClimbingActivity)
-	r.Get("/list", services.GetClimbingActivities)
+	r.Get("/create", services.CreateActivityPage)
+	r.Post("/create", services.CreateActivity)
+	r.Get("/list", services.GetActivities)
 	r.Get("/pending", services.GetPendingActivitiesForUser)
-	r.Get("/:ActivityID", services.GetClimbingActivity)
-	r.Get("/:ActivityID/edit", services.EditClimbingActivity)
-	r.Post("/:ActivityID", services.UpdateClimbingActivity)
-	r.Post("/:ActivityID/delete", services.DeleteClimbingActivity)
+	r.Get("/:ActivityID", services.GetActivity)
+	r.Get("/:ActivityID/edit", services.EditActivity)
+	r.Post("/:ActivityID", services.UpdateActivity)
+	r.Post("/:ActivityID/delete", services.DeleteActivity)
 
-	r.Get("/clone/:ActivityID", services.CloneClimbingActivity)
+	r.Get("/clone/:ActivityID", services.CloneActivity)
 }

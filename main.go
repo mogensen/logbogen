@@ -40,7 +40,7 @@ func main() {
 		slog.Error("Error connecting to database", "error", err)
 		return
 	}
-	err = database.Migrate(&dal.User{}, &dal.ClimbingActivity{})
+	err = database.Migrate(&dal.User{}, &dal.Activity{})
 	if err != nil {
 		slog.Error("Error migrating database", "error", err)
 		return
@@ -59,10 +59,10 @@ func main() {
 
 	type ActivityCtx struct {
 		UserID   *uint64
-		Activity *types.ClimbingActivity
+		Activity *types.Activity
 	}
 
-	engine.AddFunc("ctxActivity", func(user uint64, activity types.ClimbingActivity) ActivityCtx {
+	engine.AddFunc("ctxActivity", func(user uint64, activity types.Activity) ActivityCtx {
 		return ActivityCtx{
 			UserID:   &user,
 			Activity: &activity,

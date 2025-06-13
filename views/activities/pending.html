@@ -2,7 +2,7 @@
 
 <div class="py-4 mb-2 d-flex justify-content-between">
   <div>
-    <h1 class="d-inline-block">Klatre Logninger</h1>
+    <h1 class="d-inline-block">Afventende Logninger</h1>
   </div>
   <div>
     <a href="/activities/create" class="btn btn-primary">
@@ -10,12 +10,14 @@
     </a>
   </div>
 </div>
+<p>Her finder du alle aktiviteter oprettet af andre brugere, med dig som deltager. Men som du ikke selv har oprettet endnu.</p>
 
-{{ if eq (len .ClimbingActivities) 0 }}
+{{ if eq (len .Activities) 0 }}
 <div class="d-flex flex-wrap-reverse justify-content-center">
   <div class="p-2 align-self-center">
   <p>
-    Opret første logning med at trykke på
+    Du har ikke nogen klatre afventende logninger endnu.
+    Opret selv en logning med at trykke på
     <a href="/activities/create" class="btn btn-primary">
       <i class="fas fa-clipboard-check"></i>&nbsp; Log ny klatretur
     </a>
@@ -28,10 +30,11 @@
 </div>
 {{end}}
 
+
 <div class="card-body contacts_body">
   <ul class="contacts">
-    {{ range .ClimbingActivities }}
-       {{ template "climbingactivities/card" (ctxActivity $userID .) }}
+    {{ range .Activities }}
+       {{ template "activities/card" (ctxActivity $userID .) }}
     {{end}}
   </ul>
 </div>

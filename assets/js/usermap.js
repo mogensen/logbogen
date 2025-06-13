@@ -36,7 +36,7 @@ $(() => {
             data.forEach(function (row) {
 
                 var icon = new L.icon({
-                    iconUrl: '/images/climbing/' + row.type.toLowerCase() + '.svg',
+                    iconUrl: '/images/activities/' + row.type.toLowerCase() + '.svg',
                     iconSize: [35, 35],
                     iconAnchor: [22, 35]
                 });

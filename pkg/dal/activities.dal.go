@@ -9,8 +9,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// ClimbingActivity struct defines the Climbing Activity Model
-type ClimbingActivity struct {
+// Activity struct defines the Activity Model
+type Activity struct {
 	gorm.Model
 	ID           uuid.UUID                   `gorm:"not null"`
 	User         *uint64                     `gorm:"index,not null"`
@@ -20,6 +20,7 @@ type ClimbingActivity struct {
 	Location     string                      `gorm:"not null"`
 	Type         string                      `gorm:"not null"`
 	OtherType    string                      `gorm:"not null default ''"`
+	Category     string                      `gorm:"not null"`
 	Role         string                      `gorm:"not null"`
 	Comment      string                      `gorm:"not null"`
 	Participants datatypes.JSONSlice[uint64] `gorm:"type:json"`
@@ -27,46 +28,46 @@ type ClimbingActivity struct {
 	UpdatedAt    time.Time                   `gorm:"not null"`
 }
 
-// CreateActivity create a Activity entry in the Activity's table
-func CreateClimbingActivity(activity *ClimbingActivity) *gorm.DB {
+// CreateActivity creates an Activity entry in the Activity's table
+func CreateActivity(activity *Activity) *gorm.DB {
 	return database.DB.Create(activity)
 }
 
-// FindClimbingActivity finds a ClimbingActivity with given condition
-func FindClimbingActivity(dest *ClimbingActivity, conds ...interface{}) *gorm.DB {
-	return database.DB.Model(&ClimbingActivity{}).Take(dest, conds...)
+// FindActivity finds an Activity with given condition
+func FindActivity(dest *Activity, conds ...interface{}) *gorm.DB {
+	return database.DB.Model(&Activity{}).Take(dest, conds...)
 }
 
-// FindClimbingActivityByUser finds a ClimbingActivity with given ClimbingActivity and user identifier
-func FindClimbingActivityToClone(dest *ClimbingActivity, ClimbingActivityIden string, userIden uint64) *gorm.DB {
-	return database.DB.Model(&ClimbingActivity{}).Order("date DESC").
+// FindActivityToClone finds an Activity with given Activity and user identifier for cloning
+func FindActivityToClone(dest *Activity, ActivityIden string, userIden uint64) *gorm.DB {
+	return database.DB.Model(&Activity{}).Order("date DESC").
 		Where(datatypes.JSONArrayQuery("participants").Contains(userIden)).
-		Take(dest, "id = ? AND user != ?", ClimbingActivityIden, userIden)
+		Take(dest, "id = ? AND user != ?", ActivityIden, userIden)
 }
 
-// FindClimbingActivityByUser finds a ClimbingActivity with given ClimbingActivity and user identifier
-func FindClimbingActivityByUser(dest *ClimbingActivity, ClimbingActivityIden string, userIden uint64) *gorm.DB {
-	return FindClimbingActivity(dest, "id = ? AND user = ?", ClimbingActivityIden, userIden)
+// FindActivityByUser finds an Activity with given Activity and user identifier
+func FindActivityByUser(dest *Activity, ActivityIden string, userIden uint64) *gorm.DB {
+	return FindActivity(dest, "id = ? AND user = ?", ActivityIden, userIden)
 }
 
-// FindClimbingActivitiesByUser finds the ClimbingActivitys with user's identifier given
-func FindClimbingActivitiesByUser(dest *[]ClimbingActivity, userIden uint64) *gorm.DB {
-	return database.DB.Model(&ClimbingActivity{}).Order("date DESC").Find(dest, "user = ?", userIden)
+// FindActivitiesByUser finds the Activities with user's identifier given
+func FindActivitiesByUser(dest *[]Activity, userIden uint64) *gorm.DB {
+	return database.DB.Model(&Activity{}).Order("date DESC").Find(dest, "user = ?", userIden)
 }
 
-// DeleteClimbingActivity deletes a ClimbingActivity from ClimbingActivitys' table with the given ClimbingActivity and user identifier
-func DeleteClimbingActivity(ClimbingActivityIden string, userIden uint64) *gorm.DB {
-	return database.DB.Unscoped().Delete(&ClimbingActivity{}, "id = ? AND user = ?", ClimbingActivityIden, userIden)
+// DeleteActivity deletes an Activity from Activities' table with the given Activity and user identifier
+func DeleteActivity(ActivityIden string, userIden uint64) *gorm.DB {
+	return database.DB.Unscoped().Delete(&Activity{}, "id = ? AND user = ?", ActivityIden, userIden)
 }
 
-// UpdateClimbingActivity allows to update the ClimbingActivity with the given ClimbingActivityID and userID
-func UpdateClimbingActivity(ClimbingActivityIden string, userIden uint64, data interface{}) *gorm.DB {
-	return database.DB.Model(&ClimbingActivity{}).Where("id = ? AND user = ?", ClimbingActivityIden, userIden).Updates(data)
+// UpdateActivity allows to update the Activity with the given ActivityID and userID
+func UpdateActivity(ActivityIden string, userIden uint64, data interface{}) *gorm.DB {
+	return database.DB.Model(&Activity{}).Where("id = ? AND user = ?", ActivityIden, userIden).Updates(data)
 }
 
 // FindPendingActivitiesByUser finds any activities created by another user but with the current user as participant
-func FindPendingActivitiesByUser(dest *[]ClimbingActivity, userIden uint64) *gorm.DB {
-	return database.DB.Model(&ClimbingActivity{}).Order("date DESC").
+func FindPendingActivitiesByUser(dest *[]Activity, userIden uint64) *gorm.DB {
+	return database.DB.Model(&Activity{}).Order("date DESC").
 		Where(datatypes.JSONArrayQuery("participants").Contains(userIden)).
 		Find(dest, "user != ?", userIden)
 }

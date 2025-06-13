@@ -2,16 +2,16 @@ package types
 
 import "fmt"
 
-// Achievement describes an archivement a user can gain
+// Achievement describes an achievement a user can gain
 type Achievement struct {
-	ClimbType ClimbingType
-	Level     int
+	Type  ActivityType
+	Level int
 }
 
 func (a Achievement) ImageSlug() string {
-	return fmt.Sprintf("achievements/%s-%d.png", a.ClimbType, a.Level)
+	return fmt.Sprintf("achievements/%s-%d.png", a.Type, a.Level)
 }
 
 func (a Achievement) Name() string {
-	return fmt.Sprintf("%s Level %d", ClimbingTypeNames[a.ClimbType], a.Level)
+	return fmt.Sprintf("%s Level %d", ActivityTypeNames[a.Type], a.Level)
 }

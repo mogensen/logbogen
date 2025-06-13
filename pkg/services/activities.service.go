@@ -2,7 +2,6 @@ package services
 
 import (
 	"errors"
-	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,52 +13,53 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateClimbingActivityPage(c *fiber.Ctx) error {
-	// Render the create climbing activity page
-	return c.Render("climbingactivities/create", fiber.Map{
-		"ClimbingTypes": types.ClimbingTypeNames,
-		"ClimbingActivity": &types.ClimbingActivity{
+func CreateActivityPage(c *fiber.Ctx) error {
+	// Render the create activity page
+	return c.Render("activities/create", fiber.Map{
+		"ActivityTypes": types.ActivityTypeNames,
+		"Activity": &types.Activity{
 			Date: types.Date(time.Now()),
 		},
 	})
 }
 
-// CreateClimbingActivity is responsible for create ClimbingActivity
-func CreateClimbingActivity(c *fiber.Ctx) error {
+// CreateActivity is responsible for creating an Activity
+func CreateActivity(c *fiber.Ctx) error {
 	b := new(types.CreateDTO)
 
 	if err := utils.ParseBodyAndValidate(c, b); err != nil {
 		return err
 	}
 
-	activity := &dal.ClimbingActivity{
+	activity := &dal.Activity{
 		ID:           uuid.New(),
-		Date:         time.Time(b.ClimbingActivity.Date),
-		Lat:          b.ClimbingActivity.Lat,
-		Lng:          b.ClimbingActivity.Lng,
-		Location:     b.ClimbingActivity.Location,
-		Type:         b.ClimbingActivity.Type.String(),
-		OtherType:    b.ClimbingActivity.OtherType,
-		Role:         b.ClimbingActivity.Role,
-		Comment:      b.ClimbingActivity.Comment,
-		Participants: b.ClimbingActivity.ParticipantsIDs,
+		Date:         time.Time(b.Activity.Date),
+		Lat:          b.Activity.Lat,
+		Lng:          b.Activity.Lng,
+		Location:     b.Activity.Location,
+		Category:     string(b.Activity.Category),
+		Role:         b.Activity.Role,
+		Comment:      b.Activity.Comment,
+		Participants: b.Activity.ParticipantsIDs,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 		User:         &utils.GetUser(c).ID,
+		Type:         b.Activity.Type.String(),
+		OtherType:    b.Activity.OtherType,
 	}
 
-	geo, _ := ReverseGeocode(b.ClimbingActivity.Lat, b.ClimbingActivity.Lng)
+	geo, _ := ReverseGeocode(b.Activity.Lat, b.Activity.Lng)
 	activity.Location = geo.SimpleDisplayName()
 
-	if err := dal.CreateClimbingActivity(activity).Error; err != nil {
+	if err := dal.CreateActivity(activity).Error; err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
 
 	return c.Redirect("/activities/" + activity.ID.String())
 }
 
-// GetClimbingActivities returns the ClimbingActivitys list
-func GetClimbingActivities(c *fiber.Ctx) error {
+// GetActivities returns the Activities list
+func GetActivities(c *fiber.Ctx) error {
 	res, err := GetActivitiesForUser(utils.GetUser(c).ID)
 	if err != nil {
 		return err
@@ -70,15 +70,15 @@ func GetClimbingActivities(c *fiber.Ctx) error {
 		return c.JSON(res)
 	}
 
-	return c.Render("climbingactivities/list", fiber.Map{
-		"ClimbingActivities": &res,
+	return c.Render("activities/list", fiber.Map{
+		"Activities": &res,
 	})
 }
 
-func GetActivitiesForUser(userId uint64) ([]*types.ClimbingActivity, error) {
-	activities := []dal.ClimbingActivity{}
+func GetActivitiesForUser(userId uint64) ([]*types.Activity, error) {
+	activities := []dal.Activity{}
 
-	err := dal.FindClimbingActivitiesByUser(&activities, userId).Error
+	err := dal.FindActivitiesByUser(&activities, userId).Error
 	if err != nil {
 		return nil, fiber.NewError(fiber.StatusConflict, err.Error())
 	}
@@ -88,7 +88,7 @@ func GetActivitiesForUser(userId uint64) ([]*types.ClimbingActivity, error) {
 		return nil, err
 	}
 
-	res := make([]*types.ClimbingActivity, len(activities))
+	res := make([]*types.Activity, len(activities))
 	for i, activity := range activities {
 		res[i] = mapActivityFromDal(&activity, userMap)
 	}
@@ -96,7 +96,7 @@ func GetActivitiesForUser(userId uint64) ([]*types.ClimbingActivity, error) {
 }
 
 func GetPendingActivitiesForUser(c *fiber.Ctx) error {
-	activities := []dal.ClimbingActivity{}
+	activities := []dal.Activity{}
 
 	err := dal.FindPendingActivitiesByUser(&activities, utils.GetUser(c).ID).Error
 	if err != nil {
@@ -108,7 +108,7 @@ func GetPendingActivitiesForUser(c *fiber.Ctx) error {
 		return err
 	}
 
-	res := make([]*types.ClimbingActivity, len(activities))
+	res := make([]*types.Activity, len(activities))
 	for i, activity := range activities {
 		res[i] = mapActivityFromDal(&activity, userMap)
 	}
@@ -118,24 +118,24 @@ func GetPendingActivitiesForUser(c *fiber.Ctx) error {
 		return c.JSON(res)
 	}
 
-	return c.Render("climbingactivities/pending", fiber.Map{
-		"ClimbingActivities": &res,
+	return c.Render("activities/pending", fiber.Map{
+		"Activities": &res,
 	})
 }
 
-// GetClimbingActivity return a single ClimbingActivity
-func GetClimbingActivity(c *fiber.Ctx) error {
+// GetActivity return a single Activity
+func GetActivity(c *fiber.Ctx) error {
 	activityID := c.Params("ActivityID")
 
 	if activityID == "" {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid ActivityID")
 	}
 
-	activity := &dal.ClimbingActivity{}
+	activity := &dal.Activity{}
 
-	err := dal.FindClimbingActivityByUser(activity, activityID, utils.GetUser(c).ID).Error
+	err := dal.FindActivityByUser(activity, activityID, utils.GetUser(c).ID).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return c.JSON(&types.ClimbingActivityCreate{})
+		return c.JSON(&types.CreateDTO{})
 	}
 
 	userMap, err := getUserMap()
@@ -145,24 +145,24 @@ func GetClimbingActivity(c *fiber.Ctx) error {
 
 	res := mapActivityFromDal(activity, userMap)
 
-	return c.Render("climbingactivities/show", fiber.Map{
-		"ClimbingActivity": res,
+	return c.Render("activities/show", fiber.Map{
+		"Activity": res,
 	})
 }
 
-// EditClimbingActivity return a single ClimbingActivity
-func EditClimbingActivity(c *fiber.Ctx) error {
+// EditActivity return a single Activity
+func EditActivity(c *fiber.Ctx) error {
 	activityID := c.Params("ActivityID")
 
 	if activityID == "" {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid ActivityID")
 	}
 
-	activity := &dal.ClimbingActivity{}
+	activity := &dal.Activity{}
 
-	err := dal.FindClimbingActivityByUser(activity, activityID, utils.GetUser(c).ID).Error
+	err := dal.FindActivityByUser(activity, activityID, utils.GetUser(c).ID).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return c.JSON(&types.ClimbingActivityCreate{})
+		return c.JSON(&types.CreateDTO{})
 	}
 
 	userMap, err := getUserMap()
@@ -172,23 +172,23 @@ func EditClimbingActivity(c *fiber.Ctx) error {
 
 	res := mapActivityFromDal(activity, userMap)
 
-	return c.Render("climbingactivities/edit", fiber.Map{
-		"ClimbingActivity": res,
-		"ClimbingTypes":    types.ClimbingTypeNames,
+	return c.Render("activities/edit", fiber.Map{
+		"Activity":      res,
+		"ActivityTypes": types.ActivityTypeNames,
 	})
 }
 
-// DeleteClimbingActivity deletes a single ClimbingActivity
-func DeleteClimbingActivity(c *fiber.Ctx) error {
+// DeleteActivity deletes a single Activity
+func DeleteActivity(c *fiber.Ctx) error {
 	activityID := c.Params("ActivityID")
 
 	if activityID == "" {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid ActivityID")
 	}
 
-	res := dal.DeleteClimbingActivity(activityID, utils.GetUser(c).ID)
+	res := dal.DeleteActivity(activityID, utils.GetUser(c).ID)
 	if res.RowsAffected == 0 {
-		return fiber.NewError(fiber.StatusConflict, "Unable to delete ClimbingActivity")
+		return fiber.NewError(fiber.StatusConflict, "Unable to delete Activity")
 	}
 
 	err := res.Error
@@ -197,12 +197,12 @@ func DeleteClimbingActivity(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(&types.MsgResponse{
-		Message: "ClimbingActivity successfully deleted",
+		Message: "Activity successfully deleted",
 	})
 }
 
-// UpdateClimbingActivity ClimbingActivity
-func UpdateClimbingActivity(c *fiber.Ctx) error {
+// UpdateActivity updates an Activity
+func UpdateActivity(c *fiber.Ctx) error {
 	b := new(types.CreateDTO)
 	activityID := c.Params("ActivityID")
 
@@ -214,24 +214,25 @@ func UpdateClimbingActivity(c *fiber.Ctx) error {
 		return err
 	}
 
-	activity := &dal.ClimbingActivity{
-		Date:         time.Time(b.ClimbingActivity.Date),
-		Lat:          b.ClimbingActivity.Lat,
-		Lng:          b.ClimbingActivity.Lng,
-		Location:     b.ClimbingActivity.Location,
-		Type:         b.ClimbingActivity.Type.String(),
-		OtherType:    b.ClimbingActivity.OtherType,
-		Role:         b.ClimbingActivity.Role,
-		Comment:      b.ClimbingActivity.Comment,
-		Participants: b.ClimbingActivity.ParticipantsIDs,
+	activity := &dal.Activity{
+		Date:         time.Time(b.Activity.Date),
+		Lat:          b.Activity.Lat,
+		Lng:          b.Activity.Lng,
+		Location:     b.Activity.Location,
+		Category:     string(b.Activity.Category),
+		Role:         b.Activity.Role,
+		Comment:      b.Activity.Comment,
+		Participants: b.Activity.ParticipantsIDs,
 		UpdatedAt:    time.Now(),
 		User:         &utils.GetUser(c).ID,
+		Type:         b.Activity.Type.String(),
+		OtherType:    b.Activity.OtherType,
 	}
 
-	geo, _ := ReverseGeocode(b.ClimbingActivity.Lat, b.ClimbingActivity.Lng)
+	geo, _ := ReverseGeocode(b.Activity.Lat, b.Activity.Lng)
 	activity.Location = geo.SimpleDisplayName()
 
-	err := dal.UpdateClimbingActivity(activityID, utils.GetUser(c).ID, activity).Error
+	err := dal.UpdateActivity(activityID, utils.GetUser(c).ID, activity).Error
 	if err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
@@ -239,106 +240,123 @@ func UpdateClimbingActivity(c *fiber.Ctx) error {
 	return c.Redirect("/activities/" + activityID)
 }
 
-// CloneClimbingActivity clones a ClimbingActivity
-func CloneClimbingActivity(c *fiber.Ctx) error {
+// CloneActivity clones an Activity
+func CloneActivity(c *fiber.Ctx) error {
 	activityID := c.Params("ActivityID")
 
 	if activityID == "" {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid ActivityID")
 	}
 
-	activity := &dal.ClimbingActivity{}
-
-	err := dal.FindClimbingActivityToClone(activity, activityID, utils.GetUser(c).ID).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return fiber.NewError(fiber.StatusNotFound, "ClimbingActivity not found")
-	}
-
-	// Clone the activity
-	clonedActivity := &dal.ClimbingActivity{}
-	clonedActivity.Date = activity.Date
-	clonedActivity.Lat = activity.Lat
-	clonedActivity.Lng = activity.Lng
-	clonedActivity.Location = activity.Location
-	clonedActivity.Comment = activity.Comment
-	clonedActivity.Type = activity.Type
-	clonedActivity.OtherType = activity.OtherType
-	clonedActivity.Role = activity.Role
-	clonedActivity.Participants = participantsForClone(activity.Participants, utils.GetUser(c).ID, *activity.User)
-	clonedActivity.User = &utils.GetUser(c).ID
-
-	userMap, err := getUserMap()
+	activity := &dal.Activity{}
+	err := dal.FindActivityToClone(activity, activityID, utils.GetUser(c).ID).Error
 	if err != nil {
-		return err
+		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
 
-	res := mapActivityFromDal(clonedActivity, userMap)
+	// Create a new activity with the same data
+	newActivity := &dal.Activity{
+		ID:           uuid.New(),
+		Date:         activity.Date,
+		Lat:          activity.Lat,
+		Lng:          activity.Lng,
+		Location:     activity.Location,
+		Category:     activity.Category,
+		Role:         activity.Role,
+		Comment:      activity.Comment,
+		Participants: participantsForClone(activity.Participants, utils.GetUser(c).ID, *activity.User),
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+		User:         &utils.GetUser(c).ID,
+		Type:         activity.Type,
+		OtherType:    activity.OtherType,
+	}
 
-	return c.Render("climbingactivities/create", fiber.Map{
-		"ClimbingActivity": res,
-		"ClimbingTypes":    types.ClimbingTypeNames,
-	})
+	if err := dal.CreateActivity(newActivity).Error; err != nil {
+		return fiber.NewError(fiber.StatusConflict, err.Error())
+	}
+
+	return c.Redirect("/activities/" + newActivity.ID.String())
 }
 
 func participantsForClone(participants []uint64, currentUser uint64, originalUser uint64) []uint64 {
-	// Add original user as participant
-	res := []uint64{originalUser}
-
-	// Remove self from participants
-	for _, r := range participants {
-		uID := r
-		if uID != currentUser {
-			res = append(res, uID)
+	// Remove the original user and add the current user
+	newParticipants := make([]uint64, 0, len(participants))
+	for _, p := range participants {
+		if p != originalUser {
+			newParticipants = append(newParticipants, p)
 		}
 	}
-	slog.Error("participantsForClone", "res", res, "currentUser", currentUser, "originalUser", originalUser)
-	return res
+	newParticipants = append(newParticipants, currentUser)
+	return newParticipants
 }
 
 func getUserMap() (map[uint64]types.User, error) {
-	dalUsers := &[]dal.User{}
-
-	err := dal.FindUsers(dalUsers).Error
+	users := &[]dal.User{}
+	err := dal.FindUsers(users).Error
 	if err != nil {
-		return nil, fiber.NewError(fiber.StatusConflict, err.Error())
-	}
-
-	users := []types.User{}
-	for _, u := range *dalUsers {
-		users = append(users, *types.UserFromDal(&u, nil))
+		return nil, err
 	}
 
 	userMap := make(map[uint64]types.User)
-	for i, user := range users {
-		userMap[user.ID] = (users)[i]
-
+	for _, user := range *users {
+		userMap[user.ID] = *types.UserFromDal(&user, nil)
 	}
 	return userMap, nil
 }
 
-func mapActivityFromDal(activity *dal.ClimbingActivity, userMap map[uint64]types.User) *types.ClimbingActivity {
-	participants := make([]types.User, len(activity.Participants))
-	for i, participant := range activity.Participants {
-		if user, ok := userMap[participant]; ok {
-			participants[i] = user
+func mapActivityFromDal(activity *dal.Activity, userMap map[uint64]types.User) *types.Activity {
+	participants := make([]types.User, 0, len(activity.Participants))
+	for _, p := range activity.Participants {
+		if user, ok := userMap[p]; ok {
+			participants = append(participants, user)
 		}
 	}
 
-	return &types.ClimbingActivity{
+	return &types.Activity{
 		ID:              activity.ID,
 		Date:            types.Date(activity.Date),
 		Lat:             activity.Lat,
 		Lng:             activity.Lng,
 		Location:        activity.Location,
-		Type:            types.ClimbingType(activity.Type),
+		Category:        types.ActivityCategory(activity.Category),
+		Type:            types.ActivityType(activity.Type),
 		OtherType:       activity.OtherType,
 		Role:            activity.Role,
 		Comment:         activity.Comment,
 		Participants:    participants,
+		ParticipantsIDs: activity.Participants,
 		CreatedAt:       activity.CreatedAt,
 		UpdatedAt:       activity.UpdatedAt,
-		UserId:          activity.User,
 		User:            userMap[*activity.User],
-		ParticipantsIDs: activity.Participants,
 	}
+}
+
+// GetActivityTypes returns the activity types for a given category
+func GetActivityTypes(c *fiber.Ctx) error {
+	category := c.Query("category")
+	if category == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "Category is required")
+	}
+
+	var res []types.ActivityType
+	switch types.ActivityCategory(category) {
+	case types.Climbing:
+		res = []types.ActivityType{types.Tree, types.Rock, types.Boulder, types.Ice, types.HighRope, types.Wall}
+	case types.Sailing:
+		res = []types.ActivityType{types.Kayak, types.Canoe, types.Sail}
+	default:
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid category")
+	}
+
+	// Add the "other" type to both categories
+	res = append(res, types.Other)
+
+	// Create a map of type to name
+	typeMap := make(map[string]string)
+	for _, t := range res {
+		typeMap[string(t)] = types.ActivityTypeNames[t]
+	}
+
+	return c.JSON(typeMap)
 }
