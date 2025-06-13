@@ -6,26 +6,29 @@
   </div>
   <div>
     <a href="/activities/create" class="btn btn-primary">
-      <i class="fas fa-clipboard-check"></i>&nbsp; Log ny klatretur
+      <i class="fas fa-clipboard-check"></i>&nbsp; Log ny aktivitet
     </a>
   </div>
 </div>
-<p>Her finder du alle aktiviteter oprettet af andre brugere, med dig som deltager. Men som du ikke selv har oprettet endnu.</p>
+<p>Her finder du alle aktiviteter oprettet af andre brugere, med dig som deltager. Men som du ikke selv har oprettet
+  endnu.</p>
 
 {{ if eq (len .Activities) 0 }}
 <div class="d-flex flex-wrap-reverse justify-content-center">
   <div class="p-2 align-self-center">
-  <p>
-    Du har ikke nogen klatre afventende logninger endnu.
-    Opret selv en logning med at trykke på
-    <a href="/activities/create" class="btn btn-primary">
-      <i class="fas fa-clipboard-check"></i>&nbsp; Log ny klatretur
-    </a>
-  </p>
+    <p>
+      Du har ikke nogen afventende logninger fra andre brugere endnu.
+    </p>
+    <p>
+      Opret selv en logning med at trykke på
+      <a href="/activities/create" class="btn btn-primary">
+        <i class="fas fa-clipboard-check"></i>&nbsp; Log ny aktivitet
+      </a>
+    </p>
 
   </div>
   <div class="p-2 ">
-  <img src="/images/arrow.svg">
+    <img src="/images/arrow.svg">
   </div>
 </div>
 {{end}}
@@ -34,7 +37,7 @@
 <div class="card-body contacts_body">
   <ul class="contacts">
     {{ range .Activities }}
-       {{ template "activities/card" (ctxActivity $userID .) }}
+    {{ template "activities/card" (ctxActivity $userID .) }}
     {{end}}
   </ul>
 </div>
