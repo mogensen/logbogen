@@ -36,5 +36,5 @@ func findUser(dest interface{}, conds ...interface{}) *gorm.DB {
 
 // FindUser searches the user's table with the condition given
 func FindUsers(dest interface{}, conds ...interface{}) *gorm.DB {
-	return database.DB.Model(&User{}).Find(dest, conds...)
+	return database.DB.Model(&User{}).Preload("Activities").Find(dest, conds...)
 }

@@ -89,6 +89,7 @@ func main() {
 
 	routes.AuthRoutes(app)
 	routes.ActivitiesRoutes(app)
+	routes.ScoreboardRoutes(app)
 
 	certFile := "cert.pem"
 	keyFile := "key.pem"

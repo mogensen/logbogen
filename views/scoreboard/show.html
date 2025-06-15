@@ -1,0 +1,39 @@
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-center mb-6">Scoreboard</h1>
+    
+    <div class="">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col" class="text-left">Rank</th>
+                    <th scope="col" class="text-left">User</th>
+                    <th scope="col" class="text-left">Points</th>
+                    <th scope="col" class="text-left">Achievements</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range $index, $stat := .UserStats}}
+                <tr>
+                    <td>{{ $index }}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <img class="rounded-circle me-2" src="{{userImage $stat.User}}" alt="" width="48" height="48">
+                            <span>{{$stat.User.Name}}</span>
+                        </div>
+                    </td>
+                    <td>{{$stat.Points}}</td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-2">
+                            {{range $stat.ArchivementsSummary}}
+                              <div class="flex-shrink-1">
+                                <img width=48 src="/images/{{ .ImageSlug }}" title="{{.Name}} (Level {{.Level}})">
+                              </div>
+                            {{end}}
+                        </div>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>

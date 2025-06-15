@@ -96,7 +96,7 @@ func GetActivitiesForUser(userId uint64) ([]*types.Activity, error) {
 
 	res := make([]*types.Activity, len(activities))
 	for i, activity := range activities {
-		res[i] = mapActivityFromDal(&activity, userMap)
+		res[i] = MapActivityFromDal(&activity, userMap)
 	}
 	return res, nil
 }
@@ -116,7 +116,7 @@ func GetPendingActivitiesForUser(c *fiber.Ctx) error {
 
 	res := make([]*types.Activity, len(activities))
 	for i, activity := range activities {
-		res[i] = mapActivityFromDal(&activity, userMap)
+		res[i] = MapActivityFromDal(&activity, userMap)
 	}
 
 	accept := c.Accepts("html", "json")
@@ -149,7 +149,7 @@ func GetActivity(c *fiber.Ctx) error {
 		return err
 	}
 
-	res := mapActivityFromDal(activity, userMap)
+	res := MapActivityFromDal(activity, userMap)
 
 	return c.Render("activities/show", fiber.Map{
 		"Activity": res,
@@ -176,7 +176,7 @@ func EditActivity(c *fiber.Ctx) error {
 		return err
 	}
 
-	res := mapActivityFromDal(activity, userMap)
+	res := MapActivityFromDal(activity, userMap)
 
 	return c.Render("activities/edit", fiber.Map{"Activity": res})
 }
@@ -282,7 +282,7 @@ func CloneActivity(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
 
-	return c.Redirect("/activities/" + newActivity.ID.String())
+	return c.Redirect("/activities/" + newActivity.ID.String() + "/edit")
 }
 
 func participantsForClone(participants []uint64, currentUser uint64, originalUser uint64) []uint64 {
@@ -311,7 +311,7 @@ func getUserMap() (map[uint64]types.User, error) {
 	return userMap, nil
 }
 
-func mapActivityFromDal(activity *dal.Activity, userMap map[uint64]types.User) *types.Activity {
+func MapActivityFromDal(activity *dal.Activity, userMap map[uint64]types.User) *types.Activity {
 	participants := make([]types.User, 0, len(activity.Participants))
 	for _, p := range activity.Participants {
 		if user, ok := userMap[p]; ok {
