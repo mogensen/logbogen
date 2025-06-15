@@ -60,7 +60,7 @@ func ActivityTypeByID(id string) *ActivityType {
 	}
 	return &ActivityType{
 		ID:       Other,
-		Name:     "Andet",
+		Name:     id,
 		Category: Other,
 	}
 }
@@ -78,10 +78,9 @@ type Activity struct {
 	CategoryID string           `form:"category" validate:"required"`
 	Category   ActivityCategory `json:"category"`
 
-	TypeID string       `form:"type" validate:"required_unless=CategoryID other"`
-	Type   ActivityType `json:"type"`
-
-	OtherType string `json:"otherType" form:"otherType" validate:"required_if=Type other"`
+	TypeID    string       `form:"type" validate:"required_unless=CategoryID other"`
+	Type      ActivityType `json:"type"`
+	OtherType string       `json:"otherType" form:"otherType" validate:"required_if=Type other"`
 
 	Role            string    `json:"role" form:"role"`
 	Comment         string    `json:"comment" form:"comment"`
@@ -91,15 +90,8 @@ type Activity struct {
 	UpdatedAt       time.Time `json:"updatedAt" form:"updatedAt"`
 }
 
-func (a *Activity) TypeStr() string {
-	if a.Category.ID == Other {
-		return a.OtherType
-	}
-	return a.Type.Name
-}
-
 func (a *Activity) Title() string {
-	return a.TypeStr() + " nær " + a.Location
+	return a.Type.Name + " nær " + a.Location
 }
 
 // CreateDTO struct defines the /Activity/create payload

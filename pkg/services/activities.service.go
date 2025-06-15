@@ -33,6 +33,11 @@ func CreateActivity(c *fiber.Ctx) error {
 		})
 	}
 
+	t := b.Activity.TypeID
+	if b.CategoryID == types.Other {
+		t = b.OtherType
+	}
+
 	activity := &dal.Activity{
 		ID:           uuid.New(),
 		Date:         time.Time(b.Activity.Date),
@@ -46,8 +51,7 @@ func CreateActivity(c *fiber.Ctx) error {
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 		User:         &utils.GetUser(c).ID,
-		Type:         b.Activity.TypeID,
-		OtherType:    b.Activity.OtherType,
+		Type:         t,
 	}
 
 	geo, _ := ReverseGeocode(b.Activity.Lat, b.Activity.Lng)
@@ -213,19 +217,23 @@ func UpdateActivity(c *fiber.Ctx) error {
 		return err
 	}
 
+	t := b.Activity.TypeID
+	if b.CategoryID == types.Other {
+		t = b.OtherType
+	}
+
 	activity := &dal.Activity{
 		Date:         time.Time(b.Activity.Date),
 		Lat:          b.Activity.Lat,
 		Lng:          b.Activity.Lng,
 		Location:     b.Activity.Location,
-		Category:     b.Activity.Category.ID,
+		Category:     b.Activity.CategoryID,
 		Role:         b.Activity.Role,
 		Comment:      b.Activity.Comment,
 		Participants: b.Activity.ParticipantsIDs,
 		UpdatedAt:    time.Now(),
 		User:         &utils.GetUser(c).ID,
-		Type:         b.Activity.TypeID,
-		OtherType:    b.Activity.OtherType,
+		Type:         t,
 	}
 
 	geo, _ := ReverseGeocode(b.Activity.Lat, b.Activity.Lng)
@@ -268,7 +276,6 @@ func CloneActivity(c *fiber.Ctx) error {
 		UpdatedAt:    time.Now(),
 		User:         &utils.GetUser(c).ID,
 		Type:         activity.Type,
-		OtherType:    activity.OtherType,
 	}
 
 	if err := dal.CreateActivity(newActivity).Error; err != nil {
@@ -322,7 +329,6 @@ func mapActivityFromDal(activity *dal.Activity, userMap map[uint64]types.User) *
 		Category:        *types.CategoryByID(activity.Category),
 		Type:            *types.ActivityTypeByID(activity.Type),
 		TypeID:          activity.Type,
-		OtherType:       activity.OtherType,
 		Role:            activity.Role,
 		Comment:         activity.Comment,
 		Participants:    participants,

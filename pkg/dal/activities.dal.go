@@ -19,7 +19,6 @@ type Activity struct {
 	Lng          float64                     `gorm:"not null"`
 	Location     string                      `gorm:"not null"`
 	Type         string                      `gorm:"not null"`
-	OtherType    string                      `gorm:"not null default ''"`
 	Category     string                      `gorm:"not null"`
 	Role         string                      `gorm:"not null"`
 	Comment      string                      `gorm:"not null"`

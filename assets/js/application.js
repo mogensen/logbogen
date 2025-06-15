@@ -271,9 +271,13 @@ $(() => {
         if ($("input[name='category']:checked").val() === "other") {
             $("#activity-type-group").parent().slideUp();
             $("#activity-othertype-group").slideDown();
+            // Set input as required
+            $("#activity-othertype").prop('required', true);
         } else {
             $("#activity-type-group").parent().slideDown();
             $("#activity-othertype-group").slideUp();
+            // Set input as not required
+            $("#activity-othertype").prop('required', false);
         }
     }
 

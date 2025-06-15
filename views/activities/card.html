@@ -18,7 +18,7 @@
         <a href="/activities/clone/{{ $activity.ID }}">
         {{end}}
 
-        {{ $activity.TypeStr }} nær {{ $activity.Location }}
+        {{ $activity.Type.Name }} nær {{ $activity.Location }}
 
         {{ if not (is_same_user $user $activity.User.ID) }}
         <!-- TODO get name of the user -->

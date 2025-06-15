@@ -1,6 +1,6 @@
 <div class="py-4 mb-2">
   <h1 class="d-inline-block">Rediger logning</h1>
 </div>
-<form method="POST" action="/activities/{{.Activity.ID}}">
+<form method="POST" action="/activities/{{.Activity.ID}}" class="needs-validation" novalidate>
   {{ template "activities/form" . }}
 </form>
