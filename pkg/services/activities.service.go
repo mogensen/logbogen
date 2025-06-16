@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -17,13 +18,15 @@ import (
 type ActivityService struct {
 	activityDal dal.ActivityDal
 	userDal     dal.UserDal
+	weatherSvc  *WeatherService
 }
 
 // NewActivityService creates a new instance of ActivityService
-func NewActivityService(userDal dal.UserDal, activityDal dal.ActivityDal) *ActivityService {
+func NewActivityService(userDal dal.UserDal, activityDal dal.ActivityDal, weatherSvc *WeatherService) *ActivityService {
 	return &ActivityService{
 		userDal:     userDal,
 		activityDal: activityDal,
+		weatherSvc:  weatherSvc,
 	}
 }
 
@@ -164,8 +167,31 @@ func (s *ActivityService) GetActivity(c *fiber.Ctx) error {
 
 	res := types.ActivityFromDal(&activity, userMap)
 
+	// Get weather data for the activity
+	weather, err := s.weatherSvc.GetHistoricalWeather(activity.Lat, activity.Lng, activity.Date)
+	if err != nil {
+		slog.Error("Error getting weather data", "error", err)
+	}
+
+	// Create a weather view model
+	type WeatherViewModel struct {
+		Temperature float64
+		Icon        string
+	}
+
+	var weatherVM *WeatherViewModel
+	if weather != nil && len(weather.Daily.Temperature2mMax) > 0 && len(weather.Daily.WeatherCode) > 0 {
+		weatherVM = &WeatherViewModel{
+			Temperature: weather.Daily.Temperature2mMax[0],
+			Icon:        GetWeatherIcon(weather.Daily.WeatherCode[0]),
+		}
+	}
+
+	slog.Info("Weather", "weather", weatherVM)
+
 	return c.Render("activities/show", fiber.Map{
 		"Activity": res,
+		"Weather":  weatherVM,
 	})
 }
 

@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+
 	"log/slog"
 	"math/big"
 	"os"
@@ -14,7 +15,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/csrf"
-	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/template/html/v2"
 	"github.com/mogensen/logbook/pkg/dal"
 	"github.com/mogensen/logbook/pkg/database"
@@ -23,6 +24,7 @@ import (
 	"github.com/mogensen/logbook/pkg/types"
 	"github.com/mogensen/logbook/pkg/utils"
 	"github.com/mogensen/logbook/pkg/utils/middleware"
+	slogfiber "github.com/samber/slog-fiber"
 )
 
 // User represents a user in the dummy authentication system
@@ -77,7 +79,9 @@ func main() {
 		PassLocalsToViews: true,
 	})
 	// Initialize default config
-	app.Use(logger.New())
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	app.Use(slogfiber.New(logger))
+	app.Use(recover.New())
 
 	app.Static("/", "./assets")
 
@@ -89,7 +93,8 @@ func main() {
 	activityDal := dal.NewActivityService(database.DB)
 
 	// Services
-	activitiesService := services.NewActivityService(userDal, activityDal)
+	weatherService := services.NewWeatherService()
+	activitiesService := services.NewActivityService(userDal, activityDal, weatherService)
 	scoreboardService := services.NewScoreboardService(userDal)
 	authService := services.NewAuthService(userDal)
 
