@@ -1,11 +1,16 @@
 package password
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"log/slog"
+
+	"golang.org/x/crypto/bcrypt"
+)
 
 // Generate return a hashed password
 func Generate(raw string) string {
 	hash, err := bcrypt.GenerateFromPassword([]byte(raw), 10)
 	if err != nil {
+		slog.Error("failed to generate password hash", "error", err)
 		panic(err)
 	}
 
