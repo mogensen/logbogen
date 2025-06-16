@@ -309,14 +309,13 @@ func (s *ActivityService) participantsForClone(participants []uint64, currentUse
 }
 
 func (s *ActivityService) getUserMap() (map[uint64]types.User, error) {
-	users := &[]dal.User{}
-	err := s.userDal.FindUsers(users).Error
+	users, err := s.userDal.FindUsers()
 	if err != nil {
 		return nil, err
 	}
 
 	userMap := make(map[uint64]types.User)
-	for _, user := range *users {
+	for _, user := range users {
 		userMap[user.ID] = *types.UserFromDal(&user, nil)
 	}
 	return userMap, nil

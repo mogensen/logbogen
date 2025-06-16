@@ -29,16 +29,13 @@ func NewScoreboardService(userDal dal.UserDal) *ScoreboardService {
 
 // GetScoreboard returns the scoreboard data for all users
 func (s *ScoreboardService) GetScoreboard(c *fiber.Ctx) error {
-
-	users := &[]dal.User{}
-
 	// Get all users
-	err := s.userDal.FindUsers(users).Error
+	users, err := s.userDal.FindUsers()
 	if err != nil {
 		return err
 	}
 
-	res, err := s.calculateUserStats(users)
+	res, err := s.calculateUserStats(&users)
 	if err != nil {
 		return err
 	}

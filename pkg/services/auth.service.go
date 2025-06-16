@@ -108,15 +108,13 @@ type GetUsersResponse struct {
 
 // GetUsers returns all users except the current user
 func (s *AuthService) GetUsers(currentUserID uint64) (*GetUsersResponse, error) {
-	users := &[]types.User{}
-
-	err := s.userDal.FindUsers(users).Error
+	users, err := s.userDal.FindUsers()
 	if err != nil {
 		return nil, err
 	}
 
-	res := make([]*types.UserResponse, 0, len(*users))
-	for _, v := range *users {
+	res := make([]*types.UserResponse, 0, len(users))
+	for _, v := range users {
 		user := v
 		if v.ID == currentUserID {
 			continue // Skip the current user

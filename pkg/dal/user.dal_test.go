@@ -82,11 +82,8 @@ func TestUserDal_FindUsers(t *testing.T) {
 	require.NotNil(t, userResult)
 	require.NoError(t, userResult.Error)
 
-	var users []User
-
-	result := userDal.FindUsers(&users)
-	require.NotNil(t, result)
-	require.NoError(t, result.Error)
+	users, err := userDal.FindUsers()
+	require.NoError(t, err)
 	require.Equal(t, 2, len(users))
 	require.Equal(t, "Test User", users[0].Name)
 	require.Equal(t, "test@example.com", users[0].Email)

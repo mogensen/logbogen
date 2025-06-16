@@ -26,7 +26,7 @@ func (m *MockUserDal) FindUserByEmail(dest interface{}, email string) *gorm.DB {
 	return args.Get(0).(*gorm.DB)
 }
 
-func (m *MockUserDal) FindUsers(dest interface{}, conds ...interface{}) *gorm.DB {
-	args := m.Called(dest, conds)
-	return args.Get(0).(*gorm.DB)
+func (m *MockUserDal) FindUsers() ([]dal.User, error) {
+	args := m.Called()
+	return args.Get(0).([]dal.User), args.Error(1)
 }

@@ -18,7 +18,7 @@ type UserDal interface {
 	CreateUser(user *User) *gorm.DB
 	FindUserById(dest interface{}, id uint64) *gorm.DB
 	FindUserByEmail(dest interface{}, email string) *gorm.DB
-	FindUsers(dest interface{}, conds ...interface{}) *gorm.DB
+	FindUsers() ([]User, error)
 }
 
 // userDalImpl implements the UserDal interface
@@ -51,7 +51,9 @@ func (d *userDalImpl) findUser(dest interface{}, conds ...interface{}) *gorm.DB 
 	return d.db.Model(&User{}).Preload("Activities").Take(dest, conds...)
 }
 
-// FindUsers searches the user's table with the condition given
-func (d *userDalImpl) FindUsers(dest interface{}, conds ...interface{}) *gorm.DB {
-	return d.db.Model(&User{}).Preload("Activities").Find(dest, conds...)
+// FindUsers returns all users from the database
+func (d *userDalImpl) FindUsers() ([]User, error) {
+	var users []User
+	err := d.db.Model(&User{}).Preload("Activities").Find(&users).Error
+	return users, err
 }
