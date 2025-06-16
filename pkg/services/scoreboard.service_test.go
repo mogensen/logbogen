@@ -16,7 +16,7 @@ func dummyActivityService() *ActivityService {
 	return &ActivityService{userDal: new(mocks.UserDalMock)}
 }
 
-func TestScoreboardService_Summerize(t *testing.T) {
+func TestScoreboardService_Summarize(t *testing.T) {
 	// Arrange
 	mockUserDal := new(mocks.UserDalMock)
 	service := NewScoreboardService(mockUserDal)
@@ -27,7 +27,7 @@ func TestScoreboardService_Summerize(t *testing.T) {
 	}
 
 	// Act
-	points := service.summerize(activities)
+	points := service.summarize(activities)
 
 	// Assert
 	assert.Equal(t, 15, points) // 3 activities * 5 points

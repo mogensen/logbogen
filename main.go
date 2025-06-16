@@ -7,7 +7,6 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	"fmt"
 	"log/slog"
 	"math/big"
 	"os"
@@ -108,12 +107,12 @@ func main() {
 	keyFile := "key.pem"
 
 	if _, err := os.Stat(certFile); os.IsNotExist(err) {
-		fmt.Println("Self-signed certificate not found, generating...")
+		slog.Info("Self-signed certificate not found, generating...")
 		if err := generateSelfSignedCert(certFile, keyFile); err != nil {
 			panic(err)
 		}
-		fmt.Println("Self-signed certificate generated successfully")
-		fmt.Println("You will need to accept the self-signed certificate in your browser")
+		slog.Info("Self-signed certificate generated successfully")
+		slog.Info("You will need to accept the self-signed certificate in your browser")
 	}
 
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
@@ -134,8 +133,11 @@ func main() {
 func setupCsrfMiddleware() fiber.Handler {
 	csrfErrorHandler := func(c *fiber.Ctx, err error) error {
 		// Log the error so we can track who is trying to perform CSRF attacks
-		// customize this to your needs
-		fmt.Printf("CSRF Error: %v Request: %v From: %v\n", err, c.OriginalURL(), c.IP())
+		slog.Warn("CSRF Error detected",
+			"error", err,
+			"url", c.OriginalURL(),
+			"ip", c.IP(),
+		)
 
 		// check accepted content types
 		switch c.Accepts("html", "json") {

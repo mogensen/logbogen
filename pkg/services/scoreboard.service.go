@@ -62,7 +62,7 @@ func (s *ScoreboardService) calculateUserStats(users *[]dal.User) ([]UserStats, 
 		userStats := UserStats{
 			User:                types.UserFromDal(&user, nil),
 			AchievementsSummary: filteredAchievements,
-			Points:              s.summerize(activities),
+			Points:              s.summarize(activities),
 		}
 		res = append(res, userStats)
 	}
@@ -74,7 +74,7 @@ func (s *ScoreboardService) calculateUserStats(users *[]dal.User) ([]UserStats, 
 	return res, nil
 }
 
-// summerize calculates the points for a user based on the number of activities
-func (s *ScoreboardService) summerize(activities []*types.Activity) int {
+// summarize calculates the points for a user based on the number of activities
+func (s *ScoreboardService) summarize(activities []*types.Activity) int {
 	return len(activities) * 5
 }

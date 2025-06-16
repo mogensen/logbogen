@@ -2,7 +2,7 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
+	"log/slog"
 	"reflect"
 	"time"
 
@@ -42,7 +42,7 @@ func (ct *Date) String() string {
 
 // Register the converter for CustomTime type format as 2006-01-02
 var timeConverter = func(value string) reflect.Value {
-	fmt.Println("timeConverter", value)
+	slog.Debug("Converting time value", "value", value)
 	if v, err := time.Parse("2006-01-02", value); err == nil {
 		return reflect.ValueOf(v)
 	}

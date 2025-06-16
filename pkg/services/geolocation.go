@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strings"
 )
@@ -75,9 +76,10 @@ type GeocodeResponse struct {
 }
 
 func ReverseGeocode(lat, lng float64) (*GeocodeResponse, error) {
+	url := reverseGeocodeURL(lat, lng)
+	slog.Info("Performing HTTP GET request", "url", url)
 
-	fmt.Printf("1. Performing Http Get... : %s\n", reverseGeocodeURL(lat, lng))
-	resp, err := http.Get(reverseGeocodeURL(lat, lng))
+	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +90,7 @@ func ReverseGeocode(lat, lng float64) (*GeocodeResponse, error) {
 	// Convert response body to Todo struct
 	geocodeResponse := &GeocodeResponse{}
 	json.Unmarshal(bodyBytes, geocodeResponse)
-	fmt.Printf("API Response as struct %+v\n", geocodeResponse)
+	slog.Debug("Geocode API response", "response", geocodeResponse)
 	return geocodeResponse, nil
 }
 
