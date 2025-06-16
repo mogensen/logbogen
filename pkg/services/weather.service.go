@@ -16,19 +16,67 @@ type WeatherResponse struct {
 	} `json:"daily"`
 }
 
+type currentWeatherResponse struct {
+	Current struct {
+		Temperature2m float64 `json:"temperature_2m"`
+		WeatherCode   int     `json:"weathercode"`
+	} `json:"current"`
+}
+
 func NewWeatherService() *WeatherService {
 	return &WeatherService{}
 }
 
-// GetHistoricalWeather gets the weather for a specific date and location
-func (s *WeatherService) GetHistoricalWeather(lat, lng float64, date time.Time) (*WeatherResponse, error) {
-	// Open-Meteo API endpoint for historical data
+// GetWeather gets the weather for a specific date and location
+func (s *WeatherService) GetWeather(lat, lng float64, date time.Time) (*WeatherResponse, error) {
+	// Check if the date is today
+	now := time.Now()
+	if date.Year() == now.Year() && date.Month() == now.Month() && date.Day() == now.Day() {
+		return s.getCurrentWeather(lat, lng)
+	}
+	return s.getHistoricalWeather(lat, lng, date)
+}
+
+// getCurrentWeather gets the current weather for a location
+func (s *WeatherService) getCurrentWeather(lat, lng float64) (*WeatherResponse, error) {
+	url := fmt.Sprintf("https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&current=temperature_2m,weathercode&timezone=auto",
+		lat, lng)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch current weather data: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("weather API returned non-200 status code: %d", resp.StatusCode)
+	}
+
+	var currentResp csurrentWeatherResponse
+	if err := json.NewDecoder(resp.Body).Decode(&currentResp); err != nil {
+		return nil, fmt.Errorf("failed to decode current weather response: %w", err)
+	}
+
+	// Convert current weather response to historical format
+	return &WeatherResponse{
+		Daily: struct {
+			Temperature2mMax []float64 `json:"temperature_2m_max"`
+			WeatherCode      []int     `json:"weathercode"`
+		}{
+			Temperature2mMax: []float64{currentResp.Current.Temperature2m},
+			WeatherCode:      []int{currentResp.Current.WeatherCode},
+		},
+	}, nil
+}
+
+// getHistoricalWeather gets the historical weather for a specific date and location
+func (s *WeatherService) getHistoricalWeather(lat, lng float64, date time.Time) (*WeatherResponse, error) {
 	url := fmt.Sprintf("https://archive-api.open-meteo.com/v1/archive?latitude=%f&longitude=%f&start_date=%s&end_date=%s&daily=temperature_2m_max,weathercode&timezone=auto",
 		lat, lng, date.Format("2006-01-02"), date.Format("2006-01-02"))
 
 	resp, err := http.Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch weather data: %w", err)
+		return nil, fmt.Errorf("failed to fetch historical weather data: %w", err)
 	}
 	defer resp.Body.Close()
 

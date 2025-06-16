@@ -168,7 +168,7 @@ func (s *ActivityService) GetActivity(c *fiber.Ctx) error {
 	res := types.ActivityFromDal(&activity, userMap)
 
 	// Get weather data for the activity
-	weather, err := s.weatherSvc.GetHistoricalWeather(activity.Lat, activity.Lng, activity.Date)
+	weather, err := s.weatherSvc.GetWeather(activity.Lat, activity.Lng, activity.Date)
 	if err != nil {
 		slog.Error("Error getting weather data", "error", err)
 	}
