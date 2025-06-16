@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"strconv"
 
 	"github.com/mogensen/logbook/pkg/dal"
@@ -198,9 +199,11 @@ func (s *AuthService) LoginHandler(ctx *fiber.Ctx) error {
 	// Set a session variable to mark the user as logged in
 	session, err := database.SessionStore.Get(ctx)
 	if err != nil {
+		slog.Warn("Failed to get session store", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 	if err := session.Reset(); err != nil {
+		slog.Warn("Failed to reset session", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 	session.Set("username", resp.Email)
@@ -208,6 +211,7 @@ func (s *AuthService) LoginHandler(ctx *fiber.Ctx) error {
 	session.Set("loggedIn", resp.LoggedIn)
 
 	if err := session.Save(); err != nil {
+		slog.Warn("Failed to save session", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
@@ -219,10 +223,12 @@ func (s *AuthService) LoginHandler(ctx *fiber.Ctx) error {
 func (s *AuthService) LogoutHandler(ctx *fiber.Ctx) error {
 	session, err := database.SessionStore.Get(ctx)
 	if err != nil {
+		slog.Warn("Failed to get session store", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
 	if err := session.Destroy(); err != nil {
+		slog.Warn("Failed to destroy session", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 

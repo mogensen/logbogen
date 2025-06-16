@@ -52,7 +52,7 @@ func (s *WeatherService) getCurrentWeather(lat, lng float64) (*WeatherResponse, 
 		return nil, fmt.Errorf("weather API returned non-200 status code: %d", resp.StatusCode)
 	}
 
-	var currentResp csurrentWeatherResponse
+	var currentResp currentWeatherResponse
 	if err := json.NewDecoder(resp.Body).Decode(&currentResp); err != nil {
 		return nil, fmt.Errorf("failed to decode current weather response: %w", err)
 	}

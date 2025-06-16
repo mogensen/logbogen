@@ -102,8 +102,7 @@ func main() {
 	authMiddleware := middleware.NewAuthMiddleware(authService)
 
 	// Route for the root path
-	app.Get("/", csrfMiddleware, authMiddleware.User, indexPage)
-
+	routes.HomeRoutes(app, csrfMiddleware, authMiddleware)
 	routes.AuthRoutes(app, authService, authMiddleware)
 	routes.ActivitiesRoutes(app, activitiesService, authMiddleware)
 	routes.ScoreboardRoutes(app, scoreboardService, authMiddleware)

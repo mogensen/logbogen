@@ -18,13 +18,6 @@
 - Activity recommendations based on preferences
 - Community engagement features
 
-### 3. Weather Integration
-- Real-time weather data for activity locations
-- Historical weather conditions for past activities
-- Weather forecasts for planned activities
-- Weather conditions in activity details
-- Weather-based activity planning tools
-
 ### 4. Equipment Tracking System
 - Equipment inventory management
 - Usage tracking in activities
