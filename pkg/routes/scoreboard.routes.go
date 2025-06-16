@@ -13,7 +13,7 @@ import (
 // UserStats represents a user with their statistics
 type UserStats struct {
 	User                *types.User
-	ArchivementsSummary []types.Achievement
+	AchievementsSummary []types.Achievement
 	Points              int
 }
 
@@ -37,17 +37,17 @@ func ScoreboardRoutes(app *fiber.App) {
 				activities[i] = services.MapActivityFromDal(&activity, nil)
 			}
 
-			archivements := services.Archivements(activities)
-			filteredArchivements := make([]types.Achievement, 0)
-			for _, a := range archivements {
+			achievements := services.Achievements(activities)
+			filteredAchievements := make([]types.Achievement, 0)
+			for _, a := range achievements {
 				if a.Level > 0 {
-					filteredArchivements = append(filteredArchivements, a)
+					filteredAchievements = append(filteredAchievements, a)
 				}
 			}
 			userStats := UserStats{
 				User:                types.UserFromDal(&user, nil),
-				ArchivementsSummary: filteredArchivements,
-				Points:              summerize(archivements),
+				AchievementsSummary: filteredAchievements,
+				Points:              summerize(achievements),
 			}
 			res = append(res, userStats)
 		}
@@ -64,9 +64,9 @@ func ScoreboardRoutes(app *fiber.App) {
 	})
 }
 
-func summerize(archivements []types.Achievement) int {
+func summerize(achievements []types.Achievement) int {
 	points := 0
-	for _, achievement := range archivements {
+	for _, achievement := range achievements {
 		points += achievement.Level * 5
 	}
 	return points

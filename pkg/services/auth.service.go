@@ -178,5 +178,5 @@ func GetUserByID(userId uint64) (*types.User, error) {
 		return nil, fiber.NewError(fiber.StatusConflict, err.Error())
 	}
 
-	return types.UserFromDal(user, Archivements(activies)), nil
+	return types.UserFromDal(user, Achievements(activies)), nil
 }

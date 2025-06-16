@@ -1,13 +1,13 @@
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-center mb-6">Scoreboard</h1>
-    
-    <div class="">
+    <h1 class="text-center mb-6">Resultatliste</h1>
+
+    <div >
         <table class="table table-hover">
             <thead class="table-light">
                 <tr>
-                    <th scope="col" class="text-left">Rank</th>
-                    <th scope="col" class="text-left">User</th>
-                    <th scope="col" class="text-left">Points</th>
+                    <th scope="col" class="text-left">#</th>
+                    <th scope="col" class="text-left">Bruger</th>
+                    <th scope="col" class="text-left">Point</th>
                     <th scope="col" class="text-left">Achievements</th>
                 </tr>
             </thead>
@@ -24,7 +24,7 @@
                     <td>{{$stat.Points}}</td>
                     <td>
                         <div class="d-flex flex-wrap gap-2">
-                            {{range $stat.ArchivementsSummary}}
+                            {{range $stat.AchievementsSummary}}
                               <div class="flex-shrink-1">
                                 <img width=48 src="/images/{{ .ImageSlug }}" title="{{.Name}} (Level {{.Level}})">
                               </div>
