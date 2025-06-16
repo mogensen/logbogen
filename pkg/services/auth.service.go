@@ -44,9 +44,7 @@ type LoginResponse struct {
 
 // Login attempts to log in a user
 func (s *AuthService) Login(req LoginRequest) (*LoginResponse, error) {
-	u := &types.UserResponse{}
-
-	err := s.userDal.FindUserByEmail(u, req.Email).Error
+	u, err := s.userDal.FindUserByEmail(req.Email)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errors.New("invalid email or password")
 	}
@@ -77,7 +75,7 @@ type SignupResponse struct {
 
 // Signup attempts to create a new user
 func (s *AuthService) Signup(req SignupRequest) (*SignupResponse, error) {
-	err := s.userDal.FindUserByEmail(&struct{ ID string }{}, req.Email).Error
+	_, err := s.userDal.FindUserByEmail(req.Email)
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return &SignupResponse{
 			Success: false,
@@ -103,7 +101,7 @@ func (s *AuthService) Signup(req SignupRequest) (*SignupResponse, error) {
 
 // GetUsersResponse represents the get users response data
 type GetUsersResponse struct {
-	Users []*types.UserResponse
+	Users []*types.UserForLogin
 }
 
 // GetUsers returns all users except the current user
@@ -113,14 +111,14 @@ func (s *AuthService) GetUsers(currentUserID uint64) (*GetUsersResponse, error) 
 		return nil, err
 	}
 
-	res := make([]*types.UserResponse, 0, len(users))
+	res := make([]*types.UserForLogin, 0, len(users))
 	for _, v := range users {
 		user := v
 		if v.ID == currentUserID {
 			continue // Skip the current user
 		}
 
-		res = append(res, &types.UserResponse{
+		res = append(res, &types.UserForLogin{
 			ID:    user.ID,
 			Name:  user.Name,
 			Email: user.Email,
@@ -165,17 +163,12 @@ func (s *AuthService) GetUserByID(userID uint64) (*types.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	return types.UserFromDal(user, nil), nil
-}
-
-// GetUserByEmail retrieves a user by their email
-func (s *AuthService) GetUserByEmail(email string) (*types.User, error) {
-	var user types.User
-	result := s.userDal.FindUserByEmail(&user, email)
-	if result.Error != nil {
-		return nil, result.Error
+	activities := make([]*types.Activity, len(user.Activities))
+	for i, activity := range user.Activities {
+		activities[i] = types.ActivityFromDal(&activity, map[uint64]types.User{})
 	}
-	return &user, nil
+
+	return types.UserFromDal(user, Achievements(activities)), nil
 }
 
 // HTTP Handlers
@@ -295,12 +288,12 @@ func (s *AuthService) GetUserHandler(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid user")
 	}
 
-	resp, err := s.GetUser(GetUserRequest{UserID: userId})
+	user, err := s.GetUserByID(userId)
 	if err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
 
 	return ctx.Render("users/user", fiber.Map{
-		"User": resp.User,
+		"User": user,
 	})
 }

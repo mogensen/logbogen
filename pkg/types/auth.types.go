@@ -14,8 +14,8 @@ type SignupDTO struct {
 	Name string `json:"name" validate:"required,min=3"`
 }
 
-// UserResponse todo
-type UserResponse struct {
+// UserForLogin is used for login and signup
+type UserForLogin struct {
 	ID       uint64 `json:"id"`
 	Name     string `json:"name"`
 	Email    string `json:"email"`

@@ -6,31 +6,37 @@ import (
 	"gorm.io/gorm"
 )
 
-// MockUserDal is a mock implementation of the UserDal interface
-type MockUserDal struct {
+// UserDalMock is a mock implementation of dal.UserDal
+type UserDalMock struct {
 	mock.Mock
 }
 
-func (m *MockUserDal) CreateUser(user *dal.User) *gorm.DB {
+// CreateUser mocks the CreateUser method
+func (m *UserDalMock) CreateUser(user *dal.User) *gorm.DB {
 	args := m.Called(user)
 	return args.Get(0).(*gorm.DB)
 }
 
-func (m *MockUserDal) FindUserById(id uint64) (*dal.User, error) {
+// FindUserById mocks the FindUserById method
+func (m *UserDalMock) FindUserById(id uint64) (*dal.User, error) {
 	args := m.Called(id)
-	var user *dal.User
-	if args.Get(0) != nil {
-		user = args.Get(0).(*dal.User)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
 	}
-	return user, args.Error(1)
+	return args.Get(0).(*dal.User), args.Error(1)
 }
 
-func (m *MockUserDal) FindUserByEmail(dest interface{}, email string) *gorm.DB {
-	args := m.Called(dest, email)
-	return args.Get(0).(*gorm.DB)
+// FindUserByEmail mocks the FindUserByEmail method
+func (m *UserDalMock) FindUserByEmail(email string) (*dal.User, error) {
+	args := m.Called(email)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dal.User), args.Error(1)
 }
 
-func (m *MockUserDal) FindUsers() ([]dal.User, error) {
+// FindUsers mocks the FindUsers method
+func (m *UserDalMock) FindUsers() ([]dal.User, error) {
 	args := m.Called()
 	return args.Get(0).([]dal.User), args.Error(1)
 }

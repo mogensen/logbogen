@@ -7,6 +7,7 @@ import (
 	"github.com/mogensen/logbook/pkg/dal"
 	"github.com/mogensen/logbook/pkg/mocks"
 	"github.com/mogensen/logbook/pkg/types"
+	"github.com/mogensen/logbook/pkg/utils/password"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
@@ -16,7 +17,7 @@ func TestAuthService_Signup(t *testing.T) {
 	tests := []struct {
 		testName    string
 		req         SignupRequest
-		mockSetup   func(*mocks.MockUserDal)
+		mockSetup   func(*mocks.UserDalMock)
 		expectedErr error
 		expected    *SignupResponse
 	}{
@@ -27,8 +28,8 @@ func TestAuthService_Signup(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "password123",
 			},
-			mockSetup: func(m *mocks.MockUserDal) {
-				m.On("FindUserByEmail", mock.Anything, "test@example.com").Return(&gorm.DB{Error: gorm.ErrRecordNotFound})
+			mockSetup: func(m *mocks.UserDalMock) {
+				m.On("FindUserByEmail", "test@example.com").Return(nil, gorm.ErrRecordNotFound)
 				m.On("CreateUser", mock.Anything).Return(&gorm.DB{Error: nil})
 			},
 			expectedErr: nil,
@@ -44,8 +45,13 @@ func TestAuthService_Signup(t *testing.T) {
 				Email:    "existing@example.com",
 				Password: "password123",
 			},
-			mockSetup: func(m *mocks.MockUserDal) {
-				m.On("FindUserByEmail", mock.Anything, "existing@example.com").Return(&gorm.DB{Error: nil})
+			mockSetup: func(m *mocks.UserDalMock) {
+				m.On("FindUserByEmail", "existing@example.com").Return(&dal.User{
+					Model:    gorm.Model{ID: 1},
+					Name:     "Test User",
+					Email:    "existing@example.com",
+					Password: "password123",
+				}, nil)
 			},
 			expectedErr: nil,
 			expected: &SignupResponse{
@@ -57,10 +63,10 @@ func TestAuthService_Signup(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			mockUserDal := &mocks.MockUserDal{}
-			tt.mockSetup(mockUserDal)
+			userDalMock := &mocks.UserDalMock{}
+			tt.mockSetup(userDalMock)
 
-			service := NewAuthService(mockUserDal)
+			service := NewAuthService(userDalMock)
 			resp, err := service.Signup(tt.req)
 
 			if tt.expectedErr != nil {
@@ -71,7 +77,7 @@ func TestAuthService_Signup(t *testing.T) {
 				assert.Equal(t, tt.expected, resp)
 			}
 
-			mockUserDal.AssertExpectations(t)
+			userDalMock.AssertExpectations(t)
 		})
 	}
 }
@@ -80,7 +86,7 @@ func TestAuthService_Login(t *testing.T) {
 	tests := []struct {
 		testName    string
 		req         LoginRequest
-		mockSetup   func(*mocks.MockUserDal)
+		mockSetup   func(*mocks.UserDalMock)
 		expectedErr error
 		expected    *LoginResponse
 	}{
@@ -90,10 +96,36 @@ func TestAuthService_Login(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "password123",
 			},
-			mockSetup: func(m *mocks.MockUserDal) {
-				m.On("FindUserByEmail", mock.Anything, "test@example.com").Return(&gorm.DB{Error: nil})
+			mockSetup: func(m *mocks.UserDalMock) {
+				m.On("FindUserByEmail", "test@example.com").Return(&dal.User{
+					Model:    gorm.Model{ID: 1},
+					Name:     "Test User",
+					Email:    "test@example.com",
+					Password: password.Generate("password123"),
+				}, nil)
 			},
-			expectedErr: errors.New("invalid email or password"), // This will fail because we can't mock bcrypt.Verify
+			expectedErr: nil,
+			expected: &LoginResponse{
+				UserID:   1,
+				Email:    "test@example.com",
+				LoggedIn: true,
+			},
+		},
+		{
+			testName: "wrong password",
+			req: LoginRequest{
+				Email:    "bad-password@example.com",
+				Password: "not-the-password",
+			},
+			mockSetup: func(m *mocks.UserDalMock) {
+				m.On("FindUserByEmail", "bad-password@example.com").Return(&dal.User{
+					Model:    gorm.Model{ID: 1},
+					Name:     "Test User",
+					Email:    "bad-password@example.com",
+					Password: password.Generate("password123"),
+				}, nil)
+			},
+			expectedErr: errors.New("invalid email or password"),
 			expected:    nil,
 		},
 		{
@@ -102,8 +134,8 @@ func TestAuthService_Login(t *testing.T) {
 				Email:    "nonexistent@example.com",
 				Password: "password123",
 			},
-			mockSetup: func(m *mocks.MockUserDal) {
-				m.On("FindUserByEmail", mock.Anything, "nonexistent@example.com").Return(&gorm.DB{Error: gorm.ErrRecordNotFound})
+			mockSetup: func(m *mocks.UserDalMock) {
+				m.On("FindUserByEmail", "nonexistent@example.com").Return(nil, gorm.ErrRecordNotFound)
 			},
 			expectedErr: errors.New("invalid email or password"),
 			expected:    nil,
@@ -112,10 +144,10 @@ func TestAuthService_Login(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			mockUserDal := &mocks.MockUserDal{}
-			tt.mockSetup(mockUserDal)
+			userDalMock := &mocks.UserDalMock{}
+			tt.mockSetup(userDalMock)
 
-			service := NewAuthService(mockUserDal)
+			service := NewAuthService(userDalMock)
 			resp, err := service.Login(tt.req)
 
 			if tt.expectedErr != nil {
@@ -126,7 +158,7 @@ func TestAuthService_Login(t *testing.T) {
 				assert.Equal(t, tt.expected, resp)
 			}
 
-			mockUserDal.AssertExpectations(t)
+			userDalMock.AssertExpectations(t)
 		})
 	}
 }
@@ -135,7 +167,7 @@ func TestAuthService_GetUser(t *testing.T) {
 	tests := []struct {
 		testName    string
 		req         GetUserRequest
-		mockSetup   func(*mocks.MockUserDal)
+		mockSetup   func(*mocks.UserDalMock)
 		expectedErr error
 		expected    *GetUserResponse
 	}{
@@ -144,7 +176,7 @@ func TestAuthService_GetUser(t *testing.T) {
 			req: GetUserRequest{
 				UserID: 1,
 			},
-			mockSetup: func(m *mocks.MockUserDal) {
+			mockSetup: func(m *mocks.UserDalMock) {
 				m.On("FindUserById", uint64(1)).Return(&dal.User{
 					Model: gorm.Model{ID: 1},
 					Name:  "Test User",
@@ -165,7 +197,7 @@ func TestAuthService_GetUser(t *testing.T) {
 			req: GetUserRequest{
 				UserID: 999,
 			},
-			mockSetup: func(m *mocks.MockUserDal) {
+			mockSetup: func(m *mocks.UserDalMock) {
 				m.On("FindUserById", uint64(999)).Return(nil, gorm.ErrRecordNotFound)
 			},
 			expectedErr: gorm.ErrRecordNotFound,
@@ -175,10 +207,10 @@ func TestAuthService_GetUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			mockUserDal := &mocks.MockUserDal{}
-			tt.mockSetup(mockUserDal)
+			userDalMock := &mocks.UserDalMock{}
+			tt.mockSetup(userDalMock)
 
-			service := NewAuthService(mockUserDal)
+			service := NewAuthService(userDalMock)
 			resp, err := service.GetUser(tt.req)
 
 			if tt.expectedErr != nil {
@@ -191,15 +223,15 @@ func TestAuthService_GetUser(t *testing.T) {
 				assert.EqualValues(t, tt.expected.User.Email, resp.User.Email)
 			}
 
-			mockUserDal.AssertExpectations(t)
+			userDalMock.AssertExpectations(t)
 		})
 	}
 }
 
 func TestGetUserByID(t *testing.T) {
 	// Setup
-	mockUserDal := new(mocks.MockUserDal)
-	authService := NewAuthService(mockUserDal)
+	userDalMock := new(mocks.UserDalMock)
+	authService := NewAuthService(userDalMock)
 
 	// Test cases
 	tests := []struct {
@@ -213,7 +245,7 @@ func TestGetUserByID(t *testing.T) {
 			name:   "successful user retrieval",
 			userID: 1,
 			mock: func() {
-				mockUserDal.On("FindUserById", uint64(1)).
+				userDalMock.On("FindUserById", uint64(1)).
 					Return(&dal.User{
 						Model: gorm.Model{ID: 1},
 						Name:  "Test User",
@@ -226,7 +258,7 @@ func TestGetUserByID(t *testing.T) {
 			name:   "user not found",
 			userID: 999,
 			mock: func() {
-				mockUserDal.On("FindUserById", uint64(999)).
+				userDalMock.On("FindUserById", uint64(999)).
 					Return(nil, gorm.ErrRecordNotFound)
 			},
 			wantErr: true,
@@ -237,54 +269,6 @@ func TestGetUserByID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mock()
 			user, err := authService.GetUserByID(tt.userID)
-			if tt.wantErr {
-				assert.Error(t, err)
-				assert.Nil(t, user)
-			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, user)
-			}
-		})
-	}
-}
-
-func TestGetUserByEmail(t *testing.T) {
-	// Setup
-	mockUserDal := new(mocks.MockUserDal)
-	authService := NewAuthService(mockUserDal)
-
-	// Test cases
-	tests := []struct {
-		name    string
-		email   string
-		mock    func()
-		want    *types.User
-		wantErr bool
-	}{
-		{
-			name:  "successful user retrieval",
-			email: "test@example.com",
-			mock: func() {
-				mockUserDal.On("FindUserByEmail", mock.Anything, "test@example.com").
-					Return(&gorm.DB{Error: nil})
-			},
-			wantErr: false,
-		},
-		{
-			name:  "user not found",
-			email: "nonexistent@example.com",
-			mock: func() {
-				mockUserDal.On("FindUserByEmail", mock.Anything, "nonexistent@example.com").
-					Return(&gorm.DB{Error: gorm.ErrRecordNotFound})
-			},
-			wantErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.mock()
-			user, err := authService.GetUserByEmail(tt.email)
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, user)

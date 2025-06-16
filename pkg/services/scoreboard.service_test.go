@@ -13,12 +13,12 @@ import (
 )
 
 func dummyActivityService() *ActivityService {
-	return &ActivityService{userDal: new(mocks.MockUserDal)}
+	return &ActivityService{userDal: new(mocks.UserDalMock)}
 }
 
 func TestScoreboardService_Summerize(t *testing.T) {
 	// Arrange
-	mockUserDal := new(mocks.MockUserDal)
+	mockUserDal := new(mocks.UserDalMock)
 	service := NewScoreboardService(mockUserDal)
 	activities := []*types.Activity{
 		{ID: uuid.New()},
@@ -34,7 +34,7 @@ func TestScoreboardService_Summerize(t *testing.T) {
 }
 
 func TestScoreboardService_calculateUserStats(t *testing.T) {
-	mockUserDal := new(mocks.MockUserDal)
+	mockUserDal := new(mocks.UserDalMock)
 	service := NewScoreboardService(mockUserDal)
 
 	users := []dal.User{

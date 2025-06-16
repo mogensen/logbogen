@@ -55,9 +55,9 @@ func TestUserDal_FindUserByEmail(t *testing.T) {
 	require.NotNil(t, userResult)
 	require.NoError(t, userResult.Error)
 
-	dbUser := &User{}
-	result := userDal.FindUserByEmail(&dbUser, "test@example.com")
-	require.NotNil(t, result)
+	dbUser, err := userDal.FindUserByEmail("test@example.com")
+	require.NoError(t, err)
+	require.NotNil(t, dbUser)
 
 	require.Equal(t, "Test User", dbUser.Name)
 	require.Equal(t, "test@example.com", dbUser.Email)

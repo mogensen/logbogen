@@ -17,7 +17,7 @@ type User struct {
 type UserDal interface {
 	CreateUser(user *User) *gorm.DB
 	FindUserById(id uint64) (*User, error)
-	FindUserByEmail(dest interface{}, email string) *gorm.DB
+	FindUserByEmail(email string) (*User, error)
 	FindUsers() ([]User, error)
 }
 
@@ -47,13 +47,13 @@ func (d *userDalImpl) FindUserById(id uint64) (*User, error) {
 }
 
 // FindUserByEmail searches the user's table with the email given
-func (d *userDalImpl) FindUserByEmail(dest interface{}, email string) *gorm.DB {
-	return d.findUser(dest, "email = ?", email)
-}
-
-// findUser searches the user's table with the condition given
-func (d *userDalImpl) findUser(dest interface{}, conds ...interface{}) *gorm.DB {
-	return d.db.Model(&User{}).Preload("Activities").Take(dest, conds...)
+func (d *userDalImpl) FindUserByEmail(email string) (*User, error) {
+	var user User
+	err := d.db.Model(&User{}).Where("email = ?", email).Take(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 // FindUsers returns all users from the database
