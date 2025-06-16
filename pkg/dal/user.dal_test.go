@@ -34,11 +34,9 @@ func TestUserDal_FindUserById(t *testing.T) {
 	require.NotNil(t, userResult)
 	require.NoError(t, userResult.Error)
 
-	dbUser := &User{}
-
-	result := userDal.FindUserById(&dbUser, 1)
-	require.NotNil(t, result)
-	require.NoError(t, result.Error)
+	dbUser, err := userDal.FindUserById(1)
+	require.NoError(t, err)
+	require.NotNil(t, dbUser)
 
 	require.Equal(t, "Test User", dbUser.Name)
 	require.Equal(t, "test@example.com", dbUser.Email)

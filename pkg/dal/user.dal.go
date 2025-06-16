@@ -16,7 +16,7 @@ type User struct {
 // UserDal defines the interface for user data access operations
 type UserDal interface {
 	CreateUser(user *User) *gorm.DB
-	FindUserById(dest interface{}, id uint64) *gorm.DB
+	FindUserById(id uint64) (*User, error)
 	FindUserByEmail(dest interface{}, email string) *gorm.DB
 	FindUsers() ([]User, error)
 }
@@ -37,8 +37,13 @@ func (d *userDalImpl) CreateUser(user *User) *gorm.DB {
 }
 
 // FindUserById searches the user's table with the id given
-func (d *userDalImpl) FindUserById(dest interface{}, id uint64) *gorm.DB {
-	return d.findUser(dest, "id = ?", id)
+func (d *userDalImpl) FindUserById(id uint64) (*User, error) {
+	var user User
+	err := d.db.Model(&User{}).Preload("Activities").Take(&user, "id = ?", id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 // FindUserByEmail searches the user's table with the email given

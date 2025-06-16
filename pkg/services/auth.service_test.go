@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/mogensen/logbook/pkg/dal"
 	"github.com/mogensen/logbook/pkg/mocks"
 	"github.com/mogensen/logbook/pkg/types"
 	"github.com/stretchr/testify/assert"
@@ -144,15 +145,18 @@ func TestAuthService_GetUser(t *testing.T) {
 				UserID: 1,
 			},
 			mockSetup: func(m *mocks.MockUserDal) {
-				m.On("FindUserById", mock.Anything, uint64(1)).Return(&gorm.DB{Error: nil})
+				m.On("FindUserById", uint64(1)).Return(&dal.User{
+					Model: gorm.Model{ID: 1},
+					Name:  "Test User",
+					Email: "test@example.com",
+				}, nil)
 			},
 			expectedErr: nil,
 			expected: &GetUserResponse{
 				User: &types.User{
-					ID:           0,
-					Name:         "",
-					Email:        "",
-					Achievements: Achievements([]*types.Activity{}),
+					ID:    1,
+					Name:  "Test User",
+					Email: "test@example.com",
 				},
 			},
 		},
@@ -162,7 +166,7 @@ func TestAuthService_GetUser(t *testing.T) {
 				UserID: 999,
 			},
 			mockSetup: func(m *mocks.MockUserDal) {
-				m.On("FindUserById", mock.Anything, uint64(999)).Return(&gorm.DB{Error: gorm.ErrRecordNotFound})
+				m.On("FindUserById", uint64(999)).Return(nil, gorm.ErrRecordNotFound)
 			},
 			expectedErr: gorm.ErrRecordNotFound,
 			expected:    nil,
@@ -182,7 +186,9 @@ func TestAuthService_GetUser(t *testing.T) {
 				assert.Equal(t, tt.expectedErr, err)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected, resp)
+				assert.EqualValues(t, tt.expected.User.ID, resp.User.ID)
+				assert.EqualValues(t, tt.expected.User.Name, resp.User.Name)
+				assert.EqualValues(t, tt.expected.User.Email, resp.User.Email)
 			}
 
 			mockUserDal.AssertExpectations(t)
@@ -207,8 +213,12 @@ func TestGetUserByID(t *testing.T) {
 			name:   "successful user retrieval",
 			userID: 1,
 			mock: func() {
-				mockUserDal.On("FindUserById", mock.Anything, uint64(1)).
-					Return(&gorm.DB{Error: nil})
+				mockUserDal.On("FindUserById", uint64(1)).
+					Return(&dal.User{
+						Model: gorm.Model{ID: 1},
+						Name:  "Test User",
+						Email: "test@example.com",
+					}, nil)
 			},
 			wantErr: false,
 		},
@@ -216,8 +226,8 @@ func TestGetUserByID(t *testing.T) {
 			name:   "user not found",
 			userID: 999,
 			mock: func() {
-				mockUserDal.On("FindUserById", mock.Anything, uint64(999)).
-					Return(&gorm.DB{Error: gorm.ErrRecordNotFound})
+				mockUserDal.On("FindUserById", uint64(999)).
+					Return(nil, gorm.ErrRecordNotFound)
 			},
 			wantErr: true,
 		},

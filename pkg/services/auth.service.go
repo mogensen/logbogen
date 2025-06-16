@@ -144,9 +144,7 @@ type GetUserResponse struct {
 
 // GetUser returns a specific user by ID
 func (s *AuthService) GetUser(req GetUserRequest) (*GetUserResponse, error) {
-	user := &dal.User{}
-
-	err := s.userDal.FindUserById(user, req.UserID).Error
+	user, err := s.userDal.FindUserById(req.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -163,12 +161,11 @@ func (s *AuthService) GetUser(req GetUserRequest) (*GetUserResponse, error) {
 
 // GetUserByID retrieves a user by their ID
 func (s *AuthService) GetUserByID(userID uint64) (*types.User, error) {
-	var user types.User
-	result := s.userDal.FindUserById(&user, userID)
-	if result.Error != nil {
-		return nil, result.Error
+	user, err := s.userDal.FindUserById(userID)
+	if err != nil {
+		return nil, err
 	}
-	return &user, nil
+	return types.UserFromDal(user, nil), nil
 }
 
 // GetUserByEmail retrieves a user by their email
