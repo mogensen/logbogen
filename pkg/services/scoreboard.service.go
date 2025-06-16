@@ -55,7 +55,7 @@ func (s *ScoreboardService) calculateUserStats(users *[]dal.User) ([]UserStats, 
 	for _, user := range *users {
 		activities := make([]*types.Activity, len(user.Activities))
 		for i, activity := range user.Activities {
-			activities[i] = MapActivityFromDal(&activity, map[uint64]types.User{})
+			activities[i] = types.ActivityFromDal(&activity, map[uint64]types.User{})
 		}
 
 		achievements := Achievements(activities)

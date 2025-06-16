@@ -5,41 +5,20 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mogensen/logbook/pkg/dal"
+	"github.com/mogensen/logbook/pkg/mocks"
 	"github.com/mogensen/logbook/pkg/types"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
 
-// MockUserDal is a mock implementation of dal.UserDal
-type MockUserDal struct {
-	mock.Mock
-}
-
-func (m *MockUserDal) CreateUser(user *dal.User) *gorm.DB {
-	args := m.Called(user)
-	return args.Get(0).(*gorm.DB)
-}
-
-func (m *MockUserDal) FindUserById(dest interface{}, id uint64) *gorm.DB {
-	args := m.Called(dest, id)
-	return args.Get(0).(*gorm.DB)
-}
-
-func (m *MockUserDal) FindUserByEmail(dest interface{}, email string) *gorm.DB {
-	args := m.Called(dest, email)
-	return args.Get(0).(*gorm.DB)
-}
-
-func (m *MockUserDal) FindUsers(dest interface{}, conds ...interface{}) *gorm.DB {
-	args := m.Called(dest, conds)
-	return args.Get(0).(*gorm.DB)
+func dummyActivityService() *ActivityService {
+	return &ActivityService{userDal: new(mocks.MockUserDal)}
 }
 
 func TestScoreboardService_Summerize(t *testing.T) {
 	// Arrange
-	mockUserDal := new(MockUserDal)
+	mockUserDal := new(mocks.MockUserDal)
 	service := NewScoreboardService(mockUserDal)
 	activities := []*types.Activity{
 		{ID: uuid.New()},
@@ -55,7 +34,7 @@ func TestScoreboardService_Summerize(t *testing.T) {
 }
 
 func TestScoreboardService_calculateUserStats(t *testing.T) {
-	mockUserDal := new(MockUserDal)
+	mockUserDal := new(mocks.MockUserDal)
 	service := NewScoreboardService(mockUserDal)
 
 	users := []dal.User{
@@ -89,7 +68,6 @@ func TestScoreboardService_calculateUserStats(t *testing.T) {
 	assert.Equal(t, "User1", stast[1].User.Name)
 	assert.Equal(t, 2, len(stast[0].AchievementsSummary))
 	assert.Equal(t, 1, len(stast[1].AchievementsSummary))
-
 }
 
 // Helper function to create a pointer to uint64

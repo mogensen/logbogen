@@ -7,19 +7,19 @@ import (
 )
 
 // ActivitiesRoutes contains all routes relative to /activities
-func ActivitiesRoutes(app fiber.Router) {
-	r := app.Group("/activities").Use(middleware.Auth)
-	r.Get("/types", services.GetActivityTypes)
-	r.Get("/categories", services.GetActivityCategories)
+func ActivitiesRoutes(app fiber.Router, activityService *services.ActivityService, authMiddleware *middleware.AuthMiddleware) {
+	r := app.Group("/activities").Use(authMiddleware.Auth)
+	r.Get("/types", activityService.GetActivityTypes)
+	r.Get("/categories", activityService.GetActivityCategories)
 
-	r.Get("/create", services.CreateActivityPage)
-	r.Post("/create", services.CreateActivity)
-	r.Get("/list", services.GetActivities)
-	r.Get("/pending", services.GetPendingActivitiesForUser)
-	r.Get("/:ActivityID", services.GetActivity)
-	r.Get("/:ActivityID/edit", services.EditActivity)
-	r.Post("/:ActivityID", services.UpdateActivity)
-	r.Post("/:ActivityID/delete", services.DeleteActivity)
+	r.Get("/create", activityService.CreateActivityPage)
+	r.Post("/create", activityService.CreateActivity)
+	r.Get("/list", activityService.GetActivities)
+	r.Get("/pending", activityService.GetPendingActivitiesForUser)
+	r.Get("/:ActivityID", activityService.GetActivity)
+	r.Get("/:ActivityID/edit", activityService.EditActivity)
+	r.Post("/:ActivityID", activityService.UpdateActivity)
+	r.Post("/:ActivityID/delete", activityService.DeleteActivity)
 
-	r.Get("/clone/:ActivityID", services.CloneActivity)
+	r.Get("/clone/:ActivityID", activityService.CloneActivity)
 }

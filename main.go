@@ -88,15 +88,20 @@ func main() {
 	// Data Layer
 	userDal := dal.NewUserDal(database.DB)
 
-	// Route for the root path
-	app.Get("/", csrfMiddleware, middleware.User, indexPage)
-
 	// Services
+	activitiesService := services.NewActivityService(userDal)
 	scoreboardService := services.NewScoreboardService(userDal)
+	authService := services.NewAuthService(userDal)
 
-	routes.AuthRoutes(app)
-	routes.ActivitiesRoutes(app)
-	routes.ScoreboardRoutes(app, scoreboardService)
+	// Middleware
+	authMiddleware := middleware.NewAuthMiddleware(authService)
+
+	// Route for the root path
+	app.Get("/", csrfMiddleware, authMiddleware.User, indexPage)
+
+	routes.AuthRoutes(app, authService, authMiddleware)
+	routes.ActivitiesRoutes(app, activitiesService, authMiddleware)
+	routes.ScoreboardRoutes(app, scoreboardService, authMiddleware)
 
 	certFile := "cert.pem"
 	keyFile := "key.pem"

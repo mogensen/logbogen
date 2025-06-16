@@ -12,9 +12,17 @@ import (
 
 var ErrNotLoggedIn = fmt.Errorf("User is not logged in")
 
+type AuthMiddleware struct {
+	authService *services.AuthService
+}
+
+func NewAuthMiddleware(authService *services.AuthService) *AuthMiddleware {
+	return &AuthMiddleware{authService: authService}
+}
+
 // Auth is the authentication middleware
-func Auth(c *fiber.Ctx) error {
-	user, err := getCurrentUser(c)
+func (a *AuthMiddleware) Auth(c *fiber.Ctx) error {
+	user, err := a.getCurrentUser(c, a.authService)
 	if err != nil {
 		if err == ErrNotLoggedIn {
 			return c.Redirect("/")
@@ -30,8 +38,8 @@ func Auth(c *fiber.Ctx) error {
 }
 
 // User adds the user information to the context
-func User(c *fiber.Ctx) error {
-	user, err := getCurrentUser(c)
+func (a *AuthMiddleware) User(c *fiber.Ctx) error {
+	user, err := a.getCurrentUser(c, a.authService)
 	if err != nil {
 		return c.Next() // User is not logged in, continue to next middleware
 	}
@@ -43,7 +51,7 @@ func User(c *fiber.Ctx) error {
 	return c.Next()
 }
 
-func getCurrentUser(c *fiber.Ctx) (*types.User, error) {
+func (a *AuthMiddleware) getCurrentUser(c *fiber.Ctx, authService *services.AuthService) (*types.User, error) {
 	session, err := database.SessionStore.Get(c)
 	if err != nil {
 		return nil, fiber.ErrInternalServerError
@@ -57,5 +65,5 @@ func getCurrentUser(c *fiber.Ctx) (*types.User, error) {
 
 	userID, _ := session.Get("userID").(uint64)
 
-	return services.GetUserByID(userID)
+	return authService.GetUserByID(userID)
 }

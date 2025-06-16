@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/mogensen/logbook/pkg/dal"
@@ -14,16 +15,178 @@ import (
 	"gorm.io/gorm"
 )
 
-var userDal dal.UserDal
+var ErrNotLoggedIn = fmt.Errorf("User is not logged in")
 
-func init() {
-	database.Connect()
-	database.Migrate(&dal.User{}, &dal.Activity{})
-	userDal = dal.NewUserDal(database.DB)
+// AuthService handles authentication related operations
+type AuthService struct {
+	userDal dal.UserDal
 }
 
-// Login service logs in a user
-func Login(ctx *fiber.Ctx) error {
+// NewAuthService creates a new instance of AuthService
+func NewAuthService(userDal dal.UserDal) *AuthService {
+	return &AuthService{
+		userDal: userDal,
+	}
+}
+
+// LoginRequest represents the login request data
+type LoginRequest struct {
+	Email    string
+	Password string
+}
+
+// LoginResponse represents the login response data
+type LoginResponse struct {
+	UserID   uint64
+	Email    string
+	LoggedIn bool
+}
+
+// Login attempts to log in a user
+func (s *AuthService) Login(req LoginRequest) (*LoginResponse, error) {
+	u := &types.UserResponse{}
+
+	err := s.userDal.FindUserByEmail(u, req.Email).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errors.New("invalid email or password")
+	}
+
+	if err := password.Verify(u.Password, req.Password); err != nil {
+		return nil, errors.New("invalid email or password")
+	}
+
+	return &LoginResponse{
+		UserID:   u.ID,
+		Email:    u.Email,
+		LoggedIn: true,
+	}, nil
+}
+
+// SignupRequest represents the signup request data
+type SignupRequest struct {
+	Name     string
+	Email    string
+	Password string
+}
+
+// SignupResponse represents the signup response data
+type SignupResponse struct {
+	Success bool
+	Message string
+}
+
+// Signup attempts to create a new user
+func (s *AuthService) Signup(req SignupRequest) (*SignupResponse, error) {
+	err := s.userDal.FindUserByEmail(&struct{ ID string }{}, req.Email).Error
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return &SignupResponse{
+			Success: false,
+			Message: "Der er already en bruger med denne email",
+		}, nil
+	}
+
+	user := &dal.User{
+		Name:     req.Name,
+		Password: password.Generate(req.Password),
+		Email:    req.Email,
+	}
+
+	if err := s.userDal.CreateUser(user); err.Error != nil {
+		return nil, err.Error
+	}
+
+	return &SignupResponse{
+		Success: true,
+		Message: "Brugeren er oprettet, du kan nu logge ind",
+	}, nil
+}
+
+// GetUsersResponse represents the get users response data
+type GetUsersResponse struct {
+	Users []*types.UserResponse
+}
+
+// GetUsers returns all users except the current user
+func (s *AuthService) GetUsers(currentUserID uint64) (*GetUsersResponse, error) {
+	users := &[]types.User{}
+
+	err := s.userDal.FindUsers(users).Error
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*types.UserResponse, 0, len(*users))
+	for _, v := range *users {
+		user := v
+		if v.ID == currentUserID {
+			continue // Skip the current user
+		}
+
+		res = append(res, &types.UserResponse{
+			ID:    user.ID,
+			Name:  user.Name,
+			Email: user.Email,
+		})
+	}
+
+	return &GetUsersResponse{
+		Users: res,
+	}, nil
+}
+
+// GetUserRequest represents the get user request data
+type GetUserRequest struct {
+	UserID uint64
+}
+
+// GetUserResponse represents the get user response data
+type GetUserResponse struct {
+	User *types.User
+}
+
+// GetUser returns a specific user by ID
+func (s *AuthService) GetUser(req GetUserRequest) (*GetUserResponse, error) {
+	user := &dal.User{}
+
+	err := s.userDal.FindUserById(user, req.UserID).Error
+	if err != nil {
+		return nil, err
+	}
+
+	activities := make([]*types.Activity, len(user.Activities))
+	for i, activity := range user.Activities {
+		activities[i] = types.ActivityFromDal(&activity, map[uint64]types.User{})
+	}
+
+	return &GetUserResponse{
+		User: types.UserFromDal(user, Achievements(activities)),
+	}, nil
+}
+
+// GetUserByID retrieves a user by their ID
+func (s *AuthService) GetUserByID(userID uint64) (*types.User, error) {
+	var user types.User
+	result := s.userDal.FindUserById(&user, userID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &user, nil
+}
+
+// GetUserByEmail retrieves a user by their email
+func (s *AuthService) GetUserByEmail(email string) (*types.User, error) {
+	var user types.User
+	result := s.userDal.FindUserByEmail(&user, email)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &user, nil
+}
+
+// HTTP Handlers
+
+// LoginHandler handles the login HTTP request
+func (s *AuthService) LoginHandler(ctx *fiber.Ctx) error {
 	b := new(types.LoginDTO)
 
 	if err := utils.ParseBodyAndValidate(ctx, b); err != nil {
@@ -33,21 +196,14 @@ func Login(ctx *fiber.Ctx) error {
 		})
 	}
 
-	u := &types.UserResponse{}
-
-	err := userDal.FindUserByEmail(u, b.Email).Error
-
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	resp, err := s.Login(LoginRequest{
+		Email:    b.Email,
+		Password: b.Password,
+	})
+	if err != nil {
 		return ctx.Render("index", fiber.Map{
 			"csrf":  utils.GetCsrf(ctx),
-			"error": "Invalid email or password",
-		})
-	}
-
-	if err := password.Verify(u.Password, b.Password); err != nil {
-		return ctx.Render("index", fiber.Map{
-			"csrf":  utils.GetCsrf(ctx),
-			"error": "Invalid email or password",
+			"error": err.Error(),
 		})
 	}
 
@@ -59,9 +215,9 @@ func Login(ctx *fiber.Ctx) error {
 	if err := session.Reset(); err != nil {
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
-	session.Set("username", u.Email)
-	session.Set("userID", u.ID)
-	session.Set("loggedIn", true)
+	session.Set("username", resp.Email)
+	session.Set("userID", resp.UserID)
+	session.Set("loggedIn", resp.LoggedIn)
 
 	if err := session.Save(); err != nil {
 		return ctx.SendStatus(fiber.StatusInternalServerError)
@@ -71,120 +227,85 @@ func Login(ctx *fiber.Ctx) error {
 	return ctx.Redirect("/")
 }
 
-func Logout(ctx *fiber.Ctx) error {
-	// Retrieve the session
+// LogoutHandler handles the logout HTTP request
+func (s *AuthService) LogoutHandler(ctx *fiber.Ctx) error {
 	session, err := database.SessionStore.Get(ctx)
 	if err != nil {
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	// Revoke users authentication
 	if err := session.Destroy(); err != nil {
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	// Redirect to the home page
 	return ctx.Redirect("/")
 }
 
-func SignupPage(ctx *fiber.Ctx) error {
-	// Render the registration page
+// SignupPageHandler renders the registration page
+func (s *AuthService) SignupPageHandler(ctx *fiber.Ctx) error {
 	return ctx.Render("users/register", fiber.Map{
 		"Title": "Register",
 		"csrf":  utils.GetCsrf(ctx),
 	})
 }
 
-// Signup service creates a user
-func Signup(ctx *fiber.Ctx) error {
+// SignupHandler handles the signup HTTP request
+func (s *AuthService) SignupHandler(ctx *fiber.Ctx) error {
 	b := new(types.SignupDTO)
 
 	if err := utils.ParseBodyAndValidate(ctx, b); err != nil {
 		return err
 	}
 
-	err := userDal.FindUserByEmail(&struct{ ID string }{}, b.Email).Error
+	resp, err := s.Signup(SignupRequest{
+		Name:     b.Name,
+		Email:    b.Email,
+		Password: b.Password,
+	})
+	if err != nil {
+		return err
+	}
 
-	// If email already exists, return
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
+	if !resp.Success {
 		return ctx.Render("users/register", fiber.Map{
-			"error": "Der er already en bruger med denne email",
+			"error": resp.Message,
 		})
 	}
 
-	user := &dal.User{
-		Name:     b.Name,
-		Password: password.Generate(b.Password),
-		Email:    b.Email,
-	}
-
-	// Create a user, if error return
-	if err := userDal.CreateUser(user); err.Error != nil {
-		return fiber.NewError(fiber.StatusConflict, err.Error.Error())
-	}
-
 	return ctx.Render("index", fiber.Map{
-		"info": "Brugeren er oprettet, du kan nu logge ind",
+		"info": resp.Message,
 	})
 }
 
-func GetUsers(ctx *fiber.Ctx) error {
-	users := &[]types.UserResponse{}
-
-	err := userDal.FindUsers(users).Error
+// GetUsersHandler handles the get users HTTP request
+func (s *AuthService) GetUsersHandler(ctx *fiber.Ctx) error {
+	currentUser := utils.GetUser(ctx)
+	resp, err := s.GetUsers(currentUser.ID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
 
-	currentUser := utils.GetUser(ctx)
-
-	res := make([]*types.UserResponse, 0, len(*users))
-	for _, v := range *users {
-		user := v
-		if v.ID == currentUser.ID {
-			continue // Skip the current user
-		}
-		res = append(res, &user)
-	}
-
-	return ctx.JSON(res)
+	return ctx.JSON(resp.Users)
 }
 
-func GetUser(ctx *fiber.Ctx) error {
+// GetUserHandler handles the get user HTTP request
+func (s *AuthService) GetUserHandler(ctx *fiber.Ctx) error {
 	userIdParam := ctx.Params("UserID")
-
 	if userIdParam == "" {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid user")
 	}
 
-	// Parse the user ID from the URL parameter
 	userId, err := strconv.ParseUint(userIdParam, 10, 64)
 	if err != nil {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid user")
 	}
 
-	user, err := GetUserByID(userId)
+	resp, err := s.GetUser(GetUserRequest{UserID: userId})
 	if err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
 
 	return ctx.Render("users/user", fiber.Map{
-		"User": user,
+		"User": resp.User,
 	})
-}
-
-func GetUserByID(userId uint64) (*types.User, error) {
-	user := &dal.User{}
-
-	err := userDal.FindUserById(user, userId).Error
-	if err != nil {
-		return nil, fiber.NewError(fiber.StatusConflict, err.Error())
-	}
-
-	activies, err := GetActivitiesForUser(user.ID)
-	if err != nil {
-		return nil, fiber.NewError(fiber.StatusConflict, err.Error())
-	}
-
-	return types.UserFromDal(user, Achievements(activies)), nil
 }

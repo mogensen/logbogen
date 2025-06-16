@@ -7,15 +7,15 @@ import (
 )
 
 // AuthRoutes containes all the auth routes
-func AuthRoutes(app fiber.Router) {
+func AuthRoutes(app fiber.Router, authService *services.AuthService, authMiddleware *middleware.AuthMiddleware) {
 	r := app.Group("/auth")
 
-	r.Get("/signup", services.SignupPage)
-	r.Post("/signup", services.Signup)
-	r.Post("/login", services.Login)
-	r.Get("/logout", services.Logout)
+	r.Get("/signup", authService.SignupPageHandler)
+	r.Post("/signup", authService.SignupHandler)
+	r.Post("/login", authService.LoginHandler)
+	r.Get("/logout", authService.LogoutHandler)
 
-	r = app.Group("/users").Use(middleware.Auth)
-	r.Get("/list", services.GetUsers)
-	r.Get("/:UserID", services.GetUser)
+	r = app.Group("/users").Use(authMiddleware.Auth)
+	r.Get("/list", authService.GetUsersHandler)
+	r.Get("/:UserID", authService.GetUserHandler)
 }

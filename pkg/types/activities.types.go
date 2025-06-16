@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/mogensen/logbook/pkg/dal"
 )
 
 const (
@@ -92,6 +93,35 @@ type Activity struct {
 
 func (a *Activity) Title() string {
 	return a.Type.Name + " nær " + a.Location
+}
+
+// ActivityFromDal converts a DAL activity to a types Activity
+func ActivityFromDal(activity *dal.Activity, userMap map[uint64]User) *Activity {
+	participants := make([]User, 0, len(activity.Participants))
+	for _, p := range activity.Participants {
+		if user, ok := userMap[p]; ok {
+			participants = append(participants, user)
+		}
+	}
+
+	return &Activity{
+		ID:              activity.ID,
+		Date:            Date(activity.Date),
+		Lat:             activity.Lat,
+		Lng:             activity.Lng,
+		Location:        activity.Location,
+		CategoryID:      activity.Category,
+		Category:        *CategoryByID(activity.Category),
+		Type:            *ActivityTypeByID(activity.Type),
+		TypeID:          activity.Type,
+		Role:            activity.Role,
+		Comment:         activity.Comment,
+		Participants:    participants,
+		ParticipantsIDs: activity.Participants,
+		CreatedAt:       activity.CreatedAt,
+		UpdatedAt:       activity.UpdatedAt,
+		User:            userMap[*activity.User],
+	}
 }
 
 // CreateDTO struct defines the /Activity/create payload

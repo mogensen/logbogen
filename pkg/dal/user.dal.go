@@ -48,7 +48,7 @@ func (d *userDalImpl) FindUserByEmail(dest interface{}, email string) *gorm.DB {
 
 // findUser searches the user's table with the condition given
 func (d *userDalImpl) findUser(dest interface{}, conds ...interface{}) *gorm.DB {
-	return d.db.Model(&User{}).Take(dest, conds...)
+	return d.db.Model(&User{}).Preload("Activities").Take(dest, conds...)
 }
 
 // FindUsers searches the user's table with the condition given

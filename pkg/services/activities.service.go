@@ -13,7 +13,20 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateActivityPage(c *fiber.Ctx) error {
+// ActivityService handles activity related operations
+type ActivityService struct {
+	userDal dal.UserDal
+}
+
+// NewActivityService creates a new instance of ActivityService
+func NewActivityService(userDal dal.UserDal) *ActivityService {
+	return &ActivityService{
+		userDal: userDal,
+	}
+}
+
+// CreateActivityPage renders the create activity page
+func (s *ActivityService) CreateActivityPage(c *fiber.Ctx) error {
 	// Render the create activity page
 	return c.Render("activities/create", fiber.Map{
 		"Activity": &types.Activity{
@@ -23,7 +36,7 @@ func CreateActivityPage(c *fiber.Ctx) error {
 }
 
 // CreateActivity is responsible for creating an Activity
-func CreateActivity(c *fiber.Ctx) error {
+func (s *ActivityService) CreateActivity(c *fiber.Ctx) error {
 	b := new(types.CreateDTO)
 
 	if err := utils.ParseBodyAndValidate(c, b); err != nil {
@@ -65,8 +78,8 @@ func CreateActivity(c *fiber.Ctx) error {
 }
 
 // GetActivities returns the Activities list
-func GetActivities(c *fiber.Ctx) error {
-	res, err := GetActivitiesForUser(utils.GetUser(c).ID)
+func (s *ActivityService) GetActivities(c *fiber.Ctx) error {
+	res, err := s.GetActivitiesForUser(utils.GetUser(c).ID)
 	if err != nil {
 		return err
 	}
@@ -81,42 +94,40 @@ func GetActivities(c *fiber.Ctx) error {
 	})
 }
 
-func GetActivitiesForUser(userId uint64) ([]*types.Activity, error) {
-	activities := []dal.Activity{}
-
-	err := dal.FindActivitiesByUser(&activities, userId).Error
+func (s *ActivityService) GetActivitiesForUser(userId uint64) ([]*types.Activity, error) {
+	activities := &[]dal.Activity{}
+	err := dal.FindActivitiesByUser(activities, userId).Error
 	if err != nil {
 		return nil, fiber.NewError(fiber.StatusConflict, err.Error())
 	}
 
-	userMap, err := getUserMap()
+	userMap, err := s.getUserMap()
 	if err != nil {
 		return nil, err
 	}
 
-	res := make([]*types.Activity, len(activities))
-	for i, activity := range activities {
-		res[i] = MapActivityFromDal(&activity, userMap)
+	res := make([]*types.Activity, len(*activities))
+	for i, activity := range *activities {
+		res[i] = types.ActivityFromDal(&activity, userMap)
 	}
 	return res, nil
 }
 
-func GetPendingActivitiesForUser(c *fiber.Ctx) error {
-	activities := []dal.Activity{}
-
-	err := dal.FindPendingActivitiesByUser(&activities, utils.GetUser(c).ID).Error
+func (s *ActivityService) GetPendingActivitiesForUser(c *fiber.Ctx) error {
+	activities := &[]dal.Activity{}
+	err := dal.FindPendingActivitiesByUser(activities, utils.GetUser(c).ID).Error
 	if err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
 
-	userMap, err := getUserMap()
+	userMap, err := s.getUserMap()
 	if err != nil {
 		return err
 	}
 
-	res := make([]*types.Activity, len(activities))
-	for i, activity := range activities {
-		res[i] = MapActivityFromDal(&activity, userMap)
+	res := make([]*types.Activity, len(*activities))
+	for i, activity := range *activities {
+		res[i] = types.ActivityFromDal(&activity, userMap)
 	}
 
 	accept := c.Accepts("html", "json")
@@ -130,7 +141,7 @@ func GetPendingActivitiesForUser(c *fiber.Ctx) error {
 }
 
 // GetActivity return a single Activity
-func GetActivity(c *fiber.Ctx) error {
+func (s *ActivityService) GetActivity(c *fiber.Ctx) error {
 	activityID := c.Params("ActivityID")
 
 	if activityID == "" {
@@ -144,12 +155,12 @@ func GetActivity(c *fiber.Ctx) error {
 		return c.JSON(&types.CreateDTO{})
 	}
 
-	userMap, err := getUserMap()
+	userMap, err := s.getUserMap()
 	if err != nil {
 		return err
 	}
 
-	res := MapActivityFromDal(activity, userMap)
+	res := types.ActivityFromDal(activity, userMap)
 
 	return c.Render("activities/show", fiber.Map{
 		"Activity": res,
@@ -157,7 +168,7 @@ func GetActivity(c *fiber.Ctx) error {
 }
 
 // EditActivity return a single Activity
-func EditActivity(c *fiber.Ctx) error {
+func (s *ActivityService) EditActivity(c *fiber.Ctx) error {
 	activityID := c.Params("ActivityID")
 
 	if activityID == "" {
@@ -171,18 +182,18 @@ func EditActivity(c *fiber.Ctx) error {
 		return c.JSON(&types.CreateDTO{})
 	}
 
-	userMap, err := getUserMap()
+	userMap, err := s.getUserMap()
 	if err != nil {
 		return err
 	}
 
-	res := MapActivityFromDal(activity, userMap)
+	res := types.ActivityFromDal(activity, userMap)
 
 	return c.Render("activities/edit", fiber.Map{"Activity": res})
 }
 
 // DeleteActivity deletes a single Activity
-func DeleteActivity(c *fiber.Ctx) error {
+func (s *ActivityService) DeleteActivity(c *fiber.Ctx) error {
 	activityID := c.Params("ActivityID")
 
 	if activityID == "" {
@@ -205,7 +216,7 @@ func DeleteActivity(c *fiber.Ctx) error {
 }
 
 // UpdateActivity updates an Activity
-func UpdateActivity(c *fiber.Ctx) error {
+func (s *ActivityService) UpdateActivity(c *fiber.Ctx) error {
 	b := new(types.CreateDTO)
 	activityID := c.Params("ActivityID")
 
@@ -248,7 +259,7 @@ func UpdateActivity(c *fiber.Ctx) error {
 }
 
 // CloneActivity clones an Activity
-func CloneActivity(c *fiber.Ctx) error {
+func (s *ActivityService) CloneActivity(c *fiber.Ctx) error {
 	activityID := c.Params("ActivityID")
 
 	if activityID == "" {
@@ -271,7 +282,7 @@ func CloneActivity(c *fiber.Ctx) error {
 		Category:     activity.Category,
 		Role:         activity.Role,
 		Comment:      activity.Comment,
-		Participants: participantsForClone(activity.Participants, utils.GetUser(c).ID, *activity.User),
+		Participants: s.participantsForClone(activity.Participants, utils.GetUser(c).ID, *activity.User),
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 		User:         &utils.GetUser(c).ID,
@@ -285,7 +296,7 @@ func CloneActivity(c *fiber.Ctx) error {
 	return c.Redirect("/activities/" + newActivity.ID.String() + "/edit")
 }
 
-func participantsForClone(participants []uint64, currentUser uint64, originalUser uint64) []uint64 {
+func (s *ActivityService) participantsForClone(participants []uint64, currentUser uint64, originalUser uint64) []uint64 {
 	// Remove the original user and add the current user
 	newParticipants := make([]uint64, 0, len(participants))
 	for _, p := range participants {
@@ -297,9 +308,9 @@ func participantsForClone(participants []uint64, currentUser uint64, originalUse
 	return newParticipants
 }
 
-func getUserMap() (map[uint64]types.User, error) {
+func (s *ActivityService) getUserMap() (map[uint64]types.User, error) {
 	users := &[]dal.User{}
-	err := userDal.FindUsers(users).Error
+	err := s.userDal.FindUsers(users).Error
 	if err != nil {
 		return nil, err
 	}
@@ -311,36 +322,8 @@ func getUserMap() (map[uint64]types.User, error) {
 	return userMap, nil
 }
 
-func MapActivityFromDal(activity *dal.Activity, userMap map[uint64]types.User) *types.Activity {
-	participants := make([]types.User, 0, len(activity.Participants))
-	for _, p := range activity.Participants {
-		if user, ok := userMap[p]; ok {
-			participants = append(participants, user)
-		}
-	}
-
-	return &types.Activity{
-		ID:              activity.ID,
-		Date:            types.Date(activity.Date),
-		Lat:             activity.Lat,
-		Lng:             activity.Lng,
-		Location:        activity.Location,
-		CategoryID:      activity.Category,
-		Category:        *types.CategoryByID(activity.Category),
-		Type:            *types.ActivityTypeByID(activity.Type),
-		TypeID:          activity.Type,
-		Role:            activity.Role,
-		Comment:         activity.Comment,
-		Participants:    participants,
-		ParticipantsIDs: activity.Participants,
-		CreatedAt:       activity.CreatedAt,
-		UpdatedAt:       activity.UpdatedAt,
-		User:            userMap[*activity.User],
-	}
-}
-
 // GetActivityTypes returns the activity types for a given category
-func GetActivityTypes(c *fiber.Ctx) error {
+func (s *ActivityService) GetActivityTypes(c *fiber.Ctx) error {
 	category := c.Query("category")
 	if category == "" {
 		// If no category is specified, return all categories and their types
@@ -358,6 +341,6 @@ func GetActivityTypes(c *fiber.Ctx) error {
 }
 
 // GetActivityCategories returns all available activity categories
-func GetActivityCategories(c *fiber.Ctx) error {
+func (s *ActivityService) GetActivityCategories(c *fiber.Ctx) error {
 	return c.JSON(types.AllActivityCategories)
 }
