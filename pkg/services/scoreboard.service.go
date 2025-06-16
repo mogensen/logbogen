@@ -40,10 +40,7 @@ func (s *ScoreboardService) GetScoreboard(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Render("scoreboard/show", fiber.Map{
-		"Title":     "Scoreboard",
-		"UserStats": res,
-	})
+	return c.Render("scoreboard/show", fiber.Map{"UserStats": res})
 }
 
 func (s *ScoreboardService) calculateUserStats(users *[]dal.User) ([]UserStats, error) {
