@@ -20,7 +20,7 @@ func GetScoreboard(c *fiber.Ctx) error {
 	users := &[]dal.User{}
 
 	// Get all users
-	err := dal.FindUsers(users).Error
+	err := userDal.FindUsers(users).Error
 	if err != nil {
 		return err
 	}

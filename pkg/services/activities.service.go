@@ -299,7 +299,7 @@ func participantsForClone(participants []uint64, currentUser uint64, originalUse
 
 func getUserMap() (map[uint64]types.User, error) {
 	users := &[]dal.User{}
-	err := dal.FindUsers(users).Error
+	err := userDal.FindUsers(users).Error
 	if err != nil {
 		return nil, err
 	}

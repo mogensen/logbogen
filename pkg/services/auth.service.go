@@ -14,6 +14,14 @@ import (
 	"gorm.io/gorm"
 )
 
+var userDal dal.UserDal
+
+func init() {
+	database.Connect()
+	database.Migrate(&dal.User{}, &dal.Activity{})
+	userDal = dal.NewUserDal(database.DB)
+}
+
 // Login service logs in a user
 func Login(ctx *fiber.Ctx) error {
 	b := new(types.LoginDTO)
@@ -27,7 +35,7 @@ func Login(ctx *fiber.Ctx) error {
 
 	u := &types.UserResponse{}
 
-	err := dal.FindUserByEmail(u, b.Email).Error
+	err := userDal.FindUserByEmail(u, b.Email).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return ctx.Render("index", fiber.Map{
@@ -95,7 +103,7 @@ func Signup(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	err := dal.FindUserByEmail(&struct{ ID string }{}, b.Email).Error
+	err := userDal.FindUserByEmail(&struct{ ID string }{}, b.Email).Error
 
 	// If email already exists, return
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -111,7 +119,7 @@ func Signup(ctx *fiber.Ctx) error {
 	}
 
 	// Create a user, if error return
-	if err := dal.CreateUser(user); err.Error != nil {
+	if err := userDal.CreateUser(user); err.Error != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error.Error())
 	}
 
@@ -123,7 +131,7 @@ func Signup(ctx *fiber.Ctx) error {
 func GetUsers(ctx *fiber.Ctx) error {
 	users := &[]types.UserResponse{}
 
-	err := dal.FindUsers(users).Error
+	err := userDal.FindUsers(users).Error
 	if err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
@@ -168,7 +176,7 @@ func GetUser(ctx *fiber.Ctx) error {
 func GetUserByID(userId uint64) (*types.User, error) {
 	user := &dal.User{}
 
-	err := dal.FindUserById(user, userId).Error
+	err := userDal.FindUserById(user, userId).Error
 	if err != nil {
 		return nil, fiber.NewError(fiber.StatusConflict, err.Error())
 	}
