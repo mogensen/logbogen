@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/mogensen/logbook/pkg/database"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -27,46 +26,81 @@ type Activity struct {
 	UpdatedAt    time.Time                   `gorm:"not null"`
 }
 
+type ActivityDal interface {
+	CreateActivity(activity *Activity) (Activity, error)
+	FindActivity(conds ...interface{}) (Activity, error)
+	FindActivityToClone(ActivityIden string, userIden uint64) (Activity, error)
+	FindActivityByUser(ActivityIden string, userIden uint64) (Activity, error)
+	FindActivitiesByUser(userIden uint64) ([]Activity, error)
+	DeleteActivity(ActivityIden string, userIden uint64) error
+	UpdateActivity(ActivityIden string, userIden uint64, data interface{}) (Activity, error)
+	FindPendingActivitiesByUser(userIden uint64) ([]Activity, error)
+}
+
+// ActivityService handles all database operations for activities
+type ActivityService struct {
+	db *gorm.DB
+}
+
+// NewActivityService creates a new ActivityService instance
+func NewActivityService(db *gorm.DB) *ActivityService {
+	return &ActivityService{db: db}
+}
+
 // CreateActivity creates an Activity entry in the Activity's table
-func CreateActivity(activity *Activity) *gorm.DB {
-	return database.DB.Create(activity)
+func (s *ActivityService) CreateActivity(activity *Activity) (Activity, error) {
+	result := s.db.Create(activity)
+	return *activity, result.Error
 }
 
 // FindActivity finds an Activity with given condition
-func FindActivity(dest *Activity, conds ...interface{}) *gorm.DB {
-	return database.DB.Model(&Activity{}).Take(dest, conds...)
+func (s *ActivityService) FindActivity(conds ...interface{}) (Activity, error) {
+	var activity Activity
+	result := s.db.Model(&Activity{}).Take(&activity, conds...)
+	return activity, result.Error
 }
 
 // FindActivityToClone finds an Activity with given Activity and user identifier for cloning
-func FindActivityToClone(dest *Activity, ActivityIden string, userIden uint64) *gorm.DB {
-	return database.DB.Model(&Activity{}).Order("date DESC").
+func (s *ActivityService) FindActivityToClone(ActivityIden string, userIden uint64) (Activity, error) {
+	var activity Activity
+	result := s.db.Model(&Activity{}).Order("date DESC").
 		Where(datatypes.JSONArrayQuery("participants").Contains(userIden)).
-		Take(dest, "id = ? AND user != ?", ActivityIden, userIden)
+		Take(&activity, "id = ? AND user != ?", ActivityIden, userIden)
+	return activity, result.Error
 }
 
 // FindActivityByUser finds an Activity with given Activity and user identifier
-func FindActivityByUser(dest *Activity, ActivityIden string, userIden uint64) *gorm.DB {
-	return FindActivity(dest, "id = ? AND user = ?", ActivityIden, userIden)
+func (s *ActivityService) FindActivityByUser(ActivityIden string, userIden uint64) (Activity, error) {
+	return s.FindActivity("id = ? AND user = ?", ActivityIden, userIden)
 }
 
 // FindActivitiesByUser finds the Activities with user's identifier given
-func FindActivitiesByUser(dest *[]Activity, userIden uint64) *gorm.DB {
-	return database.DB.Model(&Activity{}).Order("date DESC").Find(dest, "user = ?", userIden)
+func (s *ActivityService) FindActivitiesByUser(userIden uint64) ([]Activity, error) {
+	var activities []Activity
+	result := s.db.Model(&Activity{}).Order("date DESC").Find(&activities, "user = ?", userIden)
+	return activities, result.Error
 }
 
 // DeleteActivity deletes an Activity from Activities' table with the given Activity and user identifier
-func DeleteActivity(ActivityIden string, userIden uint64) *gorm.DB {
-	return database.DB.Unscoped().Delete(&Activity{}, "id = ? AND user = ?", ActivityIden, userIden)
+func (s *ActivityService) DeleteActivity(ActivityIden string, userIden uint64) error {
+	result := s.db.Unscoped().Delete(&Activity{}, "id = ? AND user = ?", ActivityIden, userIden)
+	return result.Error
 }
 
 // UpdateActivity allows to update the Activity with the given ActivityID and userID
-func UpdateActivity(ActivityIden string, userIden uint64, data interface{}) *gorm.DB {
-	return database.DB.Model(&Activity{}).Where("id = ? AND user = ?", ActivityIden, userIden).Updates(data)
+func (s *ActivityService) UpdateActivity(ActivityIden string, userIden uint64, data interface{}) (Activity, error) {
+	result := s.db.Model(&Activity{}).Where("id = ? AND user = ?", ActivityIden, userIden).Updates(data)
+	if result.Error != nil {
+		return Activity{}, result.Error
+	}
+	return s.FindActivityByUser(ActivityIden, userIden)
 }
 
 // FindPendingActivitiesByUser finds any activities created by another user but with the current user as participant
-func FindPendingActivitiesByUser(dest *[]Activity, userIden uint64) *gorm.DB {
-	return database.DB.Model(&Activity{}).Order("date DESC").
+func (s *ActivityService) FindPendingActivitiesByUser(userIden uint64) ([]Activity, error) {
+	var activities []Activity
+	result := s.db.Model(&Activity{}).Order("date DESC").
 		Where(datatypes.JSONArrayQuery("participants").Contains(userIden)).
-		Find(dest, "user != ?", userIden)
+		Find(&activities, "user != ?", userIden)
+	return activities, result.Error
 }

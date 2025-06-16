@@ -15,13 +15,15 @@ import (
 
 // ActivityService handles activity related operations
 type ActivityService struct {
-	userDal dal.UserDal
+	activityDal dal.ActivityDal
+	userDal     dal.UserDal
 }
 
 // NewActivityService creates a new instance of ActivityService
-func NewActivityService(userDal dal.UserDal) *ActivityService {
+func NewActivityService(userDal dal.UserDal, activityDal dal.ActivityDal) *ActivityService {
 	return &ActivityService{
-		userDal: userDal,
+		userDal:     userDal,
+		activityDal: activityDal,
 	}
 }
 
@@ -70,7 +72,8 @@ func (s *ActivityService) CreateActivity(c *fiber.Ctx) error {
 	geo, _ := ReverseGeocode(b.Activity.Lat, b.Activity.Lng)
 	activity.Location = geo.SimpleDisplayName()
 
-	if err := dal.CreateActivity(activity).Error; err != nil {
+	_, err := s.activityDal.CreateActivity(activity)
+	if err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
 
@@ -95,8 +98,7 @@ func (s *ActivityService) GetActivities(c *fiber.Ctx) error {
 }
 
 func (s *ActivityService) GetActivitiesForUser(userId uint64) ([]*types.Activity, error) {
-	activities := &[]dal.Activity{}
-	err := dal.FindActivitiesByUser(activities, userId).Error
+	activities, err := s.activityDal.FindActivitiesByUser(userId)
 	if err != nil {
 		return nil, fiber.NewError(fiber.StatusConflict, err.Error())
 	}
@@ -106,16 +108,15 @@ func (s *ActivityService) GetActivitiesForUser(userId uint64) ([]*types.Activity
 		return nil, err
 	}
 
-	res := make([]*types.Activity, len(*activities))
-	for i, activity := range *activities {
+	res := make([]*types.Activity, len(activities))
+	for i, activity := range activities {
 		res[i] = types.ActivityFromDal(&activity, userMap)
 	}
 	return res, nil
 }
 
 func (s *ActivityService) GetPendingActivitiesForUser(c *fiber.Ctx) error {
-	activities := &[]dal.Activity{}
-	err := dal.FindPendingActivitiesByUser(activities, utils.GetUser(c).ID).Error
+	activities, err := s.activityDal.FindPendingActivitiesByUser(utils.GetUser(c).ID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
@@ -125,8 +126,8 @@ func (s *ActivityService) GetPendingActivitiesForUser(c *fiber.Ctx) error {
 		return err
 	}
 
-	res := make([]*types.Activity, len(*activities))
-	for i, activity := range *activities {
+	res := make([]*types.Activity, len(activities))
+	for i, activity := range activities {
 		res[i] = types.ActivityFromDal(&activity, userMap)
 	}
 
@@ -148,11 +149,12 @@ func (s *ActivityService) GetActivity(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid ActivityID")
 	}
 
-	activity := &dal.Activity{}
-
-	err := dal.FindActivityByUser(activity, activityID, utils.GetUser(c).ID).Error
+	activity, err := s.activityDal.FindActivityByUser(activityID, utils.GetUser(c).ID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return c.JSON(&types.CreateDTO{})
+	}
+	if err != nil {
+		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
 
 	userMap, err := s.getUserMap()
@@ -160,7 +162,7 @@ func (s *ActivityService) GetActivity(c *fiber.Ctx) error {
 		return err
 	}
 
-	res := types.ActivityFromDal(activity, userMap)
+	res := types.ActivityFromDal(&activity, userMap)
 
 	return c.Render("activities/show", fiber.Map{
 		"Activity": res,
@@ -175,11 +177,12 @@ func (s *ActivityService) EditActivity(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid ActivityID")
 	}
 
-	activity := &dal.Activity{}
-
-	err := dal.FindActivityByUser(activity, activityID, utils.GetUser(c).ID).Error
+	activity, err := s.activityDal.FindActivityByUser(activityID, utils.GetUser(c).ID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return c.JSON(&types.CreateDTO{})
+	}
+	if err != nil {
+		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
 
 	userMap, err := s.getUserMap()
@@ -187,7 +190,7 @@ func (s *ActivityService) EditActivity(c *fiber.Ctx) error {
 		return err
 	}
 
-	res := types.ActivityFromDal(activity, userMap)
+	res := types.ActivityFromDal(&activity, userMap)
 
 	return c.Render("activities/edit", fiber.Map{"Activity": res})
 }
@@ -200,12 +203,7 @@ func (s *ActivityService) DeleteActivity(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid ActivityID")
 	}
 
-	res := dal.DeleteActivity(activityID, utils.GetUser(c).ID)
-	if res.RowsAffected == 0 {
-		return fiber.NewError(fiber.StatusConflict, "Unable to delete Activity")
-	}
-
-	err := res.Error
+	err := s.activityDal.DeleteActivity(activityID, utils.GetUser(c).ID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
@@ -250,7 +248,7 @@ func (s *ActivityService) UpdateActivity(c *fiber.Ctx) error {
 	geo, _ := ReverseGeocode(b.Activity.Lat, b.Activity.Lng)
 	activity.Location = geo.SimpleDisplayName()
 
-	err := dal.UpdateActivity(activityID, utils.GetUser(c).ID, activity).Error
+	_, err := s.activityDal.UpdateActivity(activityID, utils.GetUser(c).ID, activity)
 	if err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
@@ -266,13 +264,12 @@ func (s *ActivityService) CloneActivity(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid ActivityID")
 	}
 
-	activity := &dal.Activity{}
-	err := dal.FindActivityToClone(activity, activityID, utils.GetUser(c).ID).Error
+	activity, err := s.activityDal.FindActivityToClone(activityID, utils.GetUser(c).ID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
 
-	// Create a new activity with the same data
+	// Create a new activity with the same data but new ID and user
 	newActivity := &dal.Activity{
 		ID:           uuid.New(),
 		Date:         activity.Date,
@@ -289,11 +286,12 @@ func (s *ActivityService) CloneActivity(c *fiber.Ctx) error {
 		Type:         activity.Type,
 	}
 
-	if err := dal.CreateActivity(newActivity).Error; err != nil {
+	_, err = s.activityDal.CreateActivity(newActivity)
+	if err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
 
-	return c.Redirect("/activities/" + newActivity.ID.String() + "/edit")
+	return c.Redirect("/activities/" + newActivity.ID.String())
 }
 
 func (s *ActivityService) participantsForClone(participants []uint64, currentUser uint64, originalUser uint64) []uint64 {
@@ -321,25 +319,12 @@ func (s *ActivityService) getUserMap() (map[uint64]types.User, error) {
 	return userMap, nil
 }
 
-// GetActivityTypes returns the activity types for a given category
+// GetActivityTypes returns all activity types
 func (s *ActivityService) GetActivityTypes(c *fiber.Ctx) error {
-	category := c.Query("category")
-	if category == "" {
-		// If no category is specified, return all categories and their types
-		return c.JSON(types.AllActivityTypes)
-	}
-
-	categoryTypes := make([]types.ActivityType, 0, len(types.AllActivityTypes))
-	for _, activityType := range types.AllActivityTypes {
-		if activityType.Category == category {
-			categoryTypes = append(categoryTypes, activityType)
-		}
-	}
-
-	return c.JSON(categoryTypes)
+	return c.JSON(types.AllActivityTypes)
 }
 
-// GetActivityCategories returns all available activity categories
+// GetActivityCategories returns all activity categories
 func (s *ActivityService) GetActivityCategories(c *fiber.Ctx) error {
 	return c.JSON(types.AllActivityCategories)
 }

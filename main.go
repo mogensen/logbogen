@@ -87,9 +87,10 @@ func main() {
 
 	// Data Layer
 	userDal := dal.NewUserDal(database.DB)
+	activityDal := dal.NewActivityService(database.DB)
 
 	// Services
-	activitiesService := services.NewActivityService(userDal)
+	activitiesService := services.NewActivityService(userDal, activityDal)
 	scoreboardService := services.NewScoreboardService(userDal)
 	authService := services.NewAuthService(userDal)
 
