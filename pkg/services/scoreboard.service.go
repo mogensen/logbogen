@@ -15,22 +15,47 @@ type UserStats struct {
 	Points              int
 }
 
+// ScoreboardService handles scoreboard-related operations
+type ScoreboardService struct {
+	userDal dal.UserDal
+}
+
+// NewScoreboardService creates a new instance of ScoreboardService
+func NewScoreboardService(userDal dal.UserDal) *ScoreboardService {
+	return &ScoreboardService{
+		userDal: userDal,
+	}
+}
+
 // GetScoreboard returns the scoreboard data for all users
-func GetScoreboard(c *fiber.Ctx) error {
+func (s *ScoreboardService) GetScoreboard(c *fiber.Ctx) error {
+
 	users := &[]dal.User{}
 
 	// Get all users
-	err := userDal.FindUsers(users).Error
+	err := s.userDal.FindUsers(users).Error
 	if err != nil {
 		return err
 	}
 
+	res, err := s.calculateUserStats(users)
+	if err != nil {
+		return err
+	}
+
+	return c.Render("scoreboard/show", fiber.Map{
+		"Title":     "Scoreboard",
+		"UserStats": res,
+	})
+}
+
+func (s *ScoreboardService) calculateUserStats(users *[]dal.User) ([]UserStats, error) {
 	res := []UserStats{}
 
 	for _, user := range *users {
 		activities := make([]*types.Activity, len(user.Activities))
 		for i, activity := range user.Activities {
-			activities[i] = MapActivityFromDal(&activity, nil)
+			activities[i] = MapActivityFromDal(&activity, map[uint64]types.User{})
 		}
 
 		achievements := Achievements(activities)
@@ -43,7 +68,7 @@ func GetScoreboard(c *fiber.Ctx) error {
 		userStats := UserStats{
 			User:                types.UserFromDal(&user, nil),
 			AchievementsSummary: filteredAchievements,
-			Points:              summerize(activities),
+			Points:              s.summerize(activities),
 		}
 		res = append(res, userStats)
 	}
@@ -52,14 +77,10 @@ func GetScoreboard(c *fiber.Ctx) error {
 	sort.Slice(res, func(i, j int) bool {
 		return res[i].Points > res[j].Points
 	})
-
-	return c.Render("scoreboard/show", fiber.Map{
-		"Title":     "Scoreboard",
-		"UserStats": res,
-	})
+	return res, nil
 }
 
 // summerize calculates the points for a user based on the number of activities
-func summerize(activities []*types.Activity) int {
+func (s *ScoreboardService) summerize(activities []*types.Activity) int {
 	return len(activities) * 5
 }

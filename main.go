@@ -20,6 +20,7 @@ import (
 	"github.com/mogensen/logbook/pkg/dal"
 	"github.com/mogensen/logbook/pkg/database"
 	"github.com/mogensen/logbook/pkg/routes"
+	"github.com/mogensen/logbook/pkg/services"
 	"github.com/mogensen/logbook/pkg/types"
 	"github.com/mogensen/logbook/pkg/utils"
 	"github.com/mogensen/logbook/pkg/utils/middleware"
@@ -84,12 +85,18 @@ func main() {
 	// CSRF Error handler
 	csrfMiddleware := setupCsrfMiddleware()
 
+	// Data Layer
+	userDal := dal.NewUserDal(database.DB)
+
 	// Route for the root path
 	app.Get("/", csrfMiddleware, middleware.User, indexPage)
 
+	// Services
+	scoreboardService := services.NewScoreboardService(userDal)
+
 	routes.AuthRoutes(app)
 	routes.ActivitiesRoutes(app)
-	routes.ScoreboardRoutes(app)
+	routes.ScoreboardRoutes(app, scoreboardService)
 
 	certFile := "cert.pem"
 	keyFile := "key.pem"

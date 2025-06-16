@@ -7,7 +7,7 @@ import (
 )
 
 // ScoreboardRoutes contains all routes relative to /scoreboard
-func ScoreboardRoutes(app fiber.Router) {
+func ScoreboardRoutes(app fiber.Router, scoreboardService *services.ScoreboardService) {
 	r := app.Group("/scoreboard").Use(middleware.Auth)
-	r.Get("/", middleware.User, services.GetScoreboard)
+	r.Get("/", middleware.User, scoreboardService.GetScoreboard)
 }
