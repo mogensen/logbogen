@@ -31,9 +31,9 @@ func init() {
 	// Initialize a session store
 	sessConfig := session.Config{
 		Storage:        storage,
-		Expiration:     30 * time.Minute,        // Expire sessions after 30 minutes of inactivity
-		KeyLookup:      "cookie:__Host-session", // Recommended to use the __Host- prefix when serving the app over TLS
-		CookieSecure:   true,
+		Expiration:     30 * time.Minute, // Expire sessions after 30 minutes of inactivity
+		KeyLookup:      "cookie:session", // Removed __Host- prefix
+		CookieSecure:   false,            // Set to false for non-TLS
 		CookieHTTPOnly: true,
 		CookieSameSite: "Lax",
 	}

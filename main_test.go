@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
+	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
 	"os"
@@ -13,6 +15,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/mogensen/logbook/pkg/database"
+	"github.com/mogensen/logbook/pkg/types"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -57,16 +60,12 @@ func TestAppSetup(t *testing.T) {
 	app, err := setupApp(cfg)
 	require.NoError(t, err)
 
-	// Start the app in a goroutine
-	go func() {
-		err := app.Listen(cfg.ListenAddr)
-		require.NoError(t, err)
-	}()
-
-	// Wait for the app to start
-	time.Sleep(500 * time.Millisecond)
-
 	email := fmt.Sprintf("test-%d@example.com", time.Now().UnixNano())
+
+	jar, err := cookiejar.New(nil)
+	require.NoError(t, err)
+	u, err := url.Parse("http://localhost")
+	require.NoError(t, err)
 
 	t.Run("Home page should be accessible", func(t *testing.T) {
 		// Make a test request
@@ -114,10 +113,38 @@ func TestAppSetup(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, fiber.StatusFound, resp.StatusCode)
 		require.Equal(t, "/", resp.Header.Get("Location"))
+
+		jar.SetCookies(u, resp.Cookies())
+		t.Logf("Cookies: %+v", jar.Cookies(req.URL))
+	})
+
+	t.Run("User can list activies", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/activities/list", nil)
+		req.Header.Add("Accept", "application/json")
+		for _, v := range jar.Cookies(u) {
+			t.Logf("Cookie: %+v", v)
+			req.AddCookie(v)
+		}
+
+		resp, err := app.Test(req)
+		require.NoError(t, err)
+		require.Equal(t, fiber.StatusOK, resp.StatusCode)
+		body, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		t.Logf("Body: %s", string(body))
+		activities := []types.Activity{}
+		err = json.Unmarshal(body, &activities)
+		require.NoError(t, err)
+		require.Len(t, activities, 0)
 	})
 
 	t.Run("User can logout", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/auth/logout", nil)
+		for _, v := range jar.Cookies(u) {
+			t.Logf("Cookie: %+v", v)
+			req.AddCookie(v)
+		}
+
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		require.Equal(t, fiber.StatusFound, resp.StatusCode)
@@ -133,14 +160,4 @@ func TestAppSetup(t *testing.T) {
 		require.Contains(t, string(body), "Log ind")
 		require.Contains(t, string(body), "Opret bruger")
 	})
-
-	// Make a test request
-	req := httptest.NewRequest("GET", "/", nil)
-	resp, err := app.Test(req)
-	require.NoError(t, err)
-	require.Equal(t, fiber.StatusOK, resp.StatusCode)
-
-	// Cleanup
-	err = app.Shutdown()
-	require.NoError(t, err)
 }

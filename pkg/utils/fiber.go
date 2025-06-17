@@ -59,11 +59,6 @@ func IsCurrentUser(c *fiber.Ctx, userId uint64) bool {
 	return false
 }
 
-func GetCsrf(c *fiber.Ctx) string {
-	csrf, _ := c.Locals("csrf").(string)
-	return csrf
-}
-
 func FormatDate(date types.Date) string {
 	day := time.Time(date)
 	if date == _emptyDate {

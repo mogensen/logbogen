@@ -6,8 +6,8 @@ import (
 	"github.com/mogensen/logbook/pkg/utils/middleware"
 )
 
-func HomeRoutes(app fiber.Router, csrfMiddleware fiber.Handler, authMiddleware *middleware.AuthMiddleware) {
-	app.Get("/", csrfMiddleware, authMiddleware.User, IndexPage)
+func HomeRoutes(app fiber.Router, authMiddleware *middleware.AuthMiddleware) {
+	app.Get("/", authMiddleware.User, IndexPage)
 }
 
 // IndexPage handles the root route of the application

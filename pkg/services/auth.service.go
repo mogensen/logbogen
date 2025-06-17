@@ -180,7 +180,6 @@ func (s *AuthService) LoginHandler(ctx *fiber.Ctx) error {
 
 	if err := utils.ParseBodyAndValidate(ctx, b); err != nil {
 		return ctx.Render("auth/login", fiber.Map{
-			"csrf":  utils.GetCsrf(ctx),
 			"error": err.Message,
 		})
 	}
@@ -191,7 +190,6 @@ func (s *AuthService) LoginHandler(ctx *fiber.Ctx) error {
 	})
 	if err != nil {
 		return ctx.Render("auth/login", fiber.Map{
-			"csrf":  utils.GetCsrf(ctx),
 			"error": err.Error(),
 		})
 	}
@@ -202,6 +200,7 @@ func (s *AuthService) LoginHandler(ctx *fiber.Ctx) error {
 		slog.Warn("Failed to get session store", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
+
 	if err := session.Reset(); err != nil {
 		slog.Warn("Failed to reset session", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
@@ -215,6 +214,7 @@ func (s *AuthService) LoginHandler(ctx *fiber.Ctx) error {
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
+	slog.Info("Logged in", "userID", resp.UserID, "email", resp.Email)
 	// Redirect to the home page
 	return ctx.Redirect("/")
 }
@@ -239,7 +239,6 @@ func (s *AuthService) LogoutHandler(ctx *fiber.Ctx) error {
 func (s *AuthService) SignupPageHandler(ctx *fiber.Ctx) error {
 	return ctx.Render("users/register", fiber.Map{
 		"Title": "Register",
-		"csrf":  utils.GetCsrf(ctx),
 	})
 }
 
@@ -308,6 +307,5 @@ func (s *AuthService) GetUserHandler(ctx *fiber.Ctx) error {
 func (s *AuthService) LoginPageHandler(ctx *fiber.Ctx) error {
 	return ctx.Render("auth/login", fiber.Map{
 		"Title": "Login",
-		"csrf":  utils.GetCsrf(ctx),
 	})
 }

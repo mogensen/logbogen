@@ -3,10 +3,8 @@ package main
 import (
 	"log/slog"
 	"os"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/csrf"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/template/html/v2"
 	"github.com/mogensen/logbook/pkg/dal"
@@ -72,9 +70,6 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 
 	app.Static("/", cfg.AssetsPath)
 
-	// CSRF Error handler
-	csrfMiddleware := setupCsrfMiddleware()
-
 	// Data Layer
 	userDal := dal.NewUserDal(database.DB)
 	activityDal := dal.NewActivityService(database.DB)
@@ -89,7 +84,7 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	authMiddleware := middleware.NewAuthMiddleware(authService)
 
 	// Route for the root path
-	routes.HomeRoutes(app, csrfMiddleware, authMiddleware)
+	routes.HomeRoutes(app, authMiddleware)
 	routes.AuthRoutes(app, authService, authMiddleware)
 	routes.ActivitiesRoutes(app, activitiesService, authMiddleware)
 	routes.ScoreboardRoutes(app, scoreboardService, authMiddleware)
@@ -114,49 +109,4 @@ func main() {
 	}
 
 	app.Listen(cfg.ListenAddr)
-}
-
-func setupCsrfMiddleware() fiber.Handler {
-	csrfErrorHandler := func(c *fiber.Ctx, err error) error {
-		// Log the error so we can track who is trying to perform CSRF attacks
-		slog.Warn("CSRF Error detected",
-			"error", err,
-			"url", c.OriginalURL(),
-			"ip", c.IP(),
-		)
-
-		// check accepted content types
-		switch c.Accepts("html", "json") {
-		case "json":
-			// Return a 403 Forbidden response for JSON requests
-			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-				"error": "403 Forbidden",
-			})
-		case "html":
-			// Return a 403 Forbidden response for HTML requests
-			return c.Status(fiber.StatusForbidden).Render("error", fiber.Map{
-				"Title":     "Error",
-				"Error":     "403 Forbidden",
-				"ErrorCode": "403",
-			})
-		default:
-			// Return a 403 Forbidden response for all other requests
-			return c.Status(fiber.StatusForbidden).SendString("403 Forbidden")
-		}
-	}
-
-	// Configure the CSRF middleware
-	csrfConfig := csrf.Config{
-		Session:        database.SessionStore,
-		KeyLookup:      "form:csrf",   // In this example, we will be using a hidden input field to store the CSRF token
-		CookieName:     "__Host-csrf", // Recommended to use the __Host- prefix when serving the app over TLS
-		CookieSameSite: "Lax",         // Recommended to set this to Lax or Strict
-		CookieSecure:   true,          // Recommended to set to true when serving the app over TLS
-		CookieHTTPOnly: true,          // Recommended, otherwise if using JS framework recomend: false and KeyLookup: "header:X-CSRF-Token"
-		ContextKey:     "csrf",
-		ErrorHandler:   csrfErrorHandler,
-		Expiration:     30 * time.Minute,
-	}
-	csrfMiddleware := csrf.New(csrfConfig)
-	return csrfMiddleware
 }

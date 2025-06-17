@@ -1,7 +1,6 @@
 {{ $activity := .Activity }}
 
 <formset id="activity-form">
-    <input type="hidden" id="csrf" name="csrf" value="{{ .csrf }}">
     {{ if .error }}
     <div class="alert alert-danger" role="alert">
         {{ .error }}
