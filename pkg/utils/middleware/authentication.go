@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/mogensen/logbook/pkg/database"
 	"github.com/mogensen/logbook/pkg/services"
@@ -54,6 +55,7 @@ func (a *AuthMiddleware) User(c *fiber.Ctx) error {
 func (a *AuthMiddleware) getCurrentUser(c *fiber.Ctx, authService *services.AuthService) (*types.User, error) {
 	session, err := database.SessionStore.Get(c)
 	if err != nil {
+		slog.Error("Failed to get session store", "error", err)
 		return nil, fiber.ErrInternalServerError
 	}
 

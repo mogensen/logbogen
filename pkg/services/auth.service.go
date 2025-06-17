@@ -266,7 +266,7 @@ func (s *AuthService) SignupHandler(ctx *fiber.Ctx) error {
 		})
 	}
 
-	return ctx.Render("index", fiber.Map{
+	return ctx.Render("auth/login", fiber.Map{
 		"info": resp.Message,
 	})
 }

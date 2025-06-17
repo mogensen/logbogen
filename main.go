@@ -1,15 +1,7 @@
 package main
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/tls"
-	"crypto/x509"
-	"crypto/x509/pkix"
-	"encoding/pem"
-
 	"log/slog"
-	"math/big"
 	"os"
 	"time"
 
@@ -21,35 +13,42 @@ import (
 	"github.com/mogensen/logbook/pkg/database"
 	"github.com/mogensen/logbook/pkg/routes"
 	"github.com/mogensen/logbook/pkg/services"
-	"github.com/mogensen/logbook/pkg/types"
 	"github.com/mogensen/logbook/pkg/utils"
 	"github.com/mogensen/logbook/pkg/utils/middleware"
 	slogfiber "github.com/samber/slog-fiber"
 )
 
-// User represents a user in the dummy authentication system
-type User struct {
-	Username string
-	Password string
+// Config holds the application configuration
+type Config struct {
+	ListenAddr  string
+	DatabaseURL string
+	ViewsPath   string
+	AssetsPath  string
+	CertFile    string
+	KeyFile     string
+	Logger      *slog.Logger
 }
 
-// Dummy user database
-var emptyHashString string
-
-func main() {
-	err := database.Connect()
-	if err != nil {
-		slog.Error("Error connecting to database", "error", err)
-		return
+// DefaultConfig returns the default configuration
+func DefaultConfig() *Config {
+	return &Config{
+		ListenAddr: "127.0.0.1:3000",
+		ViewsPath:  "./views",
+		AssetsPath: "./assets",
+		Logger:     slog.New(slog.NewTextHandler(os.Stdout, nil)),
 	}
-	err = database.Migrate(&dal.User{}, &dal.Activity{})
+}
+
+// setupApp creates and configures the Fiber application
+func setupApp(cfg *Config) (*fiber.App, error) {
+	err := database.Migrate(&dal.User{}, &dal.Activity{})
 	if err != nil {
-		slog.Error("Error migrating database", "error", err)
-		return
+		cfg.Logger.Error("Error migrating database", "error", err)
+		return nil, err
 	}
 
 	// HTML templates
-	engine := html.New("./views", ".html")
+	engine := html.New(cfg.ViewsPath, ".html")
 	engine.AddFunc("current_user", utils.GetUser)
 	engine.AddFunc("is_current_user", utils.IsCurrentUser)
 	engine.AddFunc("fmtDate", utils.FormatDate)
@@ -58,18 +57,7 @@ func main() {
 	engine.AddFunc("json", utils.ToJSON)
 	engine.AddFunc("firstSix", utils.FirstSix)
 	engine.AddFunc("userImage", utils.UserImage)
-
-	type ActivityCtx struct {
-		UserID   *uint64
-		Activity *types.Activity
-	}
-
-	engine.AddFunc("ctxActivity", func(user uint64, activity types.Activity) ActivityCtx {
-		return ActivityCtx{
-			UserID:   &user,
-			Activity: &activity,
-		}
-	})
+	engine.AddFunc("ctxActivity", utils.CtxActivity)
 
 	// Create a Fiber app
 	app := fiber.New(fiber.Config{
@@ -78,12 +66,11 @@ func main() {
 		ViewsLayout:       "layouts/main",
 		PassLocalsToViews: true,
 	})
-	// Initialize default config
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	app.Use(slogfiber.New(logger))
+
+	app.Use(slogfiber.New(cfg.Logger))
 	app.Use(recover.New())
 
-	app.Static("/", "./assets")
+	app.Static("/", cfg.AssetsPath)
 
 	// CSRF Error handler
 	csrfMiddleware := setupCsrfMiddleware()
@@ -107,31 +94,26 @@ func main() {
 	routes.ActivitiesRoutes(app, activitiesService, authMiddleware)
 	routes.ScoreboardRoutes(app, scoreboardService, authMiddleware)
 
-	certFile := "cert.pem"
-	keyFile := "key.pem"
+	return app, nil
+}
 
-	if _, err := os.Stat(certFile); os.IsNotExist(err) {
-		slog.Info("Self-signed certificate not found, generating...")
-		if err := generateSelfSignedCert(certFile, keyFile); err != nil {
-			panic(err)
-		}
-		slog.Info("Self-signed certificate generated successfully")
-		slog.Info("You will need to accept the self-signed certificate in your browser")
-	}
+func main() {
+	cfg := DefaultConfig()
 
-	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	// Connect to database
+	err := database.Connect()
 	if err != nil {
-		panic(err)
+		cfg.Logger.Error("Error connecting to database", "error", err)
+		return
 	}
 
-	config := &tls.Config{Certificates: []tls.Certificate{cert}}
-
-	ln, err := tls.Listen("tcp", "127.0.0.1:8443", config)
+	app, err := setupApp(cfg)
 	if err != nil {
-		panic(err)
+		cfg.Logger.Error("Error setting up app", "error", err)
+		return
 	}
 
-	app.Listener(ln)
+	app.Listen(cfg.ListenAddr)
 }
 
 func setupCsrfMiddleware() fiber.Handler {
@@ -177,51 +159,4 @@ func setupCsrfMiddleware() fiber.Handler {
 	}
 	csrfMiddleware := csrf.New(csrfConfig)
 	return csrfMiddleware
-}
-
-// generateSelfSignedCert generates a self-signed certificate and key
-// and saves them to the specified files
-//
-// This is only for testing purposes and should not be used in production
-func generateSelfSignedCert(certFile string, keyFile string) error {
-	priv, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		return err
-	}
-
-	template := x509.Certificate{
-		SerialNumber: big.NewInt(1),
-		Subject: pkix.Name{
-			Organization: []string{"Acme Co"},
-		},
-		NotBefore: time.Now(),
-		NotAfter:  time.Now().Add(time.Hour * 24 * 180),
-
-		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		BasicConstraintsValid: true,
-	}
-
-	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
-	if err != nil {
-		return err
-	}
-
-	certOut, err := os.Create(certFile)
-	if err != nil {
-		return err
-	}
-	defer certOut.Close()
-
-	_ = pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
-
-	keyOut, err := os.Create(keyFile)
-	if err != nil {
-		return err
-	}
-	defer keyOut.Close()
-
-	_ = pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv)})
-
-	return nil
 }

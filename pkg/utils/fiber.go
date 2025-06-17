@@ -121,3 +121,15 @@ func UserImage(user types.User) string {
 
 	return fmt.Sprintf("https://www.gravatar.com/avatar/%s?d=%s&s=200", emailHash, encoded)
 }
+
+type ActivityCtx struct {
+	UserID   *uint64
+	Activity *types.Activity
+}
+
+func CtxActivity(user uint64, activity types.Activity) ActivityCtx {
+	return ActivityCtx{
+		UserID:   &user,
+		Activity: &activity,
+	}
+}
