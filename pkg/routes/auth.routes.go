@@ -10,6 +10,7 @@ import (
 func AuthRoutes(app fiber.Router, authService *services.AuthService, authMiddleware *middleware.AuthMiddleware) {
 	r := app.Group("/auth")
 
+	r.Get("/login", authService.LoginPageHandler)
 	r.Get("/signup", authService.SignupPageHandler)
 	r.Post("/signup", authService.SignupHandler)
 	r.Post("/login", authService.LoginHandler)

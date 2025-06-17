@@ -25,7 +25,7 @@ func (a *AuthMiddleware) Auth(c *fiber.Ctx) error {
 	user, err := a.getCurrentUser(c, a.authService)
 	if err != nil {
 		if err == ErrNotLoggedIn {
-			return c.Redirect("/")
+			return c.Redirect("/auth/login")
 		}
 		return err
 	}

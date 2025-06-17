@@ -179,7 +179,7 @@ func (s *AuthService) LoginHandler(ctx *fiber.Ctx) error {
 	b := new(types.LoginDTO)
 
 	if err := utils.ParseBodyAndValidate(ctx, b); err != nil {
-		return ctx.Render("index", fiber.Map{
+		return ctx.Render("auth/login", fiber.Map{
 			"csrf":  utils.GetCsrf(ctx),
 			"error": err.Message,
 		})
@@ -190,7 +190,7 @@ func (s *AuthService) LoginHandler(ctx *fiber.Ctx) error {
 		Password: b.Password,
 	})
 	if err != nil {
-		return ctx.Render("index", fiber.Map{
+		return ctx.Render("auth/login", fiber.Map{
 			"csrf":  utils.GetCsrf(ctx),
 			"error": err.Error(),
 		})
@@ -301,5 +301,13 @@ func (s *AuthService) GetUserHandler(ctx *fiber.Ctx) error {
 
 	return ctx.Render("users/user", fiber.Map{
 		"User": user,
+	})
+}
+
+// LoginPageHandler renders the login page
+func (s *AuthService) LoginPageHandler(ctx *fiber.Ctx) error {
+	return ctx.Render("auth/login", fiber.Map{
+		"Title": "Login",
+		"csrf":  utils.GetCsrf(ctx),
 	})
 }

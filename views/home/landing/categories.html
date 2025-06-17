@@ -1,0 +1,27 @@
+<div class="row">
+    {{ $Types := $.Types }}
+    {{ range .Categories }}
+    {{ $categoryID := .ID }}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <img src="/images/categories/{{ .ID }}.png" alt="{{ .Name }}" class="img-fluid mb-3"
+                    style="width: 128px;">
+                <h3 class="card-title">{{ .Name }}</h3>
+                {{ if eq .ID "other" }}
+                <p class="card-text">Har du en anden type aktivitet? Ingen problem! Du kan nemt tilføje din egen
+                    aktivitetstype.</p>
+                {{ else }}
+                <ul class="list-unstyled">
+                    {{ range $.Types }}
+                    {{ if eq .Category $categoryID }}
+                    <li>{{ .Name }}</li>
+                    {{ end }}
+                    {{ end }}
+                </ul>
+                {{ end }}
+            </div>
+        </div>
+    </div>
+    {{ end }}
+</div>
