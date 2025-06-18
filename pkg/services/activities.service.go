@@ -347,7 +347,19 @@ func (s *ActivityService) getUserMap() (map[uint64]types.User, error) {
 
 // GetActivityTypes returns all activity types
 func (s *ActivityService) GetActivityTypes(c *fiber.Ctx) error {
-	return c.JSON(types.AllActivityTypes)
+	category := c.Query("category")
+	if category == "" {
+		// If no category is specified, return all categories and their types
+		return c.JSON(types.AllActivityTypes)
+	}
+	categoryTypes := make([]types.ActivityType, 0, len(types.AllActivityTypes))
+	for _, activityType := range types.AllActivityTypes {
+		if activityType.Category == category {
+			categoryTypes = append(categoryTypes, activityType)
+		}
+	}
+
+	return c.JSON(categoryTypes)
 }
 
 // GetActivityCategories returns all activity categories

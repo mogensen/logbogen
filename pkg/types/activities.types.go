@@ -4,67 +4,26 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/mogensen/logbook/pkg/config"
 	"github.com/mogensen/logbook/pkg/dal"
 )
 
+// Use config package's constants
 const (
-	Climbing string = "climbing"
-	Sailing  string = "sailing"
-	Other    string = "other"
+	Climbing = config.Climbing
+	Sailing  = config.Sailing
+	Other    = config.Other
 )
 
-type ActivityCategory struct {
-	ID   string
-	Name string
-}
+// Use config package's types
+type ActivityCategory = config.ActivityCategory
+type ActivityType = config.ActivityType
 
-type ActivityType struct {
-	ID       string
-	Name     string
-	Category string
-}
-
-var AllActivityCategories = []ActivityCategory{
-	{ID: Climbing, Name: "Klatring"},
-	{ID: Sailing, Name: "Søfart"},
-	{ID: Other, Name: "Andet"},
-}
-
-// AllActivityTypes is a single source of truth for all ActivityType constants
-var AllActivityTypes = []ActivityType{
-	{ID: "tree", Name: "Træklatring", Category: Climbing},
-	{ID: "rock", Name: "Klippeklatring", Category: Climbing},
-	{ID: "boulder", Name: "Bouldering", Category: Climbing},
-	{ID: "ice", Name: "Isklatring", Category: Climbing},
-	{ID: "highrope", Name: "High Rope", Category: Climbing},
-	{ID: "wall", Name: "Vægklatring", Category: Climbing},
-	{ID: "kayak", Name: "Kajak", Category: Sailing},
-	{ID: "canoe", Name: "Kano", Category: Sailing},
-	{ID: "sail", Name: "Sejlbåd", Category: Sailing},
-	{ID: "paddle-board", Name: "Paddleboard", Category: Sailing},
-}
-
-func CategoryByID(id string) *ActivityCategory {
-	for _, c := range AllActivityCategories {
-		if c.ID == id {
-			return &c
-		}
-	}
-	return nil
-}
-
-func ActivityTypeByID(id string) *ActivityType {
-	for _, t := range AllActivityTypes {
-		if t.ID == id {
-			return &t
-		}
-	}
-	return &ActivityType{
-		ID:       Other,
-		Name:     id,
-		Category: Other,
-	}
-}
+// Use config package's variables
+var (
+	AllActivityCategories = config.AllActivityCategories
+	AllActivityTypes      = config.AllActivityTypes
+)
 
 // Activity struct contains all activity fields
 type Activity struct {
@@ -111,8 +70,8 @@ func ActivityFromDal(activity *dal.Activity, userMap map[uint64]User) *Activity 
 		Lng:             activity.Lng,
 		Location:        activity.Location,
 		CategoryID:      activity.Category,
-		Category:        *CategoryByID(activity.Category),
-		Type:            *ActivityTypeByID(activity.Type),
+		Category:        *config.CategoryByID(activity.Category),
+		Type:            *config.ActivityTypeByID(activity.Type),
 		TypeID:          activity.Type,
 		Role:            activity.Role,
 		Comment:         activity.Comment,
