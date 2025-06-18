@@ -6,6 +6,15 @@ COMPOSITE="docker run -u 1000 --rm -v $PWD/assets/images/:/imgs --entrypoint com
 
 declare -a ActivityArray=("boulder" "highrope" "ice" "other" "rock" "tree" "wall" "sail" "kayak" "canoe" "paddle-board")
 
+arr=(assets/images/activities/*)
+
+# iterate through array using a counter
+for ((i=0; i<${#arr[@]}; i++)); do
+    #do something to each element of array
+    f=`basename ${arr[$i]} |cut -d"." -f1`
+    ActivityArray+=($f)
+done
+
 # Create star PNG
 $CONVERT -background none -size 1024x1024 /imgs/stars/star.svg  /imgs/stars/star.png
 
