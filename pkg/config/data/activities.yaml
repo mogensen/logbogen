@@ -2,7 +2,7 @@ categories:
   - id: climbing
     name: Klatring
   - id: sailing
-    name: Søfart
+    name: Sejlads
   - id: camping
     name: Camping
   - id: other
@@ -39,7 +39,7 @@ types:
   - id: paddle-board
     name: Paddleboard
     category: sailing 
-  - id: shelter
+  - id: shelter 
     name: Shelter
     category: camping
   - id: tent
