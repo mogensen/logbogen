@@ -49,7 +49,7 @@ func (s *UserService) GetUsers(currentUserID uint64) (*GetUsersResponse, error) 
 	}, nil
 }
 
-var activityCategoryPalette = [9]string{"#8ecae6", "#219ebc", "#023047", "#ffb703", "#fb8500"}
+var activityCategoryPalette = [5]string{"#219ebc", "#023047", "#ffb703", "#fb8500", "#8ecae6"}
 
 type ActivityMonthCategoryBar struct {
 	Year       int
