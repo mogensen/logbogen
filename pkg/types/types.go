@@ -33,6 +33,9 @@ func (ct *Date) UnmarshalJSON(data []byte) error {
 	*ct = Date(t)
 	return nil
 }
+func (ct *Date) Time() time.Time {
+	return time.Time(*ct)
+}
 
 // String() returns the time in string
 func (ct *Date) String() string {

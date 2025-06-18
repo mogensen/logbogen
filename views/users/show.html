@@ -1,27 +1,53 @@
 <div class="d-md-none">
-
   <div class="card-body">
     <center class="">
-      {{ template "users/profile_image" . }}
-      <h1 class="card-title m-t-10">{{ .Name }}</h1>
+      {{ template "users/profile_image" .User }}
+      <h1 class="card-title m-t-10">{{ .User.Name }}</h1>
     </center>
   </div>
   <div class="card-body">
-    {{ template "achievements/small" . }}
+    {{ template "achievements/small" .User }}
   </div>
 </div>
 
 <div class="d-none d-md-block">
   <div class="row">
     <div class="col-auto">
-        {{ template "users/profile_image" . }}
+      {{ template "users/profile_image" .User }}
     </div>
     <div class="col-sm-6">
       <div class="page-header">
-        <h1>{{ .Name }}</h1>
+        <h1>{{ .User.Name }}</h1>
       </div>
-      {{ template "achievements/small" . }}
+      {{ template "achievements/small" .User }}
     </div>
   </div>
+</div>
 
+<div class="card-body pt-2">
+  <h5>Aktivitetsoversigt</h5>
+  <div id="activity-bars" class="row">
+    <div class="d-flex align-items-end" style="gap:2px;">
+      {{ range $bar := .ActivityBars }}
+      <div class="col">
+        <div style="display:flex; flex-direction:column-reverse; height:200px; background-color: #f7f5f5; border:2px solid #eee;">
+          {{ range $seg := $bar.Categories }}
+          {{ if $seg.Count }}
+          <div title="{{ $seg.Tooltip }}" style="background:{{ $seg.Color }}; height:{{ $seg.Count }}0px ; width:100%;"></div>
+          {{ end }}
+          {{ end }}
+        </div>
+        <div class="activity-label mt-4 pt-3" style="width:24px; text-align:center;">{{ $bar.Label }}</div>
+      </div>
+      {{ end }}
+    </div>
+    <div class="mt-2">
+      {{ with (index .ActivityBars 0) }}
+      {{ range $seg := .Categories }}
+      <span style="display:inline-block;width:12px;height:12px;background:{{ $seg.Color }};margin-right:4px;"></span>
+      {{ $seg.CategoryName }}
+      {{ end }}
+      {{ end }}
+    </div>
+  </div>
 </div>

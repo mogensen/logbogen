@@ -46,23 +46,19 @@ func (s *ScoreboardService) GetScoreboard(c *fiber.Ctx) error {
 func (s *ScoreboardService) calculateUserStats(users *[]dal.User) ([]UserStats, error) {
 	res := []UserStats{}
 
-	for _, user := range *users {
-		activities := make([]*types.Activity, len(user.Activities))
-		for i, activity := range user.Activities {
-			activities[i] = types.ActivityFromDal(&activity, map[uint64]types.User{})
-		}
+	for _, dalUser := range *users {
+		user := types.UserFromDal(&dalUser)
 
-		achievements := Achievements(activities)
 		filteredAchievements := make([]types.Achievement, 0)
-		for _, a := range achievements {
+		for _, a := range user.Achievements {
 			if a.Level > 0 {
 				filteredAchievements = append(filteredAchievements, a)
 			}
 		}
 		userStats := UserStats{
-			User:                types.UserFromDal(&user, nil),
+			User:                user,
 			AchievementsSummary: filteredAchievements,
-			Points:              s.summarize(activities),
+			Points:              s.summarize(user.Activities),
 		}
 		res = append(res, userStats)
 	}

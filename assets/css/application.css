@@ -272,22 +272,6 @@ main {
 
 /* Landing page - Categories */
 
-/*
- .categories-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  width: 100%;
-}
-
-.category-card {
-  flex: 1 1 0;
-  min-width: 0;
-  max-width: 100%;
-  margin-bottom: 0;
-}
-*/
-
 @media (max-width: 768px) {
   .categories-row {
     flex-direction: column;
@@ -296,4 +280,8 @@ main {
     width: 100%;
     max-width: 100%;
   }
-} 
+}
+
+.activity-label {
+  transform: rotate(-90deg);
+}

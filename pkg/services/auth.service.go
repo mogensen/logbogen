@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"strconv"
 
 	"github.com/mogensen/logbook/pkg/dal"
 	"github.com/mogensen/logbook/pkg/database"
@@ -148,13 +147,8 @@ func (s *AuthService) GetUser(req GetUserRequest) (*GetUserResponse, error) {
 		return nil, err
 	}
 
-	activities := make([]*types.Activity, len(user.Activities))
-	for i, activity := range user.Activities {
-		activities[i] = types.ActivityFromDal(&activity, map[uint64]types.User{})
-	}
-
 	return &GetUserResponse{
-		User: types.UserFromDal(user, Achievements(activities)),
+		User: types.UserFromDal(user),
 	}, nil
 }
 
@@ -164,12 +158,8 @@ func (s *AuthService) GetUserByID(userID uint64) (*types.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	activities := make([]*types.Activity, len(user.Activities))
-	for i, activity := range user.Activities {
-		activities[i] = types.ActivityFromDal(&activity, map[uint64]types.User{})
-	}
 
-	return types.UserFromDal(user, Achievements(activities)), nil
+	return types.UserFromDal(user), nil
 }
 
 // HTTP Handlers
@@ -197,12 +187,12 @@ func (s *AuthService) LoginHandler(ctx *fiber.Ctx) error {
 	// Set a session variable to mark the user as logged in
 	session, err := database.SessionStore.Get(ctx)
 	if err != nil {
-		slog.Warn("Failed to get session store", "error", err)
+		slog.Error("Failed to get session store", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
 	if err := session.Reset(); err != nil {
-		slog.Warn("Failed to reset session", "error", err)
+		slog.Error("Failed to reset session", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 	session.Set("username", resp.Email)
@@ -210,7 +200,7 @@ func (s *AuthService) LoginHandler(ctx *fiber.Ctx) error {
 	session.Set("loggedIn", resp.LoggedIn)
 
 	if err := session.Save(); err != nil {
-		slog.Warn("Failed to save session", "error", err)
+		slog.Error("Failed to save session", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
@@ -223,12 +213,12 @@ func (s *AuthService) LoginHandler(ctx *fiber.Ctx) error {
 func (s *AuthService) LogoutHandler(ctx *fiber.Ctx) error {
 	session, err := database.SessionStore.Get(ctx)
 	if err != nil {
-		slog.Warn("Failed to get session store", "error", err)
+		slog.Error("Failed to get session store", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
 	if err := session.Destroy(); err != nil {
-		slog.Warn("Failed to destroy session", "error", err)
+		slog.Error("Failed to destroy session", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
@@ -267,39 +257,6 @@ func (s *AuthService) SignupHandler(ctx *fiber.Ctx) error {
 
 	return ctx.Render("auth/login", fiber.Map{
 		"info": resp.Message,
-	})
-}
-
-// GetUsersHandler handles the get users HTTP request
-func (s *AuthService) GetUsersHandler(ctx *fiber.Ctx) error {
-	currentUser := utils.GetUser(ctx)
-	resp, err := s.GetUsers(currentUser.ID)
-	if err != nil {
-		return fiber.NewError(fiber.StatusConflict, err.Error())
-	}
-
-	return ctx.JSON(resp.Users)
-}
-
-// GetUserHandler handles the get user HTTP request
-func (s *AuthService) GetUserHandler(ctx *fiber.Ctx) error {
-	userIdParam := ctx.Params("UserID")
-	if userIdParam == "" {
-		return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid user")
-	}
-
-	userId, err := strconv.ParseUint(userIdParam, 10, 64)
-	if err != nil {
-		return fiber.NewError(fiber.StatusUnprocessableEntity, "Invalid user")
-	}
-
-	user, err := s.GetUserByID(userId)
-	if err != nil {
-		return fiber.NewError(fiber.StatusConflict, err.Error())
-	}
-
-	return ctx.Render("users/user", fiber.Map{
-		"User": user,
 	})
 }
 

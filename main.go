@@ -79,13 +79,15 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	activitiesService := services.NewActivityService(userDal, activityDal, weatherService)
 	scoreboardService := services.NewScoreboardService(userDal)
 	authService := services.NewAuthService(userDal)
+	userService := services.NewUserService(userDal)
 
 	// Middleware
 	authMiddleware := middleware.NewAuthMiddleware(authService)
 
 	// Route for the root path
-	routes.HomeRoutes(app, authMiddleware)
-	routes.AuthRoutes(app, authService, authMiddleware)
+	routes.HomeRoutes(app, userService, authMiddleware)
+	routes.AuthRoutes(app, authService)
+	routes.UserRoutes(app, userService, authMiddleware)
 	routes.ActivitiesRoutes(app, activitiesService, authMiddleware)
 	routes.ScoreboardRoutes(app, scoreboardService, authMiddleware)
 

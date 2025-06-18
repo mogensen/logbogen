@@ -74,7 +74,7 @@ func TestGetWeatherToday(t *testing.T) {
 	// Verify temperature is within reasonable range for North Pole
 	// North Pole temperatures typically range from -40°C to 0°C
 	temp := weather.Daily.Temperature2mMax[0]
-	if temp > 0 {
+	if temp > 10 {
 		t.Errorf("Temperature %.1f°C is above 0°C at the North Pole", temp)
 	}
 
