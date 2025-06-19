@@ -19,10 +19,11 @@ func Achievements(activities []*Activity) []Achievement {
 	// Create achievements for all activity types
 	for _, activityType := range AllActivityTypes {
 		count := activityCounts[activityType.ID]
-		level := 0
-		if count > 0 {
-			level = (count-1)/5 + 1
+		if count == 0 {
+			continue
 		}
+
+		level := (count-1)/5 + 1
 		achievements = append(achievements, Achievement{
 			Type:  activityType,
 			Level: level,
