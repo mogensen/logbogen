@@ -16,8 +16,7 @@ $(() => {
         id: 'user-show-map',
     }).addTo(map);
 
-    var lang = getCookie("lang");
-    var markerArray = [];
+    var markerCluster = L.markerClusterGroup({maxClusterRadius: 40});
 
     fetch('/activities/list', {
         headers: {
@@ -34,7 +33,6 @@ $(() => {
         .then(data => {
             // Process the response data here
             data.forEach(function (row) {
-
                 var icon = new L.icon({
                     iconUrl: '/images/activities/' + row.type.ID + '.svg',
                     iconSize: [35, 35],
@@ -48,18 +46,18 @@ $(() => {
                     win_url: "/activities/" + row.id,
                 });
 
-                markerArray.push(m);
-                m.addTo(map);
                 m.on('click', onClick);
-            })
+                markerCluster.addLayer(m);
+            });
 
-            if (markerArray.length <= 1) {
-                map.setView([markerArray[0].getLatLng().lat, markerArray[0].getLatLng().lng], 10);
-            } else {
-                var group = L.featureGroup(markerArray).addTo(map);
-                map.fitBounds(group.getBounds().pad(0.1));
+            map.addLayer(markerCluster);
+
+            if (markerCluster.getLayers().length === 1) {
+                var onlyMarker = markerCluster.getLayers()[0];
+                map.setView(onlyMarker.getLatLng(), 10);
+            } else if (markerCluster.getLayers().length > 1) {
+                map.fitBounds(markerCluster.getBounds().pad(0.1));
             }
-
         })
         .catch(error => {
             // Handle any errors here

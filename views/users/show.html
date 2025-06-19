@@ -29,7 +29,7 @@
   <div id="activity-bars" class="row">
     <div class="d-flex align-items-end" style="gap:2px;">
       {{ range $bar := .ActivityBars }}
-      <div class="col">
+      <div class="col ps-1">
         <div style="display:flex; flex-direction:column-reverse; height:200px; background-color: #f7f5f5; border:2px solid #eee;">
           {{ range $seg := $bar.Categories }}
           {{ if $seg.Count }}
@@ -37,7 +37,7 @@
           {{ end }}
           {{ end }}
         </div>
-        <div class="activity-label mt-4 pt-3" style="width:24px; text-align:center;">{{ $bar.Label }}</div>
+        <div class="activity-label mt-4 pt-3" style="width:22px; text-align:center;">{{ $bar.Label }}</div>
       </div>
       {{ end }}
     </div>
