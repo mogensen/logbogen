@@ -119,7 +119,16 @@ func (s *ActivityService) GetActivitiesForUser(userId uint64) ([]*types.Activity
 }
 
 func (s *ActivityService) GetPendingActivitiesForUser(c *fiber.Ctx) error {
-	activities, err := s.activityDal.FindPendingActivitiesByUser(utils.GetUser(c).ID)
+	userID := utils.GetUser(c).ID
+
+	// Fetch pending activities (where user is a participant, but not the owner)
+	pendingActivities, err := s.activityDal.FindPendingActivitiesByUser(userID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusConflict, err.Error())
+	}
+
+	// Fetch all activities logged by the user
+	loggedActivities, err := s.activityDal.FindActivitiesByUser(userID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
@@ -129,19 +138,38 @@ func (s *ActivityService) GetPendingActivitiesForUser(c *fiber.Ctx) error {
 		return err
 	}
 
-	res := make([]*types.Activity, len(activities))
-	for i, activity := range activities {
-		res[i] = types.ActivityFromDal(&activity, userMap)
+	filtered, err := s.filterPending(loggedActivities, pendingActivities, userMap)
+	if err != nil {
+		return err
 	}
 
 	accept := c.Accepts("html", "json")
 	if accept == "json" {
-		return c.JSON(res)
+		return c.JSON(filtered)
 	}
 
 	return c.Render("activities/pending", fiber.Map{
-		"Activities": &res,
+		"Activities": &filtered,
 	})
+}
+
+func (s *ActivityService) filterPending(loggedActivities []dal.Activity, pendingActivities []dal.Activity, userMap map[uint64]types.User) ([]*types.Activity, error) {
+	loggedSet := make(map[string]struct{})
+	for _, a := range loggedActivities {
+		loggedSet[acticityHash(a)] = struct{}{}
+	}
+
+	filtered := make([]*types.Activity, 0, len(pendingActivities))
+	for _, activity := range pendingActivities {
+		if _, exists := loggedSet[acticityHash(activity)]; !exists {
+			filtered = append(filtered, types.ActivityFromDal(&activity, userMap))
+		}
+	}
+	return filtered, nil
+}
+
+func acticityHash(a dal.Activity) string {
+	return a.Category + "|" + a.Type + "|" + a.Date.Format("2006-01-02")
 }
 
 // GetActivity return a single Activity
