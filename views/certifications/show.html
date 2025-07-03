@@ -1,21 +1,39 @@
 <div class="container mt-4">
-  <h2>Certifikat: {{ .Cert.Type.Name }}</h2>
-  <dl class="row">
-    <dt class="col-sm-3">Udbyder</dt>
-    <dd class="col-sm-9">{{ .Cert.Provider }}</dd>
-    <dt class="col-sm-3">Startdato</dt>
-    <dd class="col-sm-9">{{ fmtDateHuman .Cert.StartDate }}</dd>
-    <dt class="col-sm-3">Slutdato</dt>
-    <dd class="col-sm-9">{{ fmtDateHuman .Cert.EndDate }}</dd>
-    <dt class="col-sm-3">Andre deltagere</dt>
+  <h2 class="card-title d-flex align-items-center mb-3">
+    <span style="font-size:2rem; margin-right:0.5rem;">🏅</span>
+    <span>{{ .Cert.Type.Name }} - {{ .Cert.Provider }}</span>
+  </h2>
+
+  <div class="card border-secondary mb-3">
+    <div class="card-body">
+      <h4 class="card-title">Dato</h4>
+      <hr />
+      <div class="d-flex justify-content-between align-items-center">
+        <dl class="row">
+          <dt class="col-sm-3">Startdato</dt>
+          <dd class="col-sm-9">{{ fmtDateHuman .Cert.StartDate }}</dd>
+          <dt class="col-sm-3">Slutdato</dt>
+          <dd class="col-sm-9">{{ fmtDateHuman .Cert.EndDate }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
 
 
-    <dd class="col-sm-9">
-      {{range .Cert.Participants }}
-      {{template "users/profile_image_mini" .}}
-      {{ end}}
-    </dd>
-  </dl>
+  <div class="card border-primary mb-3">
+    <div class="card-body">
+      <h4 class="card-title">Andre Deltagere</h4>
+      <hr />
+      <div class="card-body contacts_body">
+        <ul class="contacts">
+          {{range .Cert.Participants }}
+          {{template "users/card" .}}
+          {{ end}}
+        </ul>
+      </div>
+    </div>
+  </div>
+
   <a href="/certifications/{{ .Cert.ID }}/edit" class="btn btn-sm btn-secondary">Rediger</a>
   <form action="/certifications/{{ .Cert.ID }}/delete" method="POST" style="display:inline;">
     <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Er du sikker?')">Slet</button>
