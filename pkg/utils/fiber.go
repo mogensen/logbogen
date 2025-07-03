@@ -24,6 +24,7 @@ var _emptyDate = types.Date{}
 func ParseBody(ctx *fiber.Ctx, body interface{}) *fiber.Error {
 	if err := ctx.BodyParser(body); err != nil {
 		slog.Error("Error parsing body", "error", err)
+		fmt.Printf("Error parsing body %v\n", err)
 		return fiber.ErrBadRequest
 	}
 

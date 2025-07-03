@@ -39,7 +39,7 @@ func DefaultConfig() *Config {
 
 // setupApp creates and configures the Fiber application
 func setupApp(cfg *Config) (*fiber.App, error) {
-	err := database.Migrate(&dal.User{}, &dal.Activity{})
+	err := database.Migrate(&dal.User{}, &dal.Activity{}, &dal.Certification{})
 	if err != nil {
 		cfg.Logger.Error("Error migrating database", "error", err)
 		return nil, err
@@ -66,13 +66,14 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	})
 
 	app.Use(slogfiber.New(cfg.Logger))
-	app.Use(recover.New())
+	app.Use(recover.New(recover.Config{EnableStackTrace: true, StackTraceHandler: recover.ConfigDefault.StackTraceHandler}))
 
 	app.Static("/", cfg.AssetsPath)
 
 	// Data Layer
 	userDal := dal.NewUserDal(database.DB)
 	activityDal := dal.NewActivityService(database.DB)
+	certificationDal := dal.NewCertificationService(database.DB)
 
 	// Services
 	weatherService := services.NewWeatherService()
@@ -80,6 +81,7 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	scoreboardService := services.NewScoreboardService(userDal)
 	authService := services.NewAuthService(userDal)
 	userService := services.NewUserService(userDal)
+	certificationsService := services.NewCertificationService(certificationDal, userDal)
 
 	// Middleware
 	authMiddleware := middleware.NewAuthMiddleware(authService)
@@ -90,6 +92,7 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	routes.UserRoutes(app, userService, authMiddleware)
 	routes.ActivitiesRoutes(app, activitiesService, authMiddleware)
 	routes.ScoreboardRoutes(app, scoreboardService, authMiddleware)
+	routes.CertificationRoutes(app, certificationsService, authMiddleware)
 
 	return app, nil
 }

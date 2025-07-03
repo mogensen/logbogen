@@ -17,7 +17,7 @@ const (
 	Other    string = "other"
 )
 
-type ActivityCategory struct {
+type Category struct {
 	ID   string `yaml:"id"`
 	Name string `yaml:"name"`
 }
@@ -29,31 +29,37 @@ type ActivityType struct {
 }
 
 type activitiesConfig struct {
-	Categories []ActivityCategory `yaml:"categories"`
-	Types      []ActivityType     `yaml:"types"`
+	Categories []Category     `yaml:"categories"`
+	Types      []ActivityType `yaml:"types"`
 }
 
 var (
 	// AllActivityCategories defines all available activity categories
-	AllActivityCategories []ActivityCategory
+	AllActivityCategories []Category
 	// AllActivityTypes defines all available activity types
 	AllActivityTypes []ActivityType
 )
 
 func init() {
 	// Parse the YAML
-	var config activitiesConfig
-	if err := yaml.Unmarshal(activitiesYAML, &config); err != nil {
+	var activityConfig activitiesConfig
+	if err := yaml.Unmarshal(activitiesYAML, &activityConfig); err != nil {
+		log.Fatalf("Error parsing activities config: %v", err)
+	}
+	var certConfig CertificationsConfig
+	if err := yaml.Unmarshal(certificationsYAML, &certConfig); err != nil {
 		log.Fatalf("Error parsing activities config: %v", err)
 	}
 
 	// Set the global variables
-	AllActivityCategories = config.Categories
-	AllActivityTypes = config.Types
+	AllActivityCategories = activityConfig.Categories
+	AllActivityTypes = activityConfig.Types
+	AllCertificationCategories = certConfig.Categories
+	AllCertificationTypes = certConfig.Certifications
 }
 
 // CategoryByID returns a pointer to the ActivityCategory with the given ID
-func CategoryByID(id string) *ActivityCategory {
+func CategoryByID(id string) *Category {
 	for _, c := range AllActivityCategories {
 		if c.ID == id {
 			return &c
@@ -70,6 +76,20 @@ func ActivityTypeByID(id string) *ActivityType {
 		}
 	}
 	return &ActivityType{
+		ID:       Other,
+		Name:     id,
+		Category: Other,
+	}
+}
+
+// CertificationTypeByID returns a pointer to the CertificationType with the given ID
+func CertificationTypeByID(id string) *CertificationType {
+	for _, t := range AllCertificationTypes {
+		if t.ID == id {
+			return &t
+		}
+	}
+	return &CertificationType{
 		ID:       Other,
 		Name:     id,
 		Category: Other,

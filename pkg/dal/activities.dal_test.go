@@ -7,20 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/datatypes"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
-
-func setupTestDB(t *testing.T) *gorm.DB {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	assert.NoError(t, err)
-
-	// Migrate the schema
-	err = db.AutoMigrate(&Activity{})
-	assert.NoError(t, err)
-
-	return db
-}
 
 func TestActivityService_CreateActivity(t *testing.T) {
 	db := setupTestDB(t)

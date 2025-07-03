@@ -1,0 +1,26 @@
+
+<div class="container mt-4">
+  <h2>Certifikat: {{ .Cert.Type.Name }}</h2>
+  <dl class="row">
+    <dt class="col-sm-3">Udbyder</dt>
+    <dd class="col-sm-9">{{ .Cert.Provider }}</dd>
+    <dt class="col-sm-3">Startdato</dt>
+    <dd class="col-sm-9">{{ fmtDateHuman .Cert.StartDate }}</dd>
+    <dt class="col-sm-3">Slutdato</dt>
+    <dd class="col-sm-9">{{ fmtDateHuman .Cert.EndDate }}</dd>
+    <dt class="col-sm-3">Andre deltagere</dt>
+
+
+    <dd class="col-sm-9">
+      {{range .Cert.Participants }}
+      {{template "users/profile_image_mini" .}}
+      {{ end}}
+    </dd>
+  </dl>
+  <a href="/certifications/{{ .Cert.ID }}/edit" class="btn btn-sm btn-secondary">Rediger</a>
+  <form action="/certifications/{{ .Cert.ID }}/delete" method="POST" style="display:inline;">
+    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Er du sikker?')">Slet</button>
+  </form>
+
+  <a href="/certifications/list" class="btn btn-link">Tilbage til oversigt</a>
+</div>

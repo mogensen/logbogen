@@ -1,0 +1,34 @@
+<div class="py-4 mb-2 d-flex justify-content-between">
+  <div>
+    <h1 class="d-inline-block">Mine certifikater</h1>
+  </div>
+  <div>
+    <a href="/certifications/create" class="btn btn-primary">
+      <i class="fas fa-certificate"></i>&nbsp; Tilføj certifikat
+    </a>
+  </div>
+</div>
+
+{{ if eq (len .Certs) 0 }}
+<div class="d-flex flex-wrap-reverse justify-content-center">
+  <div class="p-2 align-self-center">
+    <p>
+      Opret dit første certifikat ved at trykke på
+      <a href="/certifications/create" class="btn btn-primary">
+        <i class="fas fa-certificate"></i>&nbsp; Tilføj certifikat
+      </a>
+    </p>
+  </div>
+  <div class="p-2 ">
+    <img src="/images/arrow.svg">
+  </div>
+</div>
+{{end}}
+
+<div class="card-body contacts_body">
+  <ul class="contacts">
+    {{ range .Certs }}
+      {{ template "certifications/card" . }}
+    {{end}}
+  </ul>
+</div>

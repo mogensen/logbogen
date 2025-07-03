@@ -16,8 +16,10 @@ const (
 )
 
 // Use config package's types
-type ActivityCategory = config.ActivityCategory
+type Category = config.Category
+
 type ActivityType = config.ActivityType
+type CertificationType = config.CertificationType
 
 // Use config package's variables
 var (
@@ -35,8 +37,8 @@ type Activity struct {
 	Lng      float64   `json:"lng" form:"lng"`
 	Location string    `json:"location" form:"location"`
 
-	CategoryID string           `form:"category" validate:"required"`
-	Category   ActivityCategory `json:"category"`
+	CategoryID string   `form:"category" validate:"required"`
+	Category   Category `json:"category"`
 
 	TypeID    string       `form:"type" validate:"required_unless=CategoryID other"`
 	Type      ActivityType `json:"type"`

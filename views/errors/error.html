@@ -1,0 +1,14 @@
+<h1>Der er sket en fejl</h1>
+{{ if .Error }}
+<div class="alert alert-danger" role="alert">
+	{{ .Error }}
+</div>
+{{ end }}
+{{ if .Info }}
+<div class="alert alert-success" role="alert">
+	{{ .Info }}
+</div>
+{{ end }}
+{{ if .Code }}
+<p>Fejlkode: {{ .Code }}</p>
+{{ end }}

@@ -19,8 +19,8 @@ func ErrorHandler(c *fiber.Ctx, err error) error {
 		code = e.Code
 	}
 
-	return c.Status(code).JSON(&httpError{
-		Statuscode: code,
-		Error:      err.Error(),
+	return c.Render("errors/error", fiber.Map{
+		"Error": err.Error(),
+		"Code":  code,
 	})
 }

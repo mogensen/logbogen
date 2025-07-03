@@ -1,0 +1,56 @@
+<form method="POST" action="{{ .Action }}" id="certification-form">
+
+  {{ if .error }}
+    <div class="alert alert-danger" role="alert">
+        {{ .error }}
+    </div>
+    {{ end }}
+
+
+  <div class="form-group mb-3">
+    <label for="category-radio" class="form-label mt-4">Aktivitets kategori</label>
+    <br />
+    <div class="btn-group" role="group" aria-label="Basic radio toggle button group" id="category-group" data-current="{{.Cert.Category.ID}}">
+        <!-- Categories will be dynamically added here -->
+    </div>
+</div>
+
+
+<div class="form-group mb-3">
+  <label for="type" class="form-label mt-4">Aktivitets type</label>
+  <br />
+    <select id="type" name="type" class="form-control"  data-current="{{.Cert.Type.ID}}"></select>
+</div>
+
+<div class="form-group mb-3" id="othertype-group" style="display: none;">
+  <label for="othertype" class="form-label mt-4">Anden type</label>
+  <input type="text" class="form-control" id="othertype" name="otherType" value="{{.Cert.Type.Name}}">
+</div>
+
+
+  <div class="mb-3">
+    <label for="provider" class="form-label">Udbyder</label>
+    <input type="text" class="form-control" id="provider" name="provider" value="{{ .Cert.Provider }}" required>
+  </div>
+  <div class="mb-3">
+    <label for="start_date" class="form-label">Startdato</label>
+    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ fmtDate .Cert.StartDate }}" required>
+  </div>
+  <div class="mb-3">
+    <label for="end_date" class="form-label">Slutdato</label>
+    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ fmtDate .Cert.EndDate }}">
+  </div>
+
+  <div>
+    <label for="participants" class="form-label mt-4">Andre Deltagere</label>
+    <select id="participants" name="participants" class="form-control" multiple="multiple">
+        {{ range .Cert.Participants }}
+        <option value="{{ .ID }}" selected>{{ .Name }}</option>
+        {{end}}
+    </select>
+  </div>
+  <br />
+
+  <button type="submit" class="btn btn-primary">Gem</button>
+  <a href="/certifications/list" class="btn btn-secondary">Annuller</a>
+</form>

@@ -1,0 +1,28 @@
+<li>
+  <a href="/certifications/{{ .ID }}" style="text-decoration: none; color: inherit;">
+    <div class="userInfo">
+      <div class="d-flex">
+        <div class="flex-shrink-1">
+          <div class="img_cont col col-auto ">
+            <img src="/images/categories/{{.Category.ID}}.png" alt="{{.Category.Name}}" class="category-list-image">
+          </div>
+        </div>
+        <div class="flex-grow-1 px-2">
+          <strong>{{ .Type.Name }}</strong>
+          <div class="text-muted small">{{ .Provider }}</div>
+          <div class="text-muted small">{{ fmtDateHuman .StartDate }} - {{ fmtDateHuman .EndDate }}</div>
+          <div class="d-flex justify-content-between align-items-center mt-1">
+            <div>
+              {{ range (firstSix .Participants) }}
+                {{ template "users/profile_image_mini" . }}
+              {{end}}
+              <span class="text-muted small d-inline">
+                {{ if gt (len .Participants) 6 }} og len(.Participants) - 6  flere  {{end}}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </a>
+</li> 

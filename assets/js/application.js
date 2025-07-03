@@ -45,13 +45,13 @@ $(() => {
 
 
     $(() => {
-        if ($('#activity-participants').length == 0) {
+        if ($('#participants').length == 0) {
             return;
         }
 
         var data = loadUsers();
         data.then(data => {
-            $('#activity-participants').select2({
+            $('#participants').select2({
                 minimumInputLength: 3,
                 data: data,
                 placeholder: "Andre deltagere...",
