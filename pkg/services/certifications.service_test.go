@@ -31,7 +31,7 @@ func TestCertificationService_CRUD(t *testing.T) {
 	cat := config.AllCertificationCategories[0]
 	typeObj := config.AllCertificationTypes[0]
 	userDalMock.On("FindUsers").
-		Return([]dal.User{{Model: gorm.Model{ID: userID}, Name: "Test User", Email: "test@example.com"}}, nil)
+		Return([]dal.User{{Model: gorm.Model{ID: uint(userID)}, Name: "Test User", Email: "test@example.com"}}, nil)
 	svc := NewCertificationService(dalSvc, userDalMock)
 	cert := types.Certification{
 		ID:              uuid.New(),

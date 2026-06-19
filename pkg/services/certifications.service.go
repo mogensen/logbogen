@@ -92,7 +92,7 @@ func (s *CertificationService) getUserMap() (map[uint64]types.User, error) {
 	}
 	userMap := make(map[uint64]types.User)
 	for _, user := range users {
-		userMap[user.ID] = *types.UserFromDal(&user)
+		userMap[uint64(user.ID)] = *types.UserFromDal(&user)
 	}
 	return userMap, nil
 }

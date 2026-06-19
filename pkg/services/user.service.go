@@ -33,12 +33,12 @@ func (s *UserService) GetUsers(currentUserID uint64) (*GetUsersResponse, error) 
 	res := make([]*types.UserForLogin, 0, len(users))
 	for _, v := range users {
 		user := v
-		if v.ID == currentUserID {
+		if uint64(v.ID) == currentUserID {
 			continue // Skip the current user
 		}
 
 		res = append(res, &types.UserForLogin{
-			ID:    user.ID,
+			ID:    uint64(user.ID),
 			Name:  user.Name,
 			Email: user.Email,
 		})
