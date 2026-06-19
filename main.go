@@ -50,16 +50,6 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 		return nil, err
 	}
 
-	// Drop the legacy "password" column left over from the pre-Auth0 schema.
-	// AutoMigrate never drops columns, so an existing database keeps
-	// `password NOT NULL`, which would reject new passwordless Auth0 users.
-	if m := database.DB.Migrator(); m.HasColumn(&dal.User{}, "password") {
-		if err := m.DropColumn(&dal.User{}, "password"); err != nil {
-			cfg.Logger.Error("Error dropping legacy password column", "error", err)
-			return nil, err
-		}
-	}
-
 	// HTML templates
 	engine := html.New(cfg.ViewsPath, ".html")
 	engine.AddFunc("current_user", utils.GetUser)
