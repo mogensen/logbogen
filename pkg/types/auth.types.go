@@ -40,7 +40,7 @@ func UserFromDal(user *dal.User) *User {
 	achievements := Achievements(activities)
 
 	return &User{
-		ID:           user.ID,
+		ID:           uint64(user.ID),
 		Name:         user.Name,
 		Email:        user.Email,
 		Activities:   activities,
