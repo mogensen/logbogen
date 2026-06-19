@@ -1,15 +1,16 @@
 package services
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log/slog"
 
+	"github.com/mogensen/logbook/pkg/auth"
 	"github.com/mogensen/logbook/pkg/dal"
 	"github.com/mogensen/logbook/pkg/database"
 	"github.com/mogensen/logbook/pkg/types"
-	"github.com/mogensen/logbook/pkg/utils"
-	"github.com/mogensen/logbook/pkg/utils/password"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -19,84 +20,43 @@ var ErrNotLoggedIn = fmt.Errorf("User is not logged in")
 
 // AuthService handles authentication related operations
 type AuthService struct {
-	userDal dal.UserDal
+	userDal       dal.UserDal
+	authenticator *auth.Authenticator // nil in dev mode
+	devMode       bool
 }
 
-// NewAuthService creates a new instance of AuthService
-func NewAuthService(userDal dal.UserDal) *AuthService {
+// NewAuthService creates a new instance of AuthService. authenticator may be
+// nil when devMode is true (the local dev-login bypass is used instead).
+func NewAuthService(userDal dal.UserDal, authenticator *auth.Authenticator, devMode bool) *AuthService {
 	return &AuthService{
-		userDal: userDal,
+		userDal:       userDal,
+		authenticator: authenticator,
+		devMode:       devMode,
 	}
 }
 
-// LoginRequest represents the login request data
-type LoginRequest struct {
-	Email    string
-	Password string
-}
-
-// LoginResponse represents the login response data
-type LoginResponse struct {
-	UserID   uint64
-	Email    string
-	LoggedIn bool
-}
-
-// Login attempts to log in a user
-func (s *AuthService) Login(req LoginRequest) (*LoginResponse, error) {
-	u, err := s.userDal.FindUserByEmail(req.Email)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, errors.New("invalid email or password")
+// upsertUser finds an existing user by Auth0 subject or creates a new one.
+// This is the single identity entry point shared by the Auth0 callback and the
+// dev-login bypass.
+func (s *AuthService) upsertUser(sub, name, email string) (*dal.User, error) {
+	user, err := s.userDal.FindUserByAuth0Sub(sub)
+	if err == nil {
+		return user, nil
 	}
-
-	if err := password.Verify(u.Password, req.Password); err != nil {
-		return nil, errors.New("invalid email or password")
-	}
-
-	return &LoginResponse{
-		UserID:   uint64(u.ID),
-		Email:    u.Email,
-		LoggedIn: true,
-	}, nil
-}
-
-// SignupRequest represents the signup request data
-type SignupRequest struct {
-	Name     string
-	Email    string
-	Password string
-}
-
-// SignupResponse represents the signup response data
-type SignupResponse struct {
-	Success bool
-	Message string
-}
-
-// Signup attempts to create a new user
-func (s *AuthService) Signup(req SignupRequest) (*SignupResponse, error) {
-	_, err := s.userDal.FindUserByEmail(req.Email)
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		return &SignupResponse{
-			Success: false,
-			Message: "Der er already en bruger med denne email",
-		}, nil
+		return nil, err
 	}
 
-	user := &dal.User{
-		Name:     req.Name,
-		Password: password.Generate(req.Password),
-		Email:    req.Email,
+	subCopy := sub
+	newUser := &dal.User{
+		Name:     name,
+		Email:    email,
+		Auth0Sub: &subCopy,
 	}
-
-	if err := s.userDal.CreateUser(user); err.Error != nil {
-		return nil, err.Error
+	if res := s.userDal.CreateUser(newUser); res.Error != nil {
+		return nil, res.Error
 	}
-
-	return &SignupResponse{
-		Success: true,
-		Message: "Brugeren er oprettet, du kan nu logge ind",
-	}, nil
+	return newUser, nil
 }
 
 // GetUsersResponse represents the get users response data
@@ -164,52 +124,119 @@ func (s *AuthService) GetUserByID(userID uint64) (*types.User, error) {
 
 // HTTP Handlers
 
-// LoginHandler handles the login HTTP request
-func (s *AuthService) LoginHandler(ctx *fiber.Ctx) error {
-	b := new(types.LoginDTO)
-
-	if err := utils.ParseBodyAndValidate(ctx, b); err != nil {
+// LoginPageHandler starts a login. In dev mode it renders the local dev-login
+// form; otherwise it redirects to Auth0 Universal Login.
+func (s *AuthService) LoginPageHandler(ctx *fiber.Ctx) error {
+	if s.devMode {
 		return ctx.Render("auth/login", fiber.Map{
-			"error": err.Message,
+			"Title":   "Login",
+			"DevMode": true,
 		})
 	}
 
-	resp, err := s.Login(LoginRequest{
-		Email:    b.Email,
-		Password: b.Password,
-	})
+	state, err := randomToken()
 	if err != nil {
-		return ctx.Render("auth/login", fiber.Map{
-			"error": err.Error(),
-		})
+		slog.Error("Failed to generate state", "error", err)
+		return ctx.SendStatus(fiber.StatusInternalServerError)
+	}
+	nonce, err := randomToken()
+	if err != nil {
+		slog.Error("Failed to generate nonce", "error", err)
+		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	// Set a session variable to mark the user as logged in
+	session, err := database.SessionStore.Get(ctx)
+	if err != nil {
+		slog.Error("Failed to get session store", "error", err)
+		return ctx.SendStatus(fiber.StatusInternalServerError)
+	}
+	session.Set("oauth_state", state)
+	session.Set("oauth_nonce", nonce)
+	if err := session.Save(); err != nil {
+		slog.Error("Failed to save session", "error", err)
+		return ctx.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	return ctx.Redirect(s.authenticator.AuthCodeURL(state, nonce))
+}
+
+// CallbackHandler completes the Auth0 Authorization Code flow: it verifies the
+// state, exchanges the code, verifies the ID token, upserts the user and
+// establishes the local session.
+func (s *AuthService) CallbackHandler(ctx *fiber.Ctx) error {
 	session, err := database.SessionStore.Get(ctx)
 	if err != nil {
 		slog.Error("Failed to get session store", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	if err := session.Reset(); err != nil {
-		slog.Error("Failed to reset session", "error", err)
-		return ctx.SendStatus(fiber.StatusInternalServerError)
-	}
-	session.Set("username", resp.Email)
-	session.Set("userID", resp.UserID)
-	session.Set("loggedIn", resp.LoggedIn)
-
-	if err := session.Save(); err != nil {
-		slog.Error("Failed to save session", "error", err)
-		return ctx.SendStatus(fiber.StatusInternalServerError)
+	expectedState, _ := session.Get("oauth_state").(string)
+	expectedNonce, _ := session.Get("oauth_nonce").(string)
+	if expectedState == "" || ctx.Query("state") != expectedState {
+		slog.Warn("Invalid OAuth state on callback")
+		return ctx.Status(fiber.StatusBadRequest).SendString("Invalid state")
 	}
 
-	slog.Info("Logged in", "userID", resp.UserID, "email", resp.Email)
-	// Redirect to the home page
+	token, err := s.authenticator.Exchange(ctx.Context(), ctx.Query("code"))
+	if err != nil {
+		slog.Error("Failed to exchange auth code", "error", err)
+		return ctx.Status(fiber.StatusUnauthorized).SendString("Authentication failed")
+	}
+
+	claims, err := s.authenticator.VerifyIDToken(ctx.Context(), token, expectedNonce)
+	if err != nil {
+		slog.Error("Failed to verify ID token", "error", err)
+		return ctx.Status(fiber.StatusUnauthorized).SendString("Authentication failed")
+	}
+
+	user, err := s.upsertUser(claims.Sub, claims.Name, claims.Email)
+	if err != nil {
+		slog.Error("Failed to upsert user", "error", err)
+		return ctx.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	if err := s.establishSession(ctx, user); err != nil {
+		return ctx.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	slog.Info("Logged in via Auth0", "userID", user.ID, "email", user.Email)
 	return ctx.Redirect("/")
 }
 
-// LogoutHandler handles the logout HTTP request
+// DevLoginHandler is the local dev-login bypass (only registered when devMode
+// is enabled). It upserts a user keyed by a synthetic "dev|<email>" subject and
+// establishes the session, mirroring the Auth0 callback.
+func (s *AuthService) DevLoginHandler(ctx *fiber.Ctx) error {
+	if !s.devMode {
+		return ctx.SendStatus(fiber.StatusNotFound)
+	}
+
+	email := ctx.FormValue("email")
+	name := ctx.FormValue("name")
+	if email == "" {
+		return ctx.Render("auth/login", fiber.Map{
+			"Title":   "Login",
+			"DevMode": true,
+			"error":   "Email is required",
+		})
+	}
+
+	user, err := s.upsertUser("dev|"+email, name, email)
+	if err != nil {
+		slog.Error("Failed to upsert dev user", "error", err)
+		return ctx.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	if err := s.establishSession(ctx, user); err != nil {
+		return ctx.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	slog.Info("Logged in via dev bypass", "userID", user.ID, "email", user.Email)
+	return ctx.Redirect("/")
+}
+
+// LogoutHandler destroys the local session. With Auth0 it also redirects to the
+// RP-initiated logout endpoint so the Auth0 session is cleared too.
 func (s *AuthService) LogoutHandler(ctx *fiber.Ctx) error {
 	session, err := database.SessionStore.Get(ctx)
 	if err != nil {
@@ -222,47 +249,41 @@ func (s *AuthService) LogoutHandler(ctx *fiber.Ctx) error {
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
+	if !s.devMode && s.authenticator != nil {
+		return ctx.Redirect(s.authenticator.LogoutURL())
+	}
 	return ctx.Redirect("/")
 }
 
-// SignupPageHandler renders the registration page
-func (s *AuthService) SignupPageHandler(ctx *fiber.Ctx) error {
-	return ctx.Render("users/register", fiber.Map{
-		"Title": "Register",
-	})
-}
-
-// SignupHandler handles the signup HTTP request
-func (s *AuthService) SignupHandler(ctx *fiber.Ctx) error {
-	b := new(types.SignupDTO)
-
-	if err := utils.ParseBodyAndValidate(ctx, b); err != nil {
-		return err
-	}
-
-	resp, err := s.Signup(SignupRequest{
-		Name:     b.Name,
-		Email:    b.Email,
-		Password: b.Password,
-	})
+// establishSession resets the session and marks the user as logged in, using
+// the same session keys the auth middleware reads.
+func (s *AuthService) establishSession(ctx *fiber.Ctx, user *dal.User) error {
+	session, err := database.SessionStore.Get(ctx)
 	if err != nil {
+		slog.Error("Failed to get session store", "error", err)
 		return err
 	}
 
-	if !resp.Success {
-		return ctx.Render("users/register", fiber.Map{
-			"error": resp.Message,
-		})
+	if err := session.Reset(); err != nil {
+		slog.Error("Failed to reset session", "error", err)
+		return err
 	}
+	session.Set("username", user.Email)
+	session.Set("userID", uint64(user.ID))
+	session.Set("loggedIn", true)
 
-	return ctx.Render("auth/login", fiber.Map{
-		"info": resp.Message,
-	})
+	if err := session.Save(); err != nil {
+		slog.Error("Failed to save session", "error", err)
+		return err
+	}
+	return nil
 }
 
-// LoginPageHandler renders the login page
-func (s *AuthService) LoginPageHandler(ctx *fiber.Ctx) error {
-	return ctx.Render("auth/login", fiber.Map{
-		"Title": "Login",
-	})
+// randomToken returns a URL-safe random token for OAuth state/nonce values.
+func randomToken() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
 }

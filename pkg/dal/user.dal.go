@@ -7,9 +7,12 @@ import (
 // User struct defines the user
 type User struct {
 	gorm.Model
-	Name       string     `gorm:"not null"`
+	Name string `gorm:"not null"`
+	// Auth0Sub is the Auth0 subject (sub) claim, the stable external identity.
+	// It is a pointer with a unique index so that NULLs (e.g. legacy rows) do
+	// not collide on the unique constraint.
+	Auth0Sub   *string    `gorm:"uniqueIndex"`
 	Email      string     `gorm:"uniqueIndex;not null"`
-	Password   string     `gorm:"not null"`
 	Activities []Activity `gorm:"foreignKey:User"`
 }
 
@@ -18,6 +21,7 @@ type UserDal interface {
 	CreateUser(user *User) *gorm.DB
 	FindUserById(id uint64) (*User, error)
 	FindUserByEmail(email string) (*User, error)
+	FindUserByAuth0Sub(sub string) (*User, error)
 	FindUsers() ([]User, error)
 }
 
@@ -50,6 +54,16 @@ func (d *userDalImpl) FindUserById(id uint64) (*User, error) {
 func (d *userDalImpl) FindUserByEmail(email string) (*User, error) {
 	var user User
 	err := d.db.Model(&User{}).Where("email = ?", email).Take(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// FindUserByAuth0Sub searches the user's table with the Auth0 subject given
+func (d *userDalImpl) FindUserByAuth0Sub(sub string) (*User, error) {
+	var user User
+	err := d.db.Model(&User{}).Preload("Activities").Take(&user, "auth0_sub = ?", sub).Error
 	if err != nil {
 		return nil, err
 	}

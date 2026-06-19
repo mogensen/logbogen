@@ -54,11 +54,13 @@ func NewTestClient(t *testing.T) *TestClient {
 	// Setup test database
 	db := setupTestDB(t)
 
-	// Create test configuration
+	// Create test configuration. DevMode enables the local dev-login bypass so
+	// the suite never reaches Auth0.
 	cfg := &Config{
 		ListenAddr: "127.0.0.1:0",
 		ViewsPath:  "./views",
 		AssetsPath: "./assets",
+		DevMode:    true,
 		Logger:     slog.New(slog.NewTextHandler(os.Stdout, nil)),
 	}
 
@@ -149,30 +151,30 @@ func (tc *TestClient) PostJSON(path string, data interface{}) *http.Response {
 	return resp
 }
 
-// CreateUser creates a new user and returns the email used
-func (tc *TestClient) CreateUser(name, password string) string {
-	email := fmt.Sprintf("test-%d@example.com", time.Now().UnixNano())
-
+// devLogin drives the dev-login bypass: it upserts a user by email and
+// establishes the session, mirroring the Auth0 callback.
+func (tc *TestClient) devLogin(name, email string) {
 	form := url.Values{}
 	form.Add("name", name)
 	form.Add("email", email)
-	form.Add("password", password)
 
-	resp := tc.Post("/auth/signup", form)
-	require.Equal(tc.t, fiber.StatusOK, resp.StatusCode)
+	resp := tc.Post("/auth/dev-login", form)
+	require.Equal(tc.t, fiber.StatusFound, resp.StatusCode)
+	require.Equal(tc.t, "/", resp.Header.Get("Location"))
+}
 
+// CreateUser creates (via first dev-login) a new user and returns the email
+// used. The password argument is retained for call-site compatibility and
+// ignored — Auth0 owns credentials, the dev bypass keys users by email.
+func (tc *TestClient) CreateUser(name, password string) string {
+	email := fmt.Sprintf("test-%d@example.com", time.Now().UnixNano())
+	tc.devLogin(name, email)
 	return email
 }
 
-// Login logs in a user with the given credentials
+// Login logs in an existing user by email via the dev-login bypass.
 func (tc *TestClient) Login(email, password string) {
-	form := url.Values{}
-	form.Add("email", email)
-	form.Add("password", password)
-
-	resp := tc.Post("/auth/login", form)
-	require.Equal(tc.t, fiber.StatusFound, resp.StatusCode)
-	require.Equal(tc.t, "/", resp.Header.Get("Location"))
+	tc.devLogin("", email)
 }
 
 // Logout logs out the current user
