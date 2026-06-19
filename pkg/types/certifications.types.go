@@ -37,7 +37,7 @@ func CertificationFromDB(db dal.Certification, userMap map[uint64]User) Certific
 		UserID:          db.UserID,
 		Provider:        db.Provider,
 		CategoryID:      db.Category,
-		Category:        *config.CategoryByID(db.Category),
+		Category:        *config.CertificationCategoriesByID(db.Category),
 		TypeID:          db.Type,
 		Type:            *config.CertificationTypeByID(db.Type),
 		StartDate:       Date(db.StartDate),

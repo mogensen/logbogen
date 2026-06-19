@@ -34,7 +34,7 @@ $(() => {
             // Process the response data here
             data.forEach(function (row) {
                 var icon = new L.icon({
-                    iconUrl: '/images/activities/' + row.type.ID + '.svg',
+                    iconUrl: '/images/activities/' + row.type.ID + '.png',
                     iconSize: [35, 35],
                     iconAnchor: [22, 35]
                 });

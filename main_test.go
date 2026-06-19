@@ -1,163 +1,128 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"log/slog"
-	"net/http/cookiejar"
-	"net/http/httptest"
-	"net/url"
-	"os"
-	"strings"
+	"math/rand"
 	"testing"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/mogensen/logbook/pkg/database"
+	"github.com/mogensen/logbook/pkg/config"
 	"github.com/mogensen/logbook/pkg/types"
 	"github.com/stretchr/testify/require"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
-func setupTestDB(t *testing.T) *gorm.DB {
-	// Create an in-memory SQLite database
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	require.NoError(t, err)
-
-	// Get the underlying *sql.DB
-	sqlDB, err := db.DB()
-	require.NoError(t, err)
-
-	// Set connection pool settings
-	sqlDB.SetMaxIdleConns(10)
-	sqlDB.SetMaxOpenConns(100)
-	sqlDB.SetConnMaxLifetime(time.Hour)
-
-	database.DB = db
-	return db
-}
-
 func TestAppSetup(t *testing.T) {
-	// Setup test database
-	db := setupTestDB(t)
-	defer func() {
-		sqlDB, err := db.DB()
-		require.NoError(t, err)
-		sqlDB.Close()
-	}()
-
-	// Create test configuration
-	cfg := &Config{
-		ListenAddr: "127.0.0.1:0", // Use port 0 to get a random available port
-		ViewsPath:  "./views",
-		AssetsPath: "./assets",
-		Logger:     slog.New(slog.NewTextHandler(os.Stdout, nil)),
-	}
-
-	// Setup app
-	app, err := setupApp(cfg)
-	require.NoError(t, err)
-
-	email := fmt.Sprintf("test-%d@example.com", time.Now().UnixNano())
-
-	jar, err := cookiejar.New(nil)
-	require.NoError(t, err)
-	u, err := url.Parse("http://localhost")
-	require.NoError(t, err)
+	client := NewTestClient(t)
 
 	t.Run("Home page should be accessible", func(t *testing.T) {
-		// Make a test request
-		req := httptest.NewRequest("GET", "/", nil)
-		resp, err := app.Test(req)
-		require.NoError(t, err)
+		resp := client.Get("/")
 		require.Equal(t, fiber.StatusOK, resp.StatusCode)
-		body, err := io.ReadAll(resp.Body)
-		require.NoError(t, err)
-		require.Contains(t, string(body), "Velkommen til Logbogen")
-		require.Contains(t, string(body), "Log ind")
-		require.Contains(t, string(body), "Opret bruger")
+		body := client.GetResponseBody(resp)
+		client.AssertResponseContains(body, "Velkommen til Logbogen")
+		client.AssertResponseContains(body, "Log ind")
+		client.AssertResponseContains(body, "Opret bruger")
 	})
 
 	t.Run("User can signup", func(t *testing.T) {
-		// Create a new user
-		form := url.Values{}
-		form.Add("name", "John Doe")
-		form.Add("email", email)
-		form.Add("password", "password")
-		req := httptest.NewRequest("POST", "/auth/signup", strings.NewReader(form.Encode()))
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-		// Send the request
-		resp, err := app.Test(req)
-		require.NoError(t, err)
-		require.Equal(t, fiber.StatusOK, resp.StatusCode)
-
-		// Check the response body
-		body, err := io.ReadAll(resp.Body)
-		require.NoError(t, err)
-		require.Contains(t, string(body), "Brugeren er oprettet, du kan nu logge ind")
-		require.Contains(t, string(body), "Login")
-		require.Contains(t, string(body), "Ny bruger")
+		email := client.CreateUser("John Doe", "password")
+		require.NotEmpty(t, email)
 	})
 
 	t.Run("User can login", func(t *testing.T) {
-		// Create a new user
-		form := url.Values{}
-		form.Add("email", email)
-		form.Add("password", "password")
-		req := httptest.NewRequest("POST", "/auth/login", strings.NewReader(form.Encode()))
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := app.Test(req)
-		require.NoError(t, err)
-		require.Equal(t, fiber.StatusFound, resp.StatusCode)
-		require.Equal(t, "/", resp.Header.Get("Location"))
-
-		jar.SetCookies(u, resp.Cookies())
-		t.Logf("Cookies: %+v", jar.Cookies(req.URL))
+		email := client.CreateUser("Jane Doe", "password")
+		client.Login(email, "password")
 	})
 
-	t.Run("User can list activies", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/activities/list", nil)
-		req.Header.Add("Accept", "application/json")
-		for _, v := range jar.Cookies(u) {
-			t.Logf("Cookie: %+v", v)
-			req.AddCookie(v)
-		}
+	t.Run("User can list activities", func(t *testing.T) {
+		email := client.CreateUser("Activity User", "password")
+		client.Login(email, "password")
 
-		resp, err := app.Test(req)
-		require.NoError(t, err)
-		require.Equal(t, fiber.StatusOK, resp.StatusCode)
-		body, err := io.ReadAll(resp.Body)
-		require.NoError(t, err)
-		t.Logf("Body: %s", string(body))
-		activities := []types.Activity{}
-		err = json.Unmarshal(body, &activities)
-		require.NoError(t, err)
+		activities := client.GetActivities()
 		require.Len(t, activities, 0)
 	})
 
-	t.Run("User can logout", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/auth/logout", nil)
-		for _, v := range jar.Cookies(u) {
-			t.Logf("Cookie: %+v", v)
-			req.AddCookie(v)
-		}
+	t.Run("User can create activity", func(t *testing.T) {
+		email := client.CreateUser("Activity User", "password")
+		client.Login(email, "password")
+		activities := client.GetActivities()
+		require.Len(t, activities, 0)
 
-		resp, err := app.Test(req)
-		require.NoError(t, err)
-		require.Equal(t, fiber.StatusFound, resp.StatusCode)
-		require.Equal(t, "/", resp.Header.Get("Location"))
+		activity := randomActivity()
+		client.CreateActivity(activity)
 
-		// Check the response body
-		req = httptest.NewRequest("GET", "/", nil)
-		resp, err = app.Test(req)
-		require.NoError(t, err)
-		body, err := io.ReadAll(resp.Body)
-		require.NoError(t, err)
-		require.Contains(t, string(body), "Velkommen til Logbogen")
-		require.Contains(t, string(body), "Log ind")
-		require.Contains(t, string(body), "Opret bruger")
+		// Verify activity is created
+		activities = client.GetActivities()
+		require.Len(t, activities, 1)
+		require.Equal(t, "Test comment", activities[0].Comment)
+		require.Equal(t, "Test role", activities[0].Role)
+		require.Equal(t, []uint64{1, 2}, activities[0].ParticipantsIDs)
+		// Type is mapped to the correct name
+		require.Equal(t, *config.ActivityTypeByID(activity.TypeID), activities[0].Type)
+		// Geocoded location
+		require.Equal(t, "København, Danmark", activities[0].Location)
 	})
+
+	t.Run("User can edit activity", func(t *testing.T) {
+		email := client.CreateUser("Activity User", "password")
+		client.Login(email, "password")
+		activities := client.GetActivities()
+		require.Len(t, activities, 0)
+
+		activity := randomActivity()
+		client.CreateActivity(activity)
+
+		// Verify activity is created
+		activities = client.GetActivities()
+		require.Len(t, activities, 1)
+		require.Equal(t, activity.Comment, activities[0].Comment)
+		require.Equal(t, activity.Role, activities[0].Role)
+		require.Equal(t, activity.ParticipantsIDs, activities[0].ParticipantsIDs)
+		require.Equal(t, *config.ActivityTypeByID(activity.TypeID), activities[0].Type)
+		require.Equal(t, "København, Danmark", activities[0].Location)
+
+		// Edit activity
+		a := activities[0]
+
+		a.Comment = "Edited comment"
+		a.Role = "Edited role"
+		a.ParticipantsIDs = []uint64{3}
+		client.UpdateActivity(a)
+
+		// Verify activity is updated
+		activities = client.GetActivities()
+		require.Len(t, activities, 1)
+		require.Equal(t, "Edited comment", activities[0].Comment)
+		require.Equal(t, "Edited role", activities[0].Role)
+		require.Equal(t, []uint64{3}, activities[0].ParticipantsIDs)
+	})
+
+	t.Run("User can logout", func(t *testing.T) {
+		email := client.CreateUser("Logout User", "password")
+		client.Login(email, "password")
+		client.Logout()
+
+		// Verify logout worked
+		resp := client.Get("/")
+		body := client.GetResponseBody(resp)
+		client.AssertResponseContains(body, "Velkommen til Logbogen")
+		client.AssertResponseContains(body, "Log ind")
+		client.AssertResponseContains(body, "Opret bruger")
+	})
+}
+
+func randomActivity() types.Activity {
+	return types.Activity{
+		Date:            randomDate(),
+		Lat:             55.676098,
+		Lng:             12.568337,
+		CategoryID:      types.AllActivityCategories[0].ID,
+		TypeID:          types.AllActivityTypes[0].ID,
+		Comment:         "Test comment",
+		Role:            "Test role",
+		ParticipantsIDs: []uint64{1, 2},
+	}
+}
+
+func randomDate() types.Date {
+	return types.Date(time.Now().AddDate(0, 0, rand.Intn(3650))) // Random date up to 10 years ago
 }

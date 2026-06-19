@@ -16,12 +16,12 @@ for ((i=0; i<${#arr[@]}; i++)); do
 done
 
 # Create star PNG
-$CONVERT -background none -size 1024x1024 /imgs/stars/star.svg  /imgs/stars/star.png
+$CONVERT -background none -size 512x512 /imgs/stars/star.svg  /imgs/stars/star.png
 
 # Climbing icons star PNG and Gray
 for activityType in "${ActivityArray[@]}"; do
   echo $activityType
-  $CONVERT -background none -size 1024x1024 /imgs/activities/${activityType}.svg   /imgs/activities/${activityType}.png
+  $CONVERT -background none -size 512x512 /imgs/activities/${activityType}.png   /imgs/activities/${activityType}.png
   $CONVERT /imgs/activities/${activityType}.png -set colorspace Gray -average /imgs/activities/${activityType}_gray.png
 done
 
@@ -36,7 +36,7 @@ done
 for activityType in "${ActivityArray[@]}"; do
   echo Achievement for: $activityType
 
-  $CONVERT -size 1024x1024  xc:none \
+  $CONVERT -size 512x512  xc:none \
     /imgs/activities/${activityType}_gray.png  -composite \
     /imgs/stars/star_0_gray.png           -composite \
     /imgs/stars/star_72_gray.png          -composite \
@@ -45,7 +45,7 @@ for activityType in "${ActivityArray[@]}"; do
     /imgs/stars/star_288_gray.png         -composite \
     /imgs/achievements/${activityType}-0.png
 
-  $CONVERT -size 1024x1024  xc:none \
+  $CONVERT -size 512x512  xc:none \
     /imgs/activities/${activityType}.png       -composite \
     /imgs/stars/star_0.png                -composite \
     /imgs/stars/star_72_gray.png          -composite \
@@ -54,7 +54,7 @@ for activityType in "${ActivityArray[@]}"; do
     /imgs/stars/star_288_gray.png         -composite \
     /imgs/achievements/${activityType}-1.png
 
-  $CONVERT -size 1024x1024  xc:none \
+  $CONVERT -size 512x512  xc:none \
     /imgs/activities/${activityType}.png       -composite \
     /imgs/stars/star_0.png                -composite \
     /imgs/stars/star_72.png               -composite \
@@ -63,7 +63,7 @@ for activityType in "${ActivityArray[@]}"; do
     /imgs/stars/star_288_gray.png         -composite \
     /imgs/achievements/${activityType}-2.png
 
-  $CONVERT -size 1024x1024  xc:none \
+  $CONVERT -size 512x512  xc:none \
     /imgs/activities/${activityType}.png       -composite \
     /imgs/stars/star_0.png                -composite \
     /imgs/stars/star_72.png               -composite \
@@ -72,7 +72,7 @@ for activityType in "${ActivityArray[@]}"; do
     /imgs/stars/star_288_gray.png         -composite \
     /imgs/achievements/${activityType}-3.png
 
-  $CONVERT -size 1024x1024  xc:none \
+  $CONVERT -size 512x512  xc:none \
     /imgs/activities/${activityType}.png       -composite \
     /imgs/stars/star_0.png                -composite \
     /imgs/stars/star_72.png               -composite \
@@ -81,7 +81,7 @@ for activityType in "${ActivityArray[@]}"; do
     /imgs/stars/star_288_gray.png         -composite \
     /imgs/achievements/${activityType}-4.png
 
-  $CONVERT -size 1024x1024  xc:none \
+  $CONVERT -size 512x512  xc:none \
     /imgs/activities/${activityType}.png       -composite \
     /imgs/stars/star_0.png                -composite \
     /imgs/stars/star_72.png               -composite \
@@ -91,5 +91,5 @@ for activityType in "${ActivityArray[@]}"; do
     /imgs/achievements/${activityType}-5.png
 done
 
-rm ./assets/images/activities/*.png
+#rm ./assets/images/activities/*.png
 rm ./assets/images/stars/*.png

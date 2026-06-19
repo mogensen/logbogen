@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+const nominatimUserAgent = "logbogen/1.0 (https://github.com/mogensen/logbook)"
+
 // Address contains address fields specific to OpenStreetMap
 // much more fields could be here? https://nominatim.org/release-docs/latest/api/Output/
 type Address struct {
@@ -79,13 +81,23 @@ func ReverseGeocode(lat, lng float64) (*GeocodeResponse, error) {
 	url := reverseGeocodeURL(lat, lng)
 	slog.Info("Performing HTTP GET request", "url", url)
 
-	resp, err := http.Get(url)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", nominatimUserAgent)
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 
 	defer resp.Body.Close()
 	bodyBytes, _ := io.ReadAll(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("geocode API returned status %d", resp.StatusCode)
+	}
 
 	// Convert response body to Todo struct
 	geocodeResponse := &GeocodeResponse{}

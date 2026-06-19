@@ -1,0 +1,81 @@
+// https://bootswatch.com/sketchy/
+@import "variables";
+
+
+// @import "~@fortawesome/fontawesome-free/css/all.min.css";
+// @import "~leaflet/dist/leaflet.css";
+// @import "~leaflet-easybutton/src/easy-button.css";
+// @import "~flag-icon-css/css/flag-icon.css";
+
+
+$input-border-radius: 0px;
+@import "~select2/dist/css/select2.css";
+
+// Select2 custom styling
+.select2-container--classic .select2-selection--multiple {
+    border: 1px solid #ced4da;
+    border-radius: 0;
+    min-height: 38px;
+}
+
+.select2-container--classic .select2-selection--multiple .select2-selection__choice {
+    background-color: #007bff;
+    border: none;
+    color: white;
+    border-radius: 3px;
+    padding: 2px 8px;
+    margin: 4px;
+}
+
+.select2-container--classic .select2-selection--multiple .select2-selection__choice__remove {
+    color: white;
+    margin-right: 5px;
+}
+
+.select2-container--classic .select2-selection--multiple .select2-selection__choice__remove:hover {
+    color: #f8f9fa;
+    background: none;
+}
+
+.select2-container--classic .select2-search--inline .select2-search__field {
+    margin-top: 7px;
+}
+
+.select2-container--classic .select2-selection--multiple .select2-selection__rendered {
+    padding: 0 8px;
+}
+
+// Screen sizes
+$small: 575px;
+$medium: 900px;
+
+// Image sizes
+$profile-image-size: 250px;
+$profile-image-size-mini: 40px;
+$list-image-size: 90px;
+$list-image-size-small: 50px;
+
+@import "facebook";
+@import "profile";
+@import "card";
+
+#activity-show-map, #activity-form-map, #user-show-map {
+    height: 250px;
+}
+
+.activity_icon_img {
+    height: $list-image-size;
+    width: $list-image-size;
+}
+
+@media (max-width: $small) {
+    .activity_icon_img {
+        margin-left: -10px;
+        height: $list-image-size-small;
+        width: $list-image-size-small;
+    }
+}
+
+body {
+    padding-bottom: 50px;
+}

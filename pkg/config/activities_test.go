@@ -60,7 +60,7 @@ func TestActivityTypeImages(t *testing.T) {
 
 	// Check that each activity type has a corresponding SVG image
 	for _, activityType := range AllActivityTypes {
-		imagePath := filepath.Join(imageDir, activityType.ID+".svg")
+		imagePath := filepath.Join(imageDir, activityType.ID+".png")
 		if _, err := os.Stat(imagePath); os.IsNotExist(err) {
 			t.Errorf("Missing image for activity type %s: %s", activityType.ID, imagePath)
 		}
@@ -88,12 +88,12 @@ func TestActivityTypeImages(t *testing.T) {
 		}
 
 		// Skip non-SVG files
-		if filepath.Ext(entry.Name()) != ".svg" {
+		if filepath.Ext(entry.Name()) != ".png" {
 			continue
 		}
 
 		// Get the activity type ID from the filename (without extension)
-		id := entry.Name()[:len(entry.Name())-4] // remove .svg extension
+		id := entry.Name()[:len(entry.Name())-4] // remove .png extension
 
 		// Skip known legacy files
 		if id == "absail" {

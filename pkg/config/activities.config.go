@@ -68,6 +68,15 @@ func CategoryByID(id string) *Category {
 	return nil
 }
 
+func CertificationCategoriesByID(id string) *Category {
+	for _, c := range AllCertificationCategories {
+		if c.ID == id {
+			return &c
+		}
+	}
+	return nil
+}
+
 // ActivityTypeByID returns a pointer to the ActivityType with the given ID
 func ActivityTypeByID(id string) *ActivityType {
 	for _, t := range AllActivityTypes {

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 )
 
 func TestCreateAndGetCertification(t *testing.T) {
@@ -12,16 +13,19 @@ func TestCreateAndGetCertification(t *testing.T) {
 	svc := NewCertificationService(db)
 
 	userID := uint64(1)
+	cat := "climbing"
+	typeID := "rock"
 	cert := Certification{
-		ID:                uuid.New(),
-		UserID:            &userID,
-		Provider:          "Falk",
-		CertificationType: "Førstehjælp",
-		StartDate:         time.Now(),
-		EndDate:           time.Now().AddDate(1, 0, 0),
-		OtherParticipants: "Alice,Bob",
+		ID:           uuid.New(),
+		UserID:       &userID,
+		Provider:     "Falk",
+		Category:     cat,
+		Type:         typeID,
+		StartDate:    time.Now(),
+		EndDate:      time.Now().AddDate(1, 0, 0),
+		Participants: datatypes.JSONSlice[uint64]{userID},
 	}
-	created, err := svc.CreateCertification(&cert)
+	created, err := svc.CreateCertification(cert)
 	if err != nil {
 		t.Fatalf("CreateCertification failed: %v", err)
 	}
@@ -43,23 +47,24 @@ func TestUpdateCertification(t *testing.T) {
 	svc := NewCertificationService(db)
 
 	userID := uint64(1)
+	cat := "climbing"
+	typeID := "rock"
 	cert := Certification{
-		ID:                uuid.New(),
-		UserID:            &userID,
-		Provider:          "Falk",
-		CertificationType: "Førstehjælp",
-		StartDate:         time.Now(),
-		EndDate:           time.Now().AddDate(1, 0, 0),
-		OtherParticipants: "Alice,Bob",
+		ID:           uuid.New(),
+		UserID:       &userID,
+		Provider:     "Falk",
+		Category:     cat,
+		Type:         typeID,
+		StartDate:    time.Now(),
+		EndDate:      time.Now().AddDate(1, 0, 0),
+		Participants: datatypes.JSONSlice[uint64]{userID},
 	}
-	created, err := svc.CreateCertification(&cert)
+	created, err := svc.CreateCertification(cert)
 	if err != nil {
 		t.Fatalf("CreateCertification failed: %v", err)
 	}
-	update := map[string]interface{}{
-		"Provider": "Dansk Træklatrenævn",
-	}
-	updated, err := svc.UpdateCertification(created.ID, 1, update)
+	created.Provider = "Dansk Træklatrenævn"
+	updated, err := svc.UpdateCertification(1, created)
 	if err != nil {
 		t.Fatalf("UpdateCertification failed: %v", err)
 	}
@@ -75,16 +80,19 @@ func TestDeleteCertification(t *testing.T) {
 	svc := NewCertificationService(db)
 
 	userID := uint64(1)
+	cat := "climbing"
+	typeID := "rock"
 	cert := Certification{
-		ID:                uuid.New(),
-		UserID:            &userID,
-		Provider:          "Falk",
-		CertificationType: "Førstehjælp",
-		StartDate:         time.Now(),
-		EndDate:           time.Now().AddDate(1, 0, 0),
-		OtherParticipants: "Alice,Bob",
+		ID:           uuid.New(),
+		UserID:       &userID,
+		Provider:     "Falk",
+		Category:     cat,
+		Type:         typeID,
+		StartDate:    time.Now(),
+		EndDate:      time.Now().AddDate(1, 0, 0),
+		Participants: datatypes.JSONSlice[uint64]{userID},
 	}
-	created, err := svc.CreateCertification(&cert)
+	created, err := svc.CreateCertification(cert)
 	if err != nil {
 		t.Fatalf("CreateCertification failed: %v", err)
 	}

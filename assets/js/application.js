@@ -38,9 +38,11 @@ $(() => {
     $.fn.select2.defaults.set("theme", "default");
 
     const zoomLevel = 12;
-    const defaultIcon = new L.icon({
-        iconUrl: "https://www.ippc.int/static/leaflet/images/marker-icon.png",
-        iconAnchor: [12.5, 41],
+    const defaultIcon = L.icon({
+        iconUrl: '/images/map/pin.png',
+        iconSize: [36, 36],
+        iconAnchor: [18, 36],
+        popupAnchor: [0, -36],
     });
 
 
@@ -248,7 +250,7 @@ $(() => {
                     <input type="radio" class="btn-check type-radio form-check-input" name="type" id="${radioId}" value="${type.ID}"
                         autocomplete="off" ${type.ID === currentType ? 'checked' : ''} required>
                     <label class="btn btn-outline-primary type-label form-check-label" for="${radioId}">
-                        <img src="/images/activities/${type.ID}.svg" alt="${type.Name}" class="category-image">
+                        <img src="/images/activities/${type.ID}.png" alt="${type.Name}" class="category-image">
                         <br />
                         <span>${type.Name}</span>
                     </label>
