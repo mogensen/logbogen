@@ -20,10 +20,9 @@ func TestAppSetup(t *testing.T) {
 		body := client.GetResponseBody(resp)
 		client.AssertResponseContains(body, "Velkommen til Logbogen")
 		client.AssertResponseContains(body, "Log ind")
-		client.AssertResponseContains(body, "Opret bruger")
 	})
 
-	t.Run("User can signup", func(t *testing.T) {
+	t.Run("User can be created via dev login", func(t *testing.T) {
 		email := client.CreateUser("John Doe", "password")
 		require.NotEmpty(t, email)
 	})
@@ -106,7 +105,6 @@ func TestAppSetup(t *testing.T) {
 		body := client.GetResponseBody(resp)
 		client.AssertResponseContains(body, "Velkommen til Logbogen")
 		client.AssertResponseContains(body, "Log ind")
-		client.AssertResponseContains(body, "Opret bruger")
 	})
 }
 

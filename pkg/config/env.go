@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -12,12 +13,23 @@ var (
 	PORT = getEnv("PORT", "5000")
 	// DB returns the name of the sqlite database
 	DB = getEnv("DB", "fiber.db")
-	// TOKENKEY returns the jwt token secret
-	TOKENKEY = getEnv("TOKEN_KEY", "test-key")
-	// TOKENEXP returns the jwt token expiration duration.
-	// Should be time.ParseDuration string. Source: https://golang.org/pkg/time/#ParseDuration
-	// default: 10h
-	TOKENEXP = getEnv("TOKEN_EXP", "10h")
+
+	// DEVMODE enables the local dev login bypass (no Auth0 tenant needed).
+	// Keep this false in production.
+	DEVMODE = getEnvBool("AUTH_DEV_MODE", false)
+
+	// AUTH0DOMAIN is the Auth0 tenant domain, e.g. "my-tenant.eu.auth0.com".
+	AUTH0DOMAIN = getEnv("AUTH0_DOMAIN", "")
+	// AUTH0CLIENTID is the Auth0 application client ID.
+	AUTH0CLIENTID = getEnv("AUTH0_CLIENT_ID", "")
+	// AUTH0CLIENTSECRET is the Auth0 application client secret.
+	AUTH0CLIENTSECRET = getEnv("AUTH0_CLIENT_SECRET", "")
+	// AUTH0CALLBACKURL is the OIDC redirect URL registered in Auth0,
+	// e.g. "http://localhost:3000/auth/callback".
+	AUTH0CALLBACKURL = getEnv("AUTH0_CALLBACK_URL", "")
+	// AUTH0LOGOUTRETURNURL is where Auth0 returns the user after logout,
+	// e.g. "http://localhost:3000/".
+	AUTH0LOGOUTRETURNURL = getEnv("AUTH0_LOGOUT_RETURN_URL", "")
 )
 
 func getEnv(name string, fallback string) string {
@@ -25,9 +37,19 @@ func getEnv(name string, fallback string) string {
 		return value
 	}
 
-	if fallback != "" {
+	// An empty fallback is a legitimate default (e.g. unset Auth0 vars in dev mode).
+	return fallback
+}
+
+func getEnvBool(name string, fallback bool) bool {
+	value, exists := os.LookupEnv(name)
+	if !exists {
 		return fallback
 	}
 
-	panic(fmt.Sprintf(`Environment variable not found :: %v`, name))
+	parsed, err := strconv.ParseBool(value)
+	if err != nil {
+		panic(fmt.Sprintf(`Environment variable %v must be a boolean :: %v`, name, value))
+	}
+	return parsed
 }

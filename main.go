@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/template/html/v2"
+	"github.com/mogensen/logbook/pkg/auth"
+	"github.com/mogensen/logbook/pkg/config"
 	"github.com/mogensen/logbook/pkg/dal"
 	"github.com/mogensen/logbook/pkg/database"
 	"github.com/mogensen/logbook/pkg/routes"
@@ -24,6 +27,7 @@ type Config struct {
 	AssetsPath  string
 	CertFile    string
 	KeyFile     string
+	DevMode     bool
 	Logger      *slog.Logger
 }
 
@@ -33,6 +37,7 @@ func DefaultConfig() *Config {
 		ListenAddr: "127.0.0.1:3000",
 		ViewsPath:  "./views",
 		AssetsPath: "./assets",
+		DevMode:    config.DEVMODE,
 		Logger:     slog.New(slog.NewTextHandler(os.Stdout, nil)),
 	}
 }
@@ -43,6 +48,16 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	if err != nil {
 		cfg.Logger.Error("Error migrating database", "error", err)
 		return nil, err
+	}
+
+	// Drop the legacy "password" column left over from the pre-Auth0 schema.
+	// AutoMigrate never drops columns, so an existing database keeps
+	// `password NOT NULL`, which would reject new passwordless Auth0 users.
+	if m := database.DB.Migrator(); m.HasColumn(&dal.User{}, "password") {
+		if err := m.DropColumn(&dal.User{}, "password"); err != nil {
+			cfg.Logger.Error("Error dropping legacy password column", "error", err)
+			return nil, err
+		}
 	}
 
 	// HTML templates
@@ -75,11 +90,27 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	activityDal := dal.NewActivityService(database.DB)
 	certificationDal := dal.NewCertificationService(database.DB)
 
+	// Auth0 authenticator (skipped in dev mode, which uses the dev-login bypass)
+	var authenticator *auth.Authenticator
+	if !cfg.DevMode {
+		authenticator, err = auth.New(context.Background(), auth.Config{
+			Domain:          config.AUTH0DOMAIN,
+			ClientID:        config.AUTH0CLIENTID,
+			ClientSecret:    config.AUTH0CLIENTSECRET,
+			CallbackURL:     config.AUTH0CALLBACKURL,
+			LogoutReturnURL: config.AUTH0LOGOUTRETURNURL,
+		})
+		if err != nil {
+			cfg.Logger.Error("Error initializing Auth0 authenticator", "error", err)
+			return nil, err
+		}
+	}
+
 	// Services
 	weatherService := services.NewWeatherService()
 	activitiesService := services.NewActivityService(userDal, activityDal, weatherService)
 	scoreboardService := services.NewScoreboardService(userDal)
-	authService := services.NewAuthService(userDal)
+	authService := services.NewAuthService(userDal, authenticator, cfg.DevMode)
 	userService := services.NewUserService(userDal)
 	certificationsService := services.NewCertificationService(certificationDal, userDal)
 
@@ -88,7 +119,7 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 
 	// Route for the root path
 	routes.HomeRoutes(app, userService, authMiddleware)
-	routes.AuthRoutes(app, authService)
+	routes.AuthRoutes(app, authService, cfg.DevMode)
 	routes.UserRoutes(app, userService, authMiddleware)
 	routes.ActivitiesRoutes(app, activitiesService, authMiddleware)
 	routes.ScoreboardRoutes(app, scoreboardService, authMiddleware)
