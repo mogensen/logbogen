@@ -11,4 +11,5 @@ func UserRoutes(app fiber.Router, userService *services.UserService, authMiddlew
 	r := app.Group("/users").Use(authMiddleware.Auth)
 	r.Get("/list", userService.GetUsersHandler)
 	r.Get("/:UserID", userService.GetUserHandler)
+	r.Post("/theme", userService.UpdateThemeHandler)
 }
