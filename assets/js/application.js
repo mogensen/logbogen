@@ -183,39 +183,45 @@ $(() => {
     }
 
     async function loadCategories() {
-        console.log("loadCategories");
         const categoryGroup = $("#category-group");
         const currentCategory = categoryGroup.data('current') || "climbing";
-        
+        const pillMode = categoryGroup.hasClass('act-edit-pillrow');
+
         try {
             const response = await fetch('/activities/categories');
             if (!response.ok) {
                 throw new Error('Failed to fetch categories');
             }
-            
+
             const categories = await response.json();
-            
-            // Clear existing radio buttons
             categoryGroup.empty();
-            
-            // Add new radio buttons for each category
+
             categories.forEach(category => {
-                const radioId = `category-${category.ID}`;
-                const radioHtml = `
-                <div class="category-radio-parent">
-                    <input type="radio" class="btn-check category-radio" name="category" id="${radioId}" value="${category.ID}"
-                        autocomplete="off" ${category.ID === currentCategory ? 'checked' : ''}>
-                    <label class="btn btn-outline-primary category-label" for="${radioId}">
-                        <img src="/images/categories/${category.ID}.png" alt="${category.Name}" class="category-image">
-                        <br />
-                        <span>${category.Name}</span>
-                    </label>
-                </div>
-                `;
-                categoryGroup.append(radioHtml);
+                const selected = category.ID === currentCategory;
+                if (pillMode) {
+                    const pillHtml = `<label class="act-edit-pill${selected ? ' sel' : ''}">
+                        <img src="/images/categories/${category.ID}.png" alt="${category.Name}">
+                        ${category.Name}
+                        <input type="radio" name="category" value="${category.ID}" ${selected ? 'checked' : ''} autocomplete="off" style="display:none">
+                    </label>`;
+                    categoryGroup.append(pillHtml);
+                } else {
+                    const radioId = `category-${category.ID}`;
+                    const radioHtml = `
+                    <div class="category-radio-parent">
+                        <input type="radio" class="btn-check category-radio" name="category" id="${radioId}" value="${category.ID}"
+                            autocomplete="off" ${selected ? 'checked' : ''}>
+                        <label class="btn btn-outline-primary category-label" for="${radioId}">
+                            <img src="/images/categories/${category.ID}.png" alt="${category.Name}" class="category-image">
+                            <br />
+                            <span>${category.Name}</span>
+                        </label>
+                    </div>
+                    `;
+                    categoryGroup.append(radioHtml);
+                }
             });
-            
-            // Initial update of types
+
             updateTypeOptions();
         } catch (error) {
             console.error('Error loading categories:', error);
@@ -226,45 +232,64 @@ $(() => {
         const category = $("input[name='category']:checked").val();
         const typeGroup = $("#activity-type-group");
         const currentType = typeGroup.data('current') || $("input[name='type']:checked").val();
+        const pillMode = typeGroup.hasClass('act-edit-pillrow');
 
         if (category == undefined) {
             return;
         }
-        
+
         try {
             const response = await fetch(`/activities/types?category=${category}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch activity types');
             }
-            
+
             const types = await response.json();
-            
-            // Clear existing radio buttons
             typeGroup.empty();
-            
-            // Add new radio buttons with images
+            typeGroup.removeData('current');
+
             types.forEach(type => {
-                const radioId = `type-${type.ID}`;
-                const radioHtml = `
-                <div class="type-radio-parent">
-                    <input type="radio" class="btn-check type-radio form-check-input" name="type" id="${radioId}" value="${type.ID}"
-                        autocomplete="off" ${type.ID === currentType ? 'checked' : ''} required>
-                    <label class="btn btn-outline-primary type-label form-check-label" for="${radioId}">
-                        <img src="/images/activities/${type.ID}.png" alt="${type.Name}" class="category-image">
-                        <br />
-                        <span>${type.Name}</span>
-                    </label>
-                </div>
-                `;
-                typeGroup.append(radioHtml);
+                const selected = type.ID === currentType;
+                if (pillMode) {
+                    const pillHtml = `<label class="act-edit-pill${selected ? ' sel' : ''}">
+                        <img src="/images/activities/${type.ID}.png" alt="${type.Name}">
+                        ${type.Name}
+                        <input type="radio" name="type" value="${type.ID}" ${selected ? 'checked' : ''} autocomplete="off" style="display:none" required>
+                    </label>`;
+                    typeGroup.append(pillHtml);
+                } else {
+                    const radioId = `type-${type.ID}`;
+                    const radioHtml = `
+                    <div class="type-radio-parent">
+                        <input type="radio" class="btn-check type-radio form-check-input" name="type" id="${radioId}" value="${type.ID}"
+                            autocomplete="off" ${selected ? 'checked' : ''} required>
+                        <label class="btn btn-outline-primary type-label form-check-label" for="${radioId}">
+                            <img src="/images/activities/${type.ID}.png" alt="${type.Name}" class="category-image">
+                            <br />
+                            <span>${type.Name}</span>
+                        </label>
+                    </div>
+                    `;
+                    typeGroup.append(radioHtml);
+                }
             });
-            
-            // Update other type field visibility
+
             updateOtherType();
         } catch (error) {
             console.error('Error updating activity types:', error);
         }
     }
+
+    $(document).on('click', '.act-edit-pillrow .act-edit-pill', function() {
+        const $pill = $(this);
+        $pill.closest('.act-edit-pillrow').find('.act-edit-pill').removeClass('sel');
+        $pill.addClass('sel');
+        const $radio = $pill.find('input[type=radio]');
+        $radio.prop('checked', true).trigger('change');
+        if ($radio.attr('name') === 'type') {
+            $('#act-edit-type-icon').attr('src', `/images/activities/${$radio.val()}.png`);
+        }
+    });
 
     // Update types when category changes
     $(document).on('change', 'input[name="category"]', updateTypeOptions);
