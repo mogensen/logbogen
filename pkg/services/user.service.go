@@ -180,3 +180,52 @@ func (s *UserService) GetUserHandler(ctx *fiber.Ctx) error {
 		"Categories":   types.AllActivityCategories,
 	})
 }
+
+// UpdateUser updates a user's properties
+func (s *UserService) UpdateUser(user *dal.User) error {
+	return s.userDal.UpdateUser(user)
+}
+
+// UpdateThemeRequest represents the request body for theme updates
+type UpdateThemeRequest struct {
+	Theme string `json:"theme"`
+}
+
+// UpdateThemeHandler handles POST requests to update the user's theme preference
+func (s *UserService) UpdateThemeHandler(ctx *fiber.Ctx) error {
+	currentUser := utils.GetUser(ctx)
+	if currentUser == nil {
+		return fiber.NewError(fiber.StatusUnauthorized, "Not authenticated")
+	}
+
+	var req UpdateThemeRequest
+	if err := ctx.BodyParser(&req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
+	}
+
+	// Validate theme value
+	if req.Theme != "light" && req.Theme != "dark" && req.Theme != "auto" {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid theme. Must be 'light', 'dark', or 'auto'")
+	}
+
+	// Get the DAL user and update
+	user, err := s.userDal.FindUserById(uint64(currentUser.ID))
+	if err != nil {
+		slog.Error("Failed to find user for theme update", "error", err, "userID", currentUser.ID)
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to update theme")
+	}
+
+	user.ThemePref = req.Theme
+	if err := s.userDal.UpdateUser(user); err != nil {
+		slog.Error("Failed to update user theme", "error", err, "userID", currentUser.ID)
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to update theme")
+	}
+
+	// Update the current user in context to reflect the change
+	currentUser.ThemePref = req.Theme
+
+	return ctx.JSON(fiber.Map{
+		"theme": req.Theme,
+		"message": "Theme updated successfully",
+	})
+}

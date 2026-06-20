@@ -7,7 +7,8 @@ import (
 // User struct defines the user
 type User struct {
 	gorm.Model
-	Name string `gorm:"not null"`
+	Name          string     `gorm:"not null"`
+	ThemePref     string     `gorm:"default:'auto'"`
 	// Auth0Sub is the Auth0 subject (sub) claim, the stable external identity.
 	// It is a pointer with a unique index so that NULLs (e.g. legacy rows) do
 	// not collide on the unique constraint.
@@ -19,6 +20,7 @@ type User struct {
 // UserDal defines the interface for user data access operations
 type UserDal interface {
 	CreateUser(user *User) *gorm.DB
+	UpdateUser(user *User) error
 	FindUserById(id uint64) (*User, error)
 	FindUserByEmail(email string) (*User, error)
 	FindUserByAuth0Sub(sub string) (*User, error)
@@ -75,4 +77,9 @@ func (d *userDalImpl) FindUsers() ([]User, error) {
 	var users []User
 	err := d.db.Model(&User{}).Preload("Activities").Find(&users).Error
 	return users, err
+}
+
+// UpdateUser updates a user in the database
+func (d *userDalImpl) UpdateUser(user *User) error {
+	return d.db.Save(user).Error
 }

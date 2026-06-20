@@ -31,7 +31,7 @@
     <div class="d-flex align-items-end" style="gap:2px;">
       {{ range $bar := .ActivityBars }}
       <div class="col ps-1">
-        <div style="display:flex; flex-direction:column-reverse; height:200px; background-color: #f7f5f5; border:2px solid #eee;">
+        <div style="display:flex; flex-direction:column-reverse; height:200px; background-color: var(--bs-tertiary-bg); border:2px solid var(--bs-border-color);">
           {{ range $seg := $bar.Categories }}
           {{ if $seg.Count }}
           <div title="{{ $seg.Tooltip }}" style="background:{{ $seg.Color }}; height:{{ $seg.Count }}0px ; width:100%;"></div>

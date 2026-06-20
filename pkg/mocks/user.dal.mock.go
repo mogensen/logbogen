@@ -49,3 +49,9 @@ func (m *UserDalMock) FindUsers() ([]dal.User, error) {
 	args := m.Called()
 	return args.Get(0).([]dal.User), args.Error(1)
 }
+
+// UpdateUser mocks the UpdateUser method
+func (m *UserDalMock) UpdateUser(user *dal.User) error {
+	args := m.Called(user)
+	return args.Error(0)
+}

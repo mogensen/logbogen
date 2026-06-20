@@ -14,6 +14,7 @@ type User struct {
 	ID           uint64        `json:"id"`
 	Name         string        `json:"name"`
 	Email        string        `json:"email"`
+	ThemePref    string        `json:"themePref"`
 	Activities   []*Activity   `json:"activities"`
 	Achievements []Achievement `json:"achievements"`
 }
@@ -30,6 +31,7 @@ func UserFromDal(user *dal.User) *User {
 		ID:           uint64(user.ID),
 		Name:         user.Name,
 		Email:        user.Email,
+		ThemePref:    user.ThemePref,
 		Activities:   activities,
 		Achievements: achievements,
 	}

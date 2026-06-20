@@ -106,6 +106,11 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 
 	// Middleware
 	authMiddleware := middleware.NewAuthMiddleware(authService)
+	themeMiddleware := middleware.ThemeMiddleware()
+
+	// Apply user middleware globally so theme middleware can read the user
+	app.Use(authMiddleware.User)
+	app.Use(themeMiddleware)
 
 	// Route for the root path
 	routes.HomeRoutes(app, userService, authMiddleware)

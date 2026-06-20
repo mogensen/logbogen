@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html{{ if ne .ThemePref "auto" }} data-bs-theme="{{ .ThemePref }}"{{ end }}>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="utf-8">
     <title>Logbogen</title>
+    <script>if(window.matchMedia('(prefers-color-scheme: dark)').matches&&!document.documentElement.getAttribute('data-bs-theme')){document.documentElement.setAttribute('data-bs-theme','dark');}</script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -56,6 +57,7 @@
   <script src="/js/usermap.js"></script>
   <script src="/js/application.js"></script>
   <script src="/js/certifications.js"></script>
+  <script src="/js/theme.js"></script>
 
 </body>
 </html>
