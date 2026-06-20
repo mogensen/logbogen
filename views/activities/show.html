@@ -1,39 +1,146 @@
-<!-- Large devices -->
-<div class="d-none d-lg-block">
-  <div class="py-4 mb-2">
-    <img src="/images/activities/{{ .Activity.Type.ID }}.png" class="category-list-image">
-    <h3 class="d-inline-block">{{ .Activity.Title }}</h3>
-    <h4 class="d-inline-block">- {{ .Activity.Role }}</h4>
+<style>
+.act-wrap { font-family: 'Patrick Hand', sans-serif; padding: 16px 0; }
+.act-lbl { font-weight: 700; font-size: 11px; letter-spacing: .13em; text-transform: uppercase; color: var(--bs-secondary-color); margin-bottom: 3px; }
+.act-val { font-weight: 700; font-size: 17px; color: var(--bs-body-color); }
+.act-hd { font-family: 'Cabin Sketch', cursive; font-weight: 700; color: var(--bs-body-color); }
+.act-chip { display: inline-block; border: 2px solid #333; background: #e8f5ea; color: #1f7a33; font-weight: 700; font-size: 14px; padding: 2px 14px; border-radius: 18px 8px 18px 8px / 8px 18px 8px 18px; }
+.act-btnO { border: 2px solid #333; background: var(--bs-body-bg); color: var(--bs-body-color); font-weight: 700; font-size: 15px; padding: 6px 16px; border-radius: 16px 7px 16px 7px / 7px 16px 7px 16px; cursor: pointer; text-decoration: none; display: inline-block; }
+.act-btnO:hover { color: var(--bs-body-color); background: var(--bs-tertiary-bg); }
+.act-btnD { border: 2px solid #dc3545; background: var(--bs-body-bg); color: #dc3545; font-weight: 700; font-size: 15px; padding: 6px 16px; border-radius: 7px 16px 7px 16px / 16px 7px 16px 7px; cursor: pointer; }
+.act-back { font-weight: 700; font-size: 16px; color: var(--bs-secondary-color); text-decoration: none; }
+.act-back:hover { color: var(--bs-body-color); }
+.act-sep { height: 2px; background: var(--bs-border-color); margin: 18px 0 24px; }
+.act-dash { border-top: 2px dashed var(--bs-border-color); margin: 16px 0; }
+.act-prose { font-weight: 700; font-size: 19px; line-height: 32px; color: var(--bs-body-color); background: repeating-linear-gradient(var(--bs-body-bg) 0 31px, var(--bs-tertiary-bg) 31px 32px); padding: 5px 2px 9px; min-height: 64px; }
+
+.act-header { display: flex; align-items: center; gap: 16px; }
+.act-title-block { flex: 1 1 auto; }
+.act-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+.act-content { display: grid; grid-template-columns: 280px 1fr; gap: 30px; align-items: start; }
+
+.act-mobile-meta { display: none; }
+.act-mobile-participants { display: none; }
+.act-wrap .user_img { height: 46px; width: 46px; }
+.act-wrap .user_info { align-items: center; }
+
+#activity-show-map {
+  width: 100%;
+  height: 300px;
+  border: 2px solid var(--bs-body-color);
+  border-radius: 12px 8px 11px 9px / 9px 11px 8px 12px;
+  overflow: hidden;
+}
+
+@media (max-width: 991px) {
+  .act-header { flex-wrap: wrap; }
+  .act-header-actions { width: 100%; justify-content: flex-end; margin-top: 4px; }
+  .act-back { margin-right: auto; }
+  .act-btnO, .act-btnD { padding: 5px 12px; font-size: 14px; }
+  .act-content { grid-template-columns: 1fr; }
+  .act-sidebar { display: none; }
+  .act-mobile-meta { display: flex; align-items: center; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
+  .act-mobile-participants { display: block; margin-top: 20px; }
+  #activity-show-map { height: 200px; }
+  .act-prose { font-size: 17px; line-height: 30px; background: repeating-linear-gradient(var(--bs-body-bg) 0 29px, var(--bs-tertiary-bg) 29px 30px); }
+}
+</style>
+
+<div class="act-wrap">
+  <div class="act-header">
+    <img src="/images/activities/{{ .Activity.Type.ID }}.png" width="54" height="54" alt="{{ .Activity.Type.Name }}" style="flex: none;">
+    <div class="act-title-block">
+      <div class="act-hd" style="font-size: 30px; line-height: 1;">{{ .Activity.Type.Name }}</div>
+      <div style="font-weight: 700; font-size: 16px; color: var(--bs-secondary-color); margin-top: 2px;">nær {{ .Activity.Location }}</div>
+    </div>
+    <div class="act-header-actions">
+      <a href="/activities/list" class="act-back">‹ Tilbage</a>
+      <a href="/activities/{{ .Activity.ID }}/edit" class="act-btnO">Rediger</a>
+      <button type="button" data-record-id="{{ .Activity.ID }}" data-record-title="{{ .Activity.Title }}"
+        class="act-btnD" data-bs-toggle="modal" data-bs-target="#confirm-delete">Slet</button>
+    </div>
+  </div>
+  <div class="act-sep"></div>
+
+  <div class="act-content">
+    <!-- Sidebar: date, weather, role, participants (desktop only) -->
+    <div class="act-sidebar">
+      <div class="act-lbl">Dato</div>
+      <div class="act-val" style="font-size: 19px;">{{ fmtDateHuman .Activity.Date }}</div>
+
+      {{ if .Weather }}
+      <div class="act-dash"></div>
+      <div class="act-lbl">Vejr</div>
+      <div style="display: flex; align-items: center; gap: 12px; margin-top: 4px;">
+        <img src="https://openweathermap.org/img/wn/{{ .Weather.Icon }}@2x.png" alt="Vejr" width="44" height="44">
+        <div style="font-weight: 700; font-size: 24px; color: var(--bs-body-color); line-height: 1;">{{ .Weather.Temperature }}°C</div>
+      </div>
+      {{ end }}
+
+      {{ if .Activity.Role }}
+      <div class="act-dash"></div>
+      <div class="act-lbl">Rolle</div>
+      <div style="margin-top: 4px;"><span class="act-chip">{{ .Activity.Role }}</span></div>
+      {{ end }}
+
+      {{ if .Activity.Participants }}
+      <div class="act-dash"></div>
+      <div class="act-lbl">Med på turen</div>
+      <ul class="contacts" style="list-style: none; padding: 0; margin: 8px 0 0;">
+        {{ range .Activity.Participants }}
+        {{ template "users/card" . }}
+        {{ end }}
+      </ul>
+      {{ end }}
+    </div>
+
+    <!-- Main: map + logbog + mobile extras -->
+    <div class="act-main">
+      <div id="activity-show-map" data-lat="{{ .Activity.Lat }}" data-lng="{{ .Activity.Lng }}"></div>
+
+      <!-- Mobile-only meta row -->
+      <div class="act-mobile-meta">
+        <div>
+          <div class="act-lbl">Dato</div>
+          <div class="act-val" style="font-size: 15px;">{{ fmtDateHuman .Activity.Date }}</div>
+        </div>
+        {{ if .Activity.Role }}
+        <div style="width: 2px; height: 30px; background: var(--bs-border-color);"></div>
+        <div>
+          <div class="act-lbl">Rolle</div>
+          <span class="act-chip" style="font-size: 13px;">{{ .Activity.Role }}</span>
+        </div>
+        {{ end }}
+        {{ if .Weather }}
+        <div style="width: 2px; height: 30px; background: var(--bs-border-color);"></div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <img src="https://openweathermap.org/img/wn/{{ .Weather.Icon }}@2x.png" alt="Vejr" width="30" height="30">
+          <div class="act-val" style="font-size: 15px;">{{ .Weather.Temperature }}°</div>
+        </div>
+        {{ end }}
+      </div>
+
+      {{ if .Activity.Comment }}
+      <div class="act-hd" style="font-size: 23px; margin-top: 22px; border-bottom: 3px dashed var(--bs-border-color); display: inline-block; padding-bottom: 2px;">Logbog</div>
+      <div class="act-prose" style="margin-top: 12px;">{{ .Activity.Comment }}</div>
+      {{ end }}
+
+      <!-- Mobile-only participants -->
+      {{ if .Activity.Participants }}
+      <div class="act-mobile-participants">
+        <div class="act-hd" style="font-size: 18px; margin-bottom: 10px;">Med på turen</div>
+        <ul class="contacts" style="list-style: none; padding: 0; margin: 0;">
+          {{ range .Activity.Participants }}
+          {{ template "users/card" . }}
+          {{ end }}
+        </ul>
+      </div>
+      {{ end }}
+    </div>
   </div>
 </div>
 
-
-<!-- Small devices -->
-<div class="d-lg-none">
-  <div class="py-4 mb-2">
-    <img src="/images/activities/{{ .Activity.Type.ID }}.png" class="category-list-image">
-    <h3 class="d-inline-block">{{ .Activity.Type.Name }}</h3>
-    <br>
-    <h4 class="d-inline-block">nær {{ .Activity.Location }}</h4>
-    <h5 class="d-inline-block">- {{ .Activity.Role }}</h5>
-  </div>
-</div>
-
-
-<!-- END Header -->
-
-<div class="container pb-2">
-  <div class="btn-group" role="group" aria-label="Basic example">
-    <a href="/activities/list" class=" col btn btn-info"> Tilbage </a>
-    <a href="/activities/{{ .Activity.ID }}/edit" class="col btn btn-warning">Rediger</a>
-    <button type="button" data-record-id="{{ .Activity.ID }}" data-record-title="{{ .Activity.Title }}"
-      class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirm-delete">Slet</button>
-
-  </div>
-</div>
-
-<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-  aria-hidden="true">
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -49,51 +156,6 @@
         <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
         <button type="button" class="btn btn-danger btn-ok">Slet</button>
       </div>
-    </div>
-  </div>
-</div>
-
-
-<div class="card border-secondary mb-3">
-  <div class="card-body">
-    <h4 class="card-title">Dato</h4>
-    <hr />
-    <div class="d-flex justify-content-between align-items-center">
-      <p class="d-inline-block mb-0">{{ fmtDateHuman .Activity.Date }}</p>
-      {{ if .Weather }}
-      <div class="d-flex align-items-center">
-        <img src="https://openweathermap.org/img/wn/{{ .Weather.Icon }}@2x.png" alt="Weather icon">
-        <p class="d-inline-block ms-2 mb-0">{{ .Weather.Temperature }}°C</p>
-      </div>
-      {{ end }}
-    </div>
-  </div>
-</div>
-
-<div class="card border-secondary mb-3">
-  <div class="card-body">
-    <div id="activity-show-map" data-lat="{{ .Activity.Lat }}" data-lng="{{ .Activity.Lng }}"></div>
-  </div>
-</div>
-
-<div class="card border-secondary mb-3">
-  <div class="card-body">
-    <h4 class="card-title">Kommentar</h4>
-    <hr />
-    <p class="d-inline-block">{{ .Activity.Comment }}</p>
-  </div>
-</div>
-
-<div class="card border-primary mb-3">
-  <div class="card-body">
-    <h4 class="card-title">Andre Deltagere</h4>
-    <hr />
-    <div class="card-body contacts_body">
-      <ul class="contacts">
-        {{range .Activity.Participants }}
-        {{template "users/card" .}}
-        {{ end}}
-      </ul>
     </div>
   </div>
 </div>
