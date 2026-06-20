@@ -1,17 +1,17 @@
 <style>
 .act-wrap { font-family: 'Patrick Hand', sans-serif; padding: 16px 0; }
-.act-lbl { font-weight: 700; font-size: 11px; letter-spacing: .13em; text-transform: uppercase; color: #a3a097; margin-bottom: 3px; }
-.act-val { font-weight: 700; font-size: 17px; color: #333; }
-.act-hd { font-family: 'Cabin Sketch', cursive; font-weight: 700; color: #333; }
+.act-lbl { font-weight: 700; font-size: 11px; letter-spacing: .13em; text-transform: uppercase; color: var(--bs-secondary-color); margin-bottom: 3px; }
+.act-val { font-weight: 700; font-size: 17px; color: var(--bs-body-color); }
+.act-hd { font-family: 'Cabin Sketch', cursive; font-weight: 700; color: var(--bs-body-color); }
 .act-chip { display: inline-block; border: 2px solid #333; background: #e8f5ea; color: #1f7a33; font-weight: 700; font-size: 14px; padding: 2px 14px; border-radius: 18px 8px 18px 8px / 8px 18px 8px 18px; }
-.act-btnO { border: 2px solid #333; background: #fff; color: #333; font-weight: 700; font-size: 15px; padding: 6px 16px; border-radius: 16px 7px 16px 7px / 7px 16px 7px 16px; cursor: pointer; text-decoration: none; display: inline-block; }
-.act-btnO:hover { color: #333; background: #f5f5f5; }
-.act-btnD { border: 2px solid #dc3545; background: #fff; color: #dc3545; font-weight: 700; font-size: 15px; padding: 6px 16px; border-radius: 7px 16px 7px 16px / 16px 7px 16px 7px; cursor: pointer; }
-.act-back { font-weight: 700; font-size: 16px; color: #6b6b6b; text-decoration: none; }
-.act-back:hover { color: #333; }
-.act-sep { height: 2px; background: #333; margin: 18px 0 24px; }
-.act-dash { border-top: 2px dashed #e3e1d8; margin: 16px 0; }
-.act-prose { font-weight: 700; font-size: 19px; line-height: 32px; color: #3b3b3b; background: repeating-linear-gradient(#fff 0 31px, #eaf0f4 31px 32px); padding: 5px 2px 9px; min-height: 64px; }
+.act-btnO { border: 2px solid #333; background: var(--bs-body-bg); color: var(--bs-body-color); font-weight: 700; font-size: 15px; padding: 6px 16px; border-radius: 16px 7px 16px 7px / 7px 16px 7px 16px; cursor: pointer; text-decoration: none; display: inline-block; }
+.act-btnO:hover { color: var(--bs-body-color); background: var(--bs-tertiary-bg); }
+.act-btnD { border: 2px solid #dc3545; background: var(--bs-body-bg); color: #dc3545; font-weight: 700; font-size: 15px; padding: 6px 16px; border-radius: 7px 16px 7px 16px / 16px 7px 16px 7px; cursor: pointer; }
+.act-back { font-weight: 700; font-size: 16px; color: var(--bs-secondary-color); text-decoration: none; }
+.act-back:hover { color: var(--bs-body-color); }
+.act-sep { height: 2px; background: var(--bs-border-color); margin: 18px 0 24px; }
+.act-dash { border-top: 2px dashed var(--bs-border-color); margin: 16px 0; }
+.act-prose { font-weight: 700; font-size: 19px; line-height: 32px; color: var(--bs-body-color); background: repeating-linear-gradient(var(--bs-body-bg) 0 31px, var(--bs-tertiary-bg) 31px 32px); padding: 5px 2px 9px; min-height: 64px; }
 
 .act-header { display: flex; align-items: center; gap: 16px; }
 .act-title-block { flex: 1 1 auto; }
@@ -42,7 +42,7 @@
   .act-mobile-meta { display: flex; align-items: center; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
   .act-mobile-participants { display: block; margin-top: 20px; }
   #activity-show-map { height: 200px; }
-  .act-prose { font-size: 17px; line-height: 30px; background: repeating-linear-gradient(#fff 0 29px, #eaf0f4 29px 30px); }
+  .act-prose { font-size: 17px; line-height: 30px; background: repeating-linear-gradient(var(--bs-body-bg) 0 29px, var(--bs-tertiary-bg) 29px 30px); }
 }
 </style>
 
@@ -51,7 +51,7 @@
     <img src="/images/activities/{{ .Activity.Type.ID }}.png" width="54" height="54" alt="{{ .Activity.Type.Name }}" style="flex: none;">
     <div class="act-title-block">
       <div class="act-hd" style="font-size: 30px; line-height: 1;">{{ .Activity.Type.Name }}</div>
-      <div style="font-weight: 700; font-size: 16px; color: #8a8a8a; margin-top: 2px;">nær {{ .Activity.Location }}</div>
+      <div style="font-weight: 700; font-size: 16px; color: var(--bs-secondary-color); margin-top: 2px;">nær {{ .Activity.Location }}</div>
     </div>
     <div class="act-header-actions">
       <a href="/activities/list" class="act-back">‹ Tilbage</a>
@@ -105,14 +105,14 @@
           <div class="act-val" style="font-size: 15px;">{{ fmtDateHuman .Activity.Date }}</div>
         </div>
         {{ if .Activity.Role }}
-        <div style="width: 2px; height: 30px; background: #ececec;"></div>
+        <div style="width: 2px; height: 30px; background: var(--bs-border-color);"></div>
         <div>
           <div class="act-lbl">Rolle</div>
           <span class="act-chip" style="font-size: 13px;">{{ .Activity.Role }}</span>
         </div>
         {{ end }}
         {{ if .Weather }}
-        <div style="width: 2px; height: 30px; background: #ececec;"></div>
+        <div style="width: 2px; height: 30px; background: var(--bs-border-color);"></div>
         <div style="display: flex; align-items: center; gap: 8px;">
           <img src="https://openweathermap.org/img/wn/{{ .Weather.Icon }}@2x.png" alt="Vejr" width="30" height="30">
           <div class="act-val" style="font-size: 15px;">{{ .Weather.Temperature }}°</div>
