@@ -120,8 +120,10 @@
         {{ end }}
       </div>
 
-      <div class="act-hd" style="font-size: 23px; margin-top: 22px; border-bottom: 3px dashed #d8d8d8; display: inline-block; padding-bottom: 2px;">Logbog</div>
+      {{ if .Activity.Comment }}
+      <div class="act-hd" style="font-size: 23px; margin-top: 22px; border-bottom: 3px dashed var(--bs-border-color); display: inline-block; padding-bottom: 2px;">Logbog</div>
       <div class="act-prose" style="margin-top: 12px;">{{ .Activity.Comment }}</div>
+      {{ end }}
 
       <!-- Mobile-only participants -->
       {{ if .Activity.Participants }}
