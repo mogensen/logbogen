@@ -287,7 +287,9 @@ $(() => {
         const $radio = $pill.find('input[type=radio]');
         $radio.prop('checked', true).trigger('change');
         if ($radio.attr('name') === 'type') {
-            $('#act-edit-type-icon').attr('src', `/images/activities/${$radio.val()}.png`);
+            $('#act-edit-type-icon')
+                .attr('src', `/images/activities/${$radio.val()}.png`)
+                .css('opacity', '1');
         }
     });
 
