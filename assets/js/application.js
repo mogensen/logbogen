@@ -330,20 +330,28 @@ $(() => {
     // Update other type field when type changes
     $(document).on('change', 'input[name="type"]', updateOtherType);
 
-    // Hide type error when a type is picked
+    // Hide errors when a valid selection is made
     $(document).on('change', 'input[name="type"]', function() {
         $('#type-error').hide();
     });
+    $(document).on('input', '#activity-othertype', function() {
+        if ($(this).val().trim()) $('#othertype-error').hide();
+    });
 
-    // Validate type selection on submit
+    // Validate type/othertype on submit
     $('#activity-form').on('submit', function(e) {
         const category = $("input[name='category']:checked").val();
         const typeSelected = $("input[name='type']:checked").val();
-        if (category !== 'other' && !typeSelected) {
+        const otherTypeVal = $('#activity-othertype').val().trim();
+
+        if (category === 'other' && !otherTypeVal) {
+            e.preventDefault();
+            $('#othertype-error').show();
+            $('#activity-othertype')[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (category !== 'other' && !typeSelected) {
             e.preventDefault();
             $('#type-error').show();
-            $('#activity-type-group').closest('.act-edit-main, .form-group')
-                .find('#type-error')[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            $('#type-error')[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     });
 

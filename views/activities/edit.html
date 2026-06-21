@@ -152,7 +152,10 @@
 
       <div style="margin-top:18px;display:none;" id="activity-othertype-group">
         <div class="act-edit-lbl">Anden type</div>
-        <input type="text" class="act-edit-field" id="activity-othertype" name="otherType" value="{{.Activity.Type.Name}}">
+        <input type="text" class="act-edit-field" id="activity-othertype" name="otherType" value="{{.Activity.Type.Name}}" placeholder="Beskriv aktivitetstype">
+        <div id="othertype-error" style="display:none;margin-top:8px;font-weight:700;font-size:14px;color:#dc3545;">
+          Angiv venligst en aktivitetstype.
+        </div>
       </div>
 
       <div style="margin-top:22px;">
