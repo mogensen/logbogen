@@ -161,6 +161,7 @@ $(() => {
             $('#activity-lat').val(e.latlng.lat);
             $('#activity-lng').val(e.latlng.lng);
             updateMarker(e.latlng.lat, e.latlng.lng);
+            $('#location-error').hide();
         });
 
         var lat = $('#activity-form-map').data("lat");
@@ -338,21 +339,37 @@ $(() => {
         if ($(this).val().trim()) $('#othertype-error').hide();
     });
 
-    // Validate type/othertype on submit
+    // Validate on submit
     $('#activity-form').on('submit', function(e) {
         const category = $("input[name='category']:checked").val();
         const typeSelected = $("input[name='type']:checked").val();
         const otherTypeVal = $('#activity-othertype').val().trim();
+        const lat = parseFloat($('#activity-lat').val()) || 0;
+        const lng = parseFloat($('#activity-lng').val()) || 0;
+
+        let valid = true;
+
+        if (lat === 0 && lng === 0) {
+            valid = false;
+            $('#location-error').show();
+            $('#location-error')[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
 
         if (category === 'other' && !otherTypeVal) {
-            e.preventDefault();
+            valid = false;
             $('#othertype-error').show();
-            $('#activity-othertype')[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (lat !== 0 || lng !== 0) {
+                $('#activity-othertype')[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         } else if (category !== 'other' && !typeSelected) {
-            e.preventDefault();
+            valid = false;
             $('#type-error').show();
-            $('#type-error')[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (lat !== 0 || lng !== 0) {
+                $('#type-error')[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         }
+
+        if (!valid) e.preventDefault();
     });
 
     // Initial load of categories
