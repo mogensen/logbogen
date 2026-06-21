@@ -330,6 +330,23 @@ $(() => {
     // Update other type field when type changes
     $(document).on('change', 'input[name="type"]', updateOtherType);
 
+    // Hide type error when a type is picked
+    $(document).on('change', 'input[name="type"]', function() {
+        $('#type-error').hide();
+    });
+
+    // Validate type selection on submit
+    $('#activity-form').on('submit', function(e) {
+        const category = $("input[name='category']:checked").val();
+        const typeSelected = $("input[name='type']:checked").val();
+        if (category !== 'other' && !typeSelected) {
+            e.preventDefault();
+            $('#type-error').show();
+            $('#activity-type-group').closest('.act-edit-main, .form-group')
+                .find('#type-error')[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+
     // Initial load of categories
     loadCategories();
     // Initial update
