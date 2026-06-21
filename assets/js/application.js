@@ -231,6 +231,8 @@ $(() => {
     async function updateTypeOptions() {
         const category = $("input[name='category']:checked").val();
         const typeGroup = $("#activity-type-group");
+        // Read data-current only once on initial load; after that use the live checked radio.
+        // removeAttr ensures jQuery can't re-read the stale HTML attribute on subsequent calls.
         const currentType = typeGroup.data('current') || $("input[name='type']:checked").val();
         const pillMode = typeGroup.hasClass('act-edit-pillrow');
 
@@ -247,6 +249,7 @@ $(() => {
             const types = await response.json();
             typeGroup.empty();
             typeGroup.removeData('current');
+            typeGroup.removeAttr('data-current');
 
             types.forEach(type => {
                 const selected = type.ID === currentType;
@@ -273,6 +276,18 @@ $(() => {
                     typeGroup.append(radioHtml);
                 }
             });
+
+            // Sync header icon with whichever type is selected after render
+            if (pillMode) {
+                const $icon = $('#act-edit-type-icon');
+                if ($icon.length) {
+                    if (currentType && types.some(t => t.ID === currentType)) {
+                        $icon.attr('src', `/images/activities/${currentType}.png`).css('opacity', '1');
+                    } else {
+                        $icon.css('opacity', '0');
+                    }
+                }
+            }
 
             updateOtherType();
         } catch (error) {
