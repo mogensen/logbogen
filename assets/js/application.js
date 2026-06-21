@@ -281,7 +281,9 @@ $(() => {
             if (pillMode) {
                 const $icon = $('#act-edit-type-icon');
                 if ($icon.length) {
-                    if (currentType && types.some(t => t.ID === currentType)) {
+                    if (category === 'other') {
+                        $icon.attr('src', '/images/activities/other.png').css('opacity', '1');
+                    } else if (currentType && types.some(t => t.ID === currentType)) {
                         $icon.attr('src', `/images/activities/${currentType}.png`).css('opacity', '1');
                     } else {
                         $icon.css('opacity', '0');
