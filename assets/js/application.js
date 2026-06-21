@@ -161,6 +161,7 @@ $(() => {
             $('#activity-lat').val(e.latlng.lat);
             $('#activity-lng').val(e.latlng.lng);
             updateMarker(e.latlng.lat, e.latlng.lng);
+            $('#location-error').hide();
         });
 
         var lat = $('#activity-form-map').data("lat");
@@ -183,39 +184,45 @@ $(() => {
     }
 
     async function loadCategories() {
-        console.log("loadCategories");
         const categoryGroup = $("#category-group");
         const currentCategory = categoryGroup.data('current') || "climbing";
-        
+        const pillMode = categoryGroup.hasClass('act-edit-pillrow');
+
         try {
             const response = await fetch('/activities/categories');
             if (!response.ok) {
                 throw new Error('Failed to fetch categories');
             }
-            
+
             const categories = await response.json();
-            
-            // Clear existing radio buttons
             categoryGroup.empty();
-            
-            // Add new radio buttons for each category
+
             categories.forEach(category => {
-                const radioId = `category-${category.ID}`;
-                const radioHtml = `
-                <div class="category-radio-parent">
-                    <input type="radio" class="btn-check category-radio" name="category" id="${radioId}" value="${category.ID}"
-                        autocomplete="off" ${category.ID === currentCategory ? 'checked' : ''}>
-                    <label class="btn btn-outline-primary category-label" for="${radioId}">
-                        <img src="/images/categories/${category.ID}.png" alt="${category.Name}" class="category-image">
-                        <br />
-                        <span>${category.Name}</span>
-                    </label>
-                </div>
-                `;
-                categoryGroup.append(radioHtml);
+                const selected = category.ID === currentCategory;
+                if (pillMode) {
+                    const pillHtml = `<label class="act-edit-pill${selected ? ' sel' : ''}">
+                        <img src="/images/categories/${category.ID}.png" alt="${category.Name}">
+                        ${category.Name}
+                        <input type="radio" name="category" value="${category.ID}" ${selected ? 'checked' : ''} autocomplete="off" style="display:none">
+                    </label>`;
+                    categoryGroup.append(pillHtml);
+                } else {
+                    const radioId = `category-${category.ID}`;
+                    const radioHtml = `
+                    <div class="category-radio-parent">
+                        <input type="radio" class="btn-check category-radio" name="category" id="${radioId}" value="${category.ID}"
+                            autocomplete="off" ${selected ? 'checked' : ''}>
+                        <label class="btn btn-outline-primary category-label" for="${radioId}">
+                            <img src="/images/categories/${category.ID}.png" alt="${category.Name}" class="category-image">
+                            <br />
+                            <span>${category.Name}</span>
+                        </label>
+                    </div>
+                    `;
+                    categoryGroup.append(radioHtml);
+                }
             });
-            
-            // Initial update of types
+
             updateTypeOptions();
         } catch (error) {
             console.error('Error loading categories:', error);
@@ -225,46 +232,84 @@ $(() => {
     async function updateTypeOptions() {
         const category = $("input[name='category']:checked").val();
         const typeGroup = $("#activity-type-group");
+        // Read data-current only once on initial load; after that use the live checked radio.
+        // removeAttr ensures jQuery can't re-read the stale HTML attribute on subsequent calls.
         const currentType = typeGroup.data('current') || $("input[name='type']:checked").val();
+        const pillMode = typeGroup.hasClass('act-edit-pillrow');
 
         if (category == undefined) {
             return;
         }
-        
+
         try {
             const response = await fetch(`/activities/types?category=${category}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch activity types');
             }
-            
+
             const types = await response.json();
-            
-            // Clear existing radio buttons
             typeGroup.empty();
-            
-            // Add new radio buttons with images
+            typeGroup.removeData('current');
+            typeGroup.removeAttr('data-current');
+
             types.forEach(type => {
-                const radioId = `type-${type.ID}`;
-                const radioHtml = `
-                <div class="type-radio-parent">
-                    <input type="radio" class="btn-check type-radio form-check-input" name="type" id="${radioId}" value="${type.ID}"
-                        autocomplete="off" ${type.ID === currentType ? 'checked' : ''} required>
-                    <label class="btn btn-outline-primary type-label form-check-label" for="${radioId}">
-                        <img src="/images/activities/${type.ID}.png" alt="${type.Name}" class="category-image">
-                        <br />
-                        <span>${type.Name}</span>
-                    </label>
-                </div>
-                `;
-                typeGroup.append(radioHtml);
+                const selected = type.ID === currentType;
+                if (pillMode) {
+                    const pillHtml = `<label class="act-edit-pill${selected ? ' sel' : ''}">
+                        <img src="/images/activities/${type.ID}.png" alt="${type.Name}">
+                        ${type.Name}
+                        <input type="radio" name="type" value="${type.ID}" ${selected ? 'checked' : ''} autocomplete="off" style="display:none" required>
+                    </label>`;
+                    typeGroup.append(pillHtml);
+                } else {
+                    const radioId = `type-${type.ID}`;
+                    const radioHtml = `
+                    <div class="type-radio-parent">
+                        <input type="radio" class="btn-check type-radio form-check-input" name="type" id="${radioId}" value="${type.ID}"
+                            autocomplete="off" ${selected ? 'checked' : ''} required>
+                        <label class="btn btn-outline-primary type-label form-check-label" for="${radioId}">
+                            <img src="/images/activities/${type.ID}.png" alt="${type.Name}" class="category-image">
+                            <br />
+                            <span>${type.Name}</span>
+                        </label>
+                    </div>
+                    `;
+                    typeGroup.append(radioHtml);
+                }
             });
-            
-            // Update other type field visibility
+
+            // Sync header icon with whichever type is selected after render
+            if (pillMode) {
+                const $icon = $('#act-edit-type-icon');
+                if ($icon.length) {
+                    if (category === 'other') {
+                        $icon.attr('src', '/images/activities/other.png').css('opacity', '1');
+                    } else if (currentType && types.some(t => t.ID === currentType)) {
+                        $icon.attr('src', `/images/activities/${currentType}.png`).css('opacity', '1');
+                    } else {
+                        $icon.css('opacity', '0');
+                    }
+                }
+            }
+
             updateOtherType();
         } catch (error) {
             console.error('Error updating activity types:', error);
         }
     }
+
+    $(document).on('click', '.act-edit-pillrow .act-edit-pill', function() {
+        const $pill = $(this);
+        $pill.closest('.act-edit-pillrow').find('.act-edit-pill').removeClass('sel');
+        $pill.addClass('sel');
+        const $radio = $pill.find('input[type=radio]');
+        $radio.prop('checked', true).trigger('change');
+        if ($radio.attr('name') === 'type') {
+            $('#act-edit-type-icon')
+                .attr('src', `/images/activities/${$radio.val()}.png`)
+                .css('opacity', '1');
+        }
+    });
 
     // Update types when category changes
     $(document).on('change', 'input[name="category"]', updateTypeOptions);
@@ -285,6 +330,47 @@ $(() => {
 
     // Update other type field when type changes
     $(document).on('change', 'input[name="type"]', updateOtherType);
+
+    // Hide errors when a valid selection is made
+    $(document).on('change', 'input[name="type"]', function() {
+        $('#type-error').hide();
+    });
+    $(document).on('input', '#activity-othertype', function() {
+        if ($(this).val().trim()) $('#othertype-error').hide();
+    });
+
+    // Validate on submit
+    $('#activity-form').on('submit', function(e) {
+        const category = $("input[name='category']:checked").val();
+        const typeSelected = $("input[name='type']:checked").val();
+        const otherTypeVal = $('#activity-othertype').val().trim();
+        const lat = parseFloat($('#activity-lat').val()) || 0;
+        const lng = parseFloat($('#activity-lng').val()) || 0;
+
+        let valid = true;
+
+        if (lat === 0 && lng === 0) {
+            valid = false;
+            $('#location-error').show();
+            $('#location-error')[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        if (category === 'other' && !otherTypeVal) {
+            valid = false;
+            $('#othertype-error').show();
+            if (lat !== 0 || lng !== 0) {
+                $('#activity-othertype')[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        } else if (category !== 'other' && !typeSelected) {
+            valid = false;
+            $('#type-error').show();
+            if (lat !== 0 || lng !== 0) {
+                $('#type-error')[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        if (!valid) e.preventDefault();
+    });
 
     // Initial load of categories
     loadCategories();
