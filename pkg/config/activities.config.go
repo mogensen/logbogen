@@ -14,6 +14,7 @@ var activitiesYAML []byte
 const (
 	Climbing string = "climbing"
 	Sailing  string = "sailing"
+	Foraging string = "foraging"
 	Other    string = "other"
 )
 

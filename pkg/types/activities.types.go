@@ -12,6 +12,7 @@ import (
 const (
 	Climbing = config.Climbing
 	Sailing  = config.Sailing
+	Foraging = config.Foraging
 	Other    = config.Other
 )
 
