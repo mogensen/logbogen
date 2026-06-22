@@ -5,6 +5,8 @@ categories:
     name: Sejlads
   - id: camping
     name: Camping
+  - id: foraging
+    name: Sanke
   - id: other
     name: Andet
 
@@ -54,3 +56,12 @@ types:
   - id: camper
     name: Campingvogn
     category: camping
+  - id: mushrooms
+    name: Svampe
+    category: foraging
+  - id: herbs
+    name: Urter
+    category: foraging
+  - id: berries-fruit
+    name: Bær og frugt
+    category: foraging
