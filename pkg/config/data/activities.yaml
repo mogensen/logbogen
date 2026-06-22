@@ -1,67 +1,70 @@
 categories:
-  - id: climbing
-    name: Klatring
-  - id: sailing
-    name: Sejlads
-  - id: camping
-    name: Camping
-  - id: foraging
-    name: Sanke
-  - id: other
-    name: Andet
+- id: climbing
+  name: Klatring
+- id: sailing
+  name: Sejlads
+- id: camping
+  name: Camping
+- id: foraging
+  name: Sanke
+- id: other
+  name: Andet
 
 types:
-  - id: tree
-    name: Træklatring
-    category: climbing
-  - id: rock
-    name: Klippeklatring
-    category: climbing
-  - id: boulder
-    name: Bouldering
-    category: climbing
-  - id: ice
-    name: Isklatring
-    category: climbing
-  - id: highrope
-    name: High Rope
-    category: climbing
-  - id: wall
-    name: Vægklatring
-    category: climbing
-  - id: kayak
-    name: Kajak
-    category: sailing
-  - id: canoe
-    name: Kano
-    category: sailing
-  - id: sail
-    name: Sejlbåd
-    category: sailing
-  - id: paddle-board
-    name: Paddleboard
-    category: sailing 
-  - id: shelter 
-    name: Shelter
-    category: camping
-  - id: tent
-    name: Telt
-    category: camping
-  - id: van
-    name: Van
-    category: camping
-  - id: rv
-    name: Autocamper
-    category: camping
-  - id: camper
-    name: Campingvogn
-    category: camping
-  - id: mushrooms
-    name: Svampe
-    category: foraging
-  - id: herbs
-    name: Urter
-    category: foraging
-  - id: berries-fruit
-    name: Bær og frugt
-    category: foraging
+- id: tree
+  name: Træklatring
+  category: climbing
+- id: rock
+  name: Klippeklatring
+  category: climbing
+- id: boulder
+  name: Bouldering
+  category: climbing
+- id: ice
+  name: Isklatring
+  category: climbing
+- id: highrope
+  name: High Rope
+  category: climbing
+- id: wall
+  name: Vægklatring
+  category: climbing
+- id: kayak
+  name: Kajak
+  category: sailing
+- id: canoe
+  name: Kano
+  category: sailing
+- id: sail
+  name: Sejlbåd
+  category: sailing
+- id: paddle-board
+  name: Paddleboard
+  category: sailing
+- id: shelter
+  name: Shelter
+  category: camping
+- id: tent
+  name: Telt
+  category: camping
+- id: van
+  name: Van
+  category: camping
+- id: rv
+  name: Autocamper
+  category: camping
+- id: camper
+  name: Campingvogn
+  category: camping
+- id: hammock
+  name: Hængekøje
+  category: camping
+- id: mushrooms
+  name: Svampe
+  category: foraging
+- id: herbs
+  name: Urter
+  category: foraging
+- id: berries-fruit
+  name: Bær og frugt
+  category: foraging
