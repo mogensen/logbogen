@@ -1,58 +1,57 @@
 categories:
-  - id: "firstaid"
-    name: "Førstehjælp"
-  - id: climbing
-    name: Klatring
-  - id: sailing
-    name: Sejlads
-  - id: other
-    name: Andet
-  
+- id: "firstaid"
+  name: "Førstehjælp"
+- id: climbing
+  name: Klatring
+- id: sailing
+  name: Sejlads
+- id: other
+  name: Andet
+
 # List of known certification types
 certifications:
-  ## Firstaid
-  - id: "firstaid"
-    name: "Førstehjælp"
-    category: "firstaid"
-  - id: "lifeguard"
-    name: "Livredder"
-    category: "firstaid"
-  
-  ## Climbing
-  - id: "treeclimbing-instructor"
-    name: "Træklatre instruktør"
-    category: "climbing"
-  
-  ## Sailing - Sail and engine
-  - id: "sailing-1"
-    name: "Dulighedsprøve"
-    category: "sailing"
-  - id: "yachtmaster"
-    name: "Yachtskipper 1"
-    category: "sailing"
-  - id: "yachtmaster-instructor"
-    name: "Yachtskipper 3"
-    category: "sailing"
-  
-  ## Sailing - Kano
-  - id: "kano-instructor-1"
-    name: "Turkanoinstruktør 1"
-    category: "sailing"
-  - id: "kano-instructor-2"
-    name: "Turkanoinstruktør 2"
-    category: "sailing"
-  - id: "kano-instructor-3"
-    name: "Turkanoinstruktør 3"
-    category: "sailing"
+## Firstaid
+- id: "firstaid"
+  name: "Førstehjælp"
+  category: "firstaid"
+- id: "lifeguard"
+  name: "Livredder"
+  category: "firstaid"
 
-  ## Sailing - Kayak
-  - id: "kayak-instructor-1"
-    name: "Havkajak instruktør 1"
-    category: "sailing"
-  - id: "kayak-instructor-2"
-    name: "Havkajak instruktør 2"
-    category: "sailing"
-  - id: "kayak-instructor-3"
-    name: "Havkajak instruktør 3"
-    category: "sailing"
+## Climbing
+- id: "treeclimbing-instructor"
+  name: "Træklatre instruktør"
+  category: "climbing"
 
+## Sailing - Sail and engine
+- id: "sailing-1"
+  name: "Dulighedsprøve"
+  category: "sailing"
+- id: "yachtmaster"
+  name: "Yachtskipper 1"
+  category: "sailing"
+- id: "yachtmaster-instructor"
+  name: "Yachtskipper 3"
+  category: "sailing"
+
+## Sailing - Kano
+- id: "kano-instructor-1"
+  name: "Turkanoinstruktør 1"
+  category: "sailing"
+- id: "kano-instructor-2"
+  name: "Turkanoinstruktør 2"
+  category: "sailing"
+- id: "kano-instructor-3"
+  name: "Turkanoinstruktør 3"
+  category: "sailing"
+
+## Sailing - Kayak
+- id: "kayak-instructor-1"
+  name: "Havkajak instruktør 1"
+  category: "sailing"
+- id: "kayak-instructor-2"
+  name: "Havkajak instruktør 2"
+  category: "sailing"
+- id: "kayak-instructor-3"
+  name: "Havkajak instruktør 3"
+  category: "sailing"
