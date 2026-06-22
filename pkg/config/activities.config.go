@@ -10,13 +10,6 @@ import (
 //go:embed data/activities.yaml
 var activitiesYAML []byte
 
-// Activity category constants
-const (
-	Climbing string = "climbing"
-	Sailing  string = "sailing"
-	Other    string = "other"
-)
-
 type Category struct {
 	ID   string `yaml:"id"`
 	Name string `yaml:"name"`
@@ -85,9 +78,9 @@ func ActivityTypeByID(id string) *ActivityType {
 		}
 	}
 	return &ActivityType{
-		ID:       Other,
+		ID:       "other",
 		Name:     id,
-		Category: Other,
+		Category: "other",
 	}
 }
 
@@ -99,8 +92,8 @@ func CertificationTypeByID(id string) *CertificationType {
 		}
 	}
 	return &CertificationType{
-		ID:       Other,
+		ID:       "other",
 		Name:     id,
-		Category: Other,
+		Category: "other",
 	}
 }

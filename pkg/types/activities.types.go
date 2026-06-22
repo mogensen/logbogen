@@ -8,11 +8,11 @@ import (
 	"github.com/mogensen/logbook/pkg/dal"
 )
 
-// Use config package's constants
 const (
-	Climbing = config.Climbing
-	Sailing  = config.Sailing
-	Other    = config.Other
+	Climbing string = "climbing"
+	Sailing  string = "sailing"
+	Foraging string = "foraging"
+	Other    string = "other"
 )
 
 // Use config package's types
