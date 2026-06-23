@@ -14,16 +14,10 @@ func HomeRoutes(app fiber.Router, userService *services.UserService, authMiddlew
 
 func IndexPage(userService *services.UserService) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		activityBars := []services.ActivityMonthCategoryBar{}
-		user := utils.GetUser(c)
-		if user != nil {
-			activityBars = userService.GetUserActivityBars(user)
-		}
 		return c.Render("home/index", fiber.Map{
-			"User":         utils.GetUser(c),
-			"ActivityBars": activityBars,
-			"Categories":   config.AllActivityCategories,
-			"Types":        config.AllActivityTypes,
+			"User":       utils.GetUser(c),
+			"Categories": config.AllActivityCategories,
+			"Types":      config.AllActivityTypes,
 		})
 	}
 }

@@ -41,7 +41,7 @@ $(() => {
     const defaultIcon = L.icon({
         iconUrl: '/images/map/pin.png',
         iconSize: [36, 36],
-        iconAnchor: [18, 36],
+        iconAnchor: [0, 36],
         popupAnchor: [0, -36],
     });
 

@@ -15,7 +15,7 @@
     <div class="col-auto">
       {{ template "users/profile_image" .User }}
     </div>
-    <div class="col-sm-8">
+    <div class="col-sm-12">
       <div class="page-header">
         <h1>{{ .User.Name }}</h1>
       </div>
@@ -24,32 +24,50 @@
   </div>
 </div>
 
-{{ if .ActivityBars }}
+{{ if .ActivityHeatmap }}
 <div class="card-body pt-2">
-  <h5>Aktivitetsoversigt</h5>
-  <div id="activity-bars" class="row">
-    <div class="d-flex align-items-end" style="gap:2px;">
-      {{ range $bar := .ActivityBars }}
-      <div class="col ps-1">
-        <div style="display:flex; flex-direction:column-reverse; height:200px; background-color: var(--bs-tertiary-bg); border:2px solid var(--bs-border-color);">
-          {{ range $seg := $bar.Categories }}
-          {{ if $seg.Count }}
-          <div title="{{ $seg.Tooltip }}" style="background:{{ $seg.Color }}; height:{{ $seg.Count }}0px ; width:100%;"></div>
-          {{ end }}
-          {{ end }}
-        </div>
-        <div class="activity-label mt-4 pt-3" style="width:22px; text-align:center;">{{ $bar.Label }}</div>
-      </div>
-      {{ end }}
-    </div>
-    <div class="mt-2">
-      {{ with (index .ActivityBars 0) }}
-      {{ range $seg := .Categories }}
-      <span style="display:inline-block;width:12px;height:12px;background:{{ $seg.Color }};margin-right:4px;"></span>
-      {{ $seg.CategoryName }}
-      {{ end }}
-      {{ end }}
-    </div>
+
+  <div class="activity-heatmap-title">
+    <span class="activity-heatmap-title-text">Aktivitetsoversigt</span>
+    <span class="activity-heatmap-title-rule"></span>
   </div>
+
+  <div class="activity-heatmap">
+    <div class="activity-heatmap-header">
+      <span></span>
+      <span><span class="d-none d-md-inline">Jan</span><span class="d-md-none">J</span></span>
+      <span><span class="d-none d-md-inline">Feb</span><span class="d-md-none">F</span></span>
+      <span><span class="d-none d-md-inline">Mar</span><span class="d-md-none">M</span></span>
+      <span><span class="d-none d-md-inline">Apr</span><span class="d-md-none">A</span></span>
+      <span><span class="d-none d-md-inline">Maj</span><span class="d-md-none">M</span></span>
+      <span><span class="d-none d-md-inline">Jun</span><span class="d-md-none">J</span></span>
+      <span><span class="d-none d-md-inline">Jul</span><span class="d-md-none">J</span></span>
+      <span><span class="d-none d-md-inline">Aug</span><span class="d-md-none">A</span></span>
+      <span><span class="d-none d-md-inline">Sep</span><span class="d-md-none">S</span></span>
+      <span><span class="d-none d-md-inline">Okt</span><span class="d-md-none">O</span></span>
+      <span><span class="d-none d-md-inline">Nov</span><span class="d-md-none">N</span></span>
+      <span><span class="d-none d-md-inline">Dec</span><span class="d-md-none">D</span></span>
+    </div>
+    {{ range $row := .ActivityHeatmap }}
+    <div class="activity-heatmap-row">
+      <span class="activity-heatmap-year">'{{ slice (printf "%d" $row.Year) 2 }}</span>
+      {{ range $cell := $row.Months }}
+      <div class="activity-heatmap-cell{{ if $cell.IsCurrentPeriod }} activity-heatmap-cell--current{{ end }}{{ if not $cell.Color }} intensity-0{{ end }}"
+        {{ if $cell.Color }}style="background:{{ $cell.Color }}"{{ end }}
+        title="{{ $cell.Tooltip }}"></div>
+      {{ end }}
+    </div>
+    {{ end }}
+  </div>
+
+  <div class="activity-heatmap-legend">
+    {{ range $item := .HeatmapLegend }}
+    <span class="activity-heatmap-legend-item">
+      <span class="activity-heatmap-legend-swatch" style="background:{{ $item.Color }}"></span>
+      {{ $item.Name }}
+    </span>
+    {{ end }}
+  </div>
+
 </div>
 {{ end }}
