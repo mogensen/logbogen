@@ -349,14 +349,17 @@ func (s *ActivityService) CloneActivity(c *fiber.Ctx) error {
 }
 
 func (s *ActivityService) participantsForClone(participants []uint64, currentUser uint64, originalUser uint64) []uint64 {
-	// Remove the original user and add the current user
+	// Current user becomes the owner, so remove them from participants.
+	// Original owner becomes a participant (unless cloning own activity).
 	newParticipants := make([]uint64, 0, len(participants))
 	for _, p := range participants {
-		if p != originalUser {
+		if p != currentUser {
 			newParticipants = append(newParticipants, p)
 		}
 	}
-	newParticipants = append(newParticipants, currentUser)
+	if originalUser != currentUser {
+		newParticipants = append(newParticipants, originalUser)
+	}
 	return newParticipants
 }
 
