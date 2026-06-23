@@ -101,7 +101,7 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	activitiesService := services.NewActivityService(userDal, activityDal, weatherService)
 	scoreboardService := services.NewScoreboardService(userDal)
 	authService := services.NewAuthService(userDal, authenticator, cfg.DevMode)
-	userService := services.NewUserService(userDal)
+	userService := services.NewUserService(userDal, certificationDal)
 	certificationsService := services.NewCertificationService(certificationDal, userDal)
 
 	// Middleware

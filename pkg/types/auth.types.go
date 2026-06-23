@@ -1,6 +1,10 @@
 package types
 
-import "github.com/mogensen/logbook/pkg/dal"
+import (
+	"time"
+
+	"github.com/mogensen/logbook/pkg/dal"
+)
 
 // UserForLogin is a lightweight user projection used in listings
 type UserForLogin struct {
@@ -15,6 +19,7 @@ type User struct {
 	Name         string        `json:"name"`
 	Email        string        `json:"email"`
 	ThemePref    string        `json:"themePref"`
+	MemberSince  time.Time     `json:"memberSince"`
 	Activities   []*Activity   `json:"activities"`
 	Achievements []Achievement `json:"achievements"`
 }
@@ -32,6 +37,7 @@ func UserFromDal(user *dal.User) *User {
 		Name:         user.Name,
 		Email:        user.Email,
 		ThemePref:    user.ThemePref,
+		MemberSince:  user.Model.CreatedAt,
 		Activities:   activities,
 		Achievements: achievements,
 	}

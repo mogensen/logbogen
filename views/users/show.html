@@ -1,34 +1,75 @@
-<div class="d-md-none">
-  <div class="card-body">
-    <center class="">
-      {{ template "users/profile_image" .User }}
-      <h1 class="card-title m-t-10">{{ .User.Name }}</h1>
-    </center>
+{{/* ── Profile header ── */}}
+<div class="card-body pb-0">
+
+  {{/* Desktop */}}
+  <div class="d-none d-md-flex align-items-center gap-4">
+    <img src="{{ userImage .User }}" class="rounded-circle profile-header-avatar flex-shrink-0" alt="{{ .User.Name }}">
+    <div class="flex-grow-1" style="min-width:0;">
+      <div class="profile-header-eyebrow">{{ if .IsOwnProfile }}Min profil{{ else }}Profil{{ end }}</div>
+      <h1 class="profile-header-name">{{ .User.Name }}</h1>
+      {{ if .MemberSinceLabel }}<div class="profile-header-meta">{{ .MemberSinceLabel }}</div>{{ end }}
+    </div>
+    <div class="d-flex align-items-center gap-3 flex-shrink-0">
+      <div class="text-center">
+        <div class="profile-header-stat-num">{{ len .User.Activities }}</div>
+        <div class="profile-header-stat-lbl">Aktiviteter</div>
+      </div>
+      <div class="profile-header-divider"></div>
+      <div class="text-center">
+        <div class="profile-header-stat-num">{{ len .User.Achievements }}<span class="profile-header-stat-total">/{{ .TotalAchievements }}</span></div>
+        <div class="profile-header-stat-lbl">Achievements</div>
+      </div>
+      <div class="profile-header-divider"></div>
+      <div class="text-center">
+        <div class="profile-header-stat-num">{{ .CertCount }}</div>
+        <div class="profile-header-stat-lbl">Certifikater</div>
+      </div>
+    </div>
   </div>
-  <div class="card-body">
-    {{ template "achievements/small" .User }}
+
+  {{/* Mobile */}}
+  <div class="d-md-none text-center">
+    <img src="{{ userImage .User }}" class="rounded-circle profile-header-avatar-mobile" alt="{{ .User.Name }}">
+    <h1 class="profile-header-name mt-3">{{ .User.Name }}</h1>
+    {{ if .MemberSinceLabel }}<div class="profile-header-meta mt-1">{{ .MemberSinceLabel }}</div>{{ end }}
+    <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
+      <div class="text-center">
+        <div class="profile-header-stat-num">{{ len .User.Activities }}</div>
+        <div class="profile-header-stat-lbl">Aktiviteter</div>
+      </div>
+      <div class="profile-header-divider"></div>
+      <div class="text-center">
+        <div class="profile-header-stat-num">{{ len .User.Achievements }}<span class="profile-header-stat-total">/{{ .TotalAchievements }}</span></div>
+        <div class="profile-header-stat-lbl">Achievements</div>
+      </div>
+      <div class="profile-header-divider"></div>
+      <div class="text-center">
+        <div class="profile-header-stat-num">{{ .CertCount }}</div>
+        <div class="profile-header-stat-lbl">Certifikater</div>
+      </div>
+    </div>
   </div>
+
 </div>
 
-<div class="d-none d-md-block">
-  <div class="row">
-    <div class="col-auto">
-      {{ template "users/profile_image" .User }}
-    </div>
-    <div class="col-sm-12">
-      <div class="page-header">
-        <h1>{{ .User.Name }}</h1>
-      </div>
-      {{ template "achievements/small" .User }}
-    </div>
+<hr class="profile-header-rule mx-3">
+
+<div class="card-body pt-2">
+
+    <div class="activity-heatmap-title">
+    <span class="activity-heatmap-title-text">Achievements</span>
+    <span class="activity-heatmap-title-rule"></span>
   </div>
+
+
+  {{ template "achievements/small" .User }}
 </div>
 
 {{ if .ActivityHeatmap }}
 <div class="card-body pt-2">
 
   <div class="activity-heatmap-title">
-    <span class="activity-heatmap-title-text">Aktivitetsoversigt</span>
+    <span class="activity-heatmap-title-text">Aktiviteter</span>
     <span class="activity-heatmap-title-rule"></span>
   </div>
 
@@ -52,7 +93,7 @@
     <div class="activity-heatmap-row">
       <span class="activity-heatmap-year">'{{ slice (printf "%d" $row.Year) 2 }}</span>
       {{ range $cell := $row.Months }}
-      <div class="activity-heatmap-cell{{ if $cell.IsCurrentPeriod }} activity-heatmap-cell--current{{ end }}{{ if not $cell.Color }} intensity-0{{ end }}"
+      <div class="activity-heatmap-cell{{ if $cell.IsCurrentPeriod }} activity-heatmap-cell--current{{ end }}{{ if not $cell.Color }} intensity-0{{ end }}{{ if $cell.IsFuture }} activity-heatmap-cell--future{{ end }}"
         {{ if $cell.Color }}style="background:{{ $cell.Color }}"{{ end }}
         title="{{ $cell.Tooltip }}"></div>
       {{ end }}

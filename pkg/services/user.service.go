@@ -16,13 +16,15 @@ import (
 
 // UserService handles authentication related operations
 type UserService struct {
-	userDal dal.UserDal
+	userDal        dal.UserDal
+	certificationDal *dal.CertificationService
 }
 
 // NewUserService creates a new instance of UserService
-func NewUserService(userDal dal.UserDal) *UserService {
+func NewUserService(userDal dal.UserDal, certificationDal *dal.CertificationService) *UserService {
 	return &UserService{
-		userDal: userDal,
+		userDal:        userDal,
+		certificationDal: certificationDal,
 	}
 }
 
@@ -50,6 +52,15 @@ func (s *UserService) GetUsers(currentUserID uint64) (*GetUsersResponse, error) 
 	return &GetUsersResponse{
 		Users: res,
 	}, nil
+}
+
+var danishMonths = [13]string{"", "januar", "februar", "marts", "april", "maj", "juni", "juli", "august", "september", "oktober", "november", "december"}
+
+func formatMemberSince(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return fmt.Sprintf("Medlem siden %s %d", danishMonths[t.Month()], t.Year())
 }
 
 // categoryColors maps category IDs to hex colors (matching the design palette).
@@ -85,10 +96,11 @@ func heatmapLegend() []CategoryLegendItem {
 }
 
 type ActivityHeatmapCell struct {
-	Count         int
-	Color         template.CSS // solid color or CSS gradient; empty = no activity
+	Count           int
+	Color           template.CSS // solid color or CSS gradient; empty = no activity
 	IsCurrentPeriod bool
-	Tooltip       string
+	IsFuture        bool
+	Tooltip         string
 }
 
 type ActivityHeatmapRow struct {
@@ -185,7 +197,10 @@ func (s *UserService) GetUserActivityHeatmap(user *types.User) []ActivityHeatmap
 		for m := 1; m <= 12; m++ {
 			mk := cellKey{y, m}
 			isCurrent := y == now.Year() && m == int(now.Month())
-			row.Months[m-1] = buildCell(monthCats[mk], monthTotals[mk], monthNames[m-1]+" "+strconv.Itoa(y), isCurrent)
+			isFuture := y > now.Year() || (y == now.Year() && m > int(now.Month()))
+			cell := buildCell(monthCats[mk], monthTotals[mk], monthNames[m-1]+" "+strconv.Itoa(y), isCurrent)
+			cell.IsFuture = isFuture
+			row.Months[m-1] = cell
 		}
 		rows = append(rows, row)
 	}
@@ -232,12 +247,24 @@ func (s *UserService) GetUserHandler(ctx *fiber.Ctx) error {
 	}
 
 	activityHeatmap := s.GetUserActivityHeatmap(user)
+	currentUser := utils.GetUser(ctx)
+	isOwnProfile := currentUser != nil && currentUser.ID == userId
+
+	certs, err := s.certificationDal.GetCertificationsByUser(userId)
+	if err != nil {
+		slog.Error("Failed to get certifications for user", "error", err, "userID", userId)
+		certs = nil
+	}
 
 	return ctx.Render("users/user", fiber.Map{
-		"User":            *user,
-		"ActivityHeatmap": activityHeatmap,
-		"HeatmapLegend":   heatmapLegend(),
-		"Categories":      types.AllActivityCategories,
+		"User":              *user,
+		"ActivityHeatmap":   activityHeatmap,
+		"HeatmapLegend":     heatmapLegend(),
+		"Categories":        types.AllActivityCategories,
+		"IsOwnProfile":      isOwnProfile,
+		"MemberSinceLabel":  formatMemberSince(user.MemberSince),
+		"TotalAchievements": len(types.AllActivityTypes),
+		"CertCount":         len(certs),
 	})
 }
 

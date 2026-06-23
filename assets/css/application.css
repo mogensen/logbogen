@@ -327,6 +327,82 @@ main {
   }
 }
 
+/* ── Profile header ── */
+
+.profile-header-avatar {
+  width: 100px;
+  height: 100px;
+  border: 2px solid var(--bs-body-color);
+  object-fit: cover;
+}
+
+.profile-header-avatar-mobile {
+  width: 88px;
+  height: 88px;
+  border: 2px solid var(--bs-body-color);
+  object-fit: cover;
+}
+
+.profile-header-eyebrow {
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--bs-secondary-color);
+  margin-bottom: 4px;
+}
+
+.profile-header-name {
+  font-family: 'Cabin Sketch', cursive;
+  font-weight: 700;
+  font-size: 2.2rem;
+  line-height: 1;
+  margin: 0;
+}
+
+.profile-header-meta {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--bs-secondary-color);
+  margin-top: 5px;
+}
+
+.profile-header-stat-num {
+  font-family: 'Cabin Sketch', cursive;
+  font-weight: 700;
+  font-size: 1.875rem;
+  line-height: 1;
+}
+
+.profile-header-stat-total {
+  font-size: 1.125rem;
+  color: var(--bs-secondary-color);
+}
+
+.profile-header-stat-lbl {
+  font-weight: 700;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bs-secondary-color);
+  margin-top: 5px;
+}
+
+.profile-header-divider {
+  width: 2px;
+  height: 42px;
+  background: var(--bs-border-color);
+  flex-shrink: 0;
+}
+
+.profile-header-rule {
+  border: 0;
+  border-top: 2px solid var(--bs-body-color);
+  opacity: 1;
+  margin-top: 20px;
+  margin-bottom: 0;
+}
+
 .activity-heatmap-title {
   display: flex;
   align-items: baseline;
@@ -410,6 +486,10 @@ main {
 
 .activity-heatmap-cell--current {
   box-shadow: 0 0 0 2px var(--bs-body-color);
+}
+
+.activity-heatmap-cell--future {
+  visibility: hidden;
 }
 
 .activity-heatmap-legend {
