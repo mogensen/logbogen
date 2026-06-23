@@ -1,8 +1,11 @@
 package services
 
 import (
+	"fmt"
+	"html/template"
 	"log/slog"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -49,88 +52,144 @@ func (s *UserService) GetUsers(currentUserID uint64) (*GetUsersResponse, error) 
 	}, nil
 }
 
-var activityCategoryPalette = [5]string{"#219ebc", "#023047", "#ffb703", "#fb8500", "#8ecae6"}
-
-type ActivityMonthCategoryBar struct {
-	Year       int
-	Month      int
-	Label      string                    // MM/YYYY
-	Categories []ActivityCategorySegment // ordered by main categories
-	Total      int
+// categoryColors maps category IDs to hex colors (matching the design palette).
+var categoryColors = map[string]string{
+	"climbing": "#1899b0",
+	"sailing":  "#5cba7d",
+	"camping":  "#f3c01c",
+	"foraging": "#e8590c",
+	"other":    "#a9d3e8",
 }
 
-type ActivityCategorySegment struct {
-	CategoryID   string
-	CategoryName string
-	Color        string
-	Count        int
-	HeightPct    float64 // 0-100, proportional height for the bar
-	Tooltip      string  // "MM/YYYY: CategoryName (Count)"
+type CategoryLegendItem struct {
+	Name  string
+	Color template.CSS
 }
 
-// GetUserActivityBars returns a slice of ActivityMonthCategoryBar for the user's activities
-func (s *UserService) GetUserActivityBars(user *types.User) []ActivityMonthCategoryBar {
-	categories := types.AllActivityCategories
-	categoryIDs := make([]string, len(categories))
-	for i, cat := range categories {
-		categoryIDs[i] = cat.ID
+// heatmapLegend returns per-category legend items plus a "Flere kategorier" entry.
+func heatmapLegend() []CategoryLegendItem {
+	items := make([]CategoryLegendItem, 0, len(types.AllActivityCategories)+1)
+	for _, cat := range types.AllActivityCategories {
+		hex := categoryColors[cat.ID]
+		if hex == "" {
+			hex = "#a9d3e8"
+		}
+		items = append(items, CategoryLegendItem{Name: cat.Name, Color: template.CSS(hex)})
+	}
+	// Gradient swatch for months with multiple categories
+	items = append(items, CategoryLegendItem{
+		Name:  "Flere kategorier",
+		Color: template.CSS("linear-gradient(135deg,#1899b0 0 50%,#5cba7d 50% 100%)"),
+	})
+	return items
+}
+
+type ActivityHeatmapCell struct {
+	Count         int
+	Color         template.CSS // solid color or CSS gradient; empty = no activity
+	IsCurrentPeriod bool
+	Tooltip       string
+}
+
+type ActivityHeatmapRow struct {
+	Year   int
+	Months [12]ActivityHeatmapCell
+}
+
+// categoryGradient builds a CSS background value for the active categories in
+// AllActivityCategories order: solid for one category, linear for two, conic for three+.
+func categoryGradient(catCounts map[string]int) template.CSS {
+	colors := make([]string, 0, len(catCounts))
+	for _, cat := range types.AllActivityCategories {
+		if catCounts[cat.ID] > 0 {
+			c := categoryColors[cat.ID]
+			if c == "" {
+				c = "#a9d3e8"
+			}
+			colors = append(colors, c)
+		}
+	}
+	switch len(colors) {
+	case 0:
+		return ""
+	case 1:
+		return template.CSS(colors[0])
+	case 2:
+		return template.CSS(fmt.Sprintf("linear-gradient(135deg,%s 0 50%%,%s 50%% 100%%)", colors[0], colors[1]))
+	default:
+		pct := 100.0 / float64(len(colors))
+		parts := make([]string, len(colors))
+		for i, c := range colors {
+			start := float64(i) * pct
+			end := float64(i+1) * pct
+			if i == len(colors)-1 {
+				end = 100
+			}
+			parts[i] = fmt.Sprintf("%s %.4g%% %.4g%%", c, start, end)
+		}
+		return template.CSS("conic-gradient(" + strings.Join(parts, ",") + ")")
+	}
+}
+
+// buildCell creates an ActivityHeatmapCell from per-category counts and a date label.
+func buildCell(catCounts map[string]int, total int, dateLabel string, isCurrent bool) ActivityHeatmapCell {
+	if total == 0 {
+		return ActivityHeatmapCell{Tooltip: dateLabel + ": ingen aktiviteter", IsCurrentPeriod: isCurrent}
 	}
 
+	tooltipParts := make([]string, 0, len(catCounts))
+	for _, cat := range types.AllActivityCategories {
+		if c := catCounts[cat.ID]; c > 0 {
+			tooltipParts = append(tooltipParts, cat.Name+" ("+strconv.Itoa(c)+")")
+		}
+	}
+
+	return ActivityHeatmapCell{
+		Count:         total,
+		Color:         categoryGradient(catCounts),
+		IsCurrentPeriod: isCurrent,
+		Tooltip:       dateLabel + ": " + strings.Join(tooltipParts, ", "),
+	}
+}
+
+// GetUserActivityHeatmap returns one row per year with monthly and weekly cells.
+func (s *UserService) GetUserActivityHeatmap(user *types.User) []ActivityHeatmapRow {
 	if len(user.Activities) == 0 {
 		return nil
 	}
-	minDate := user.Activities[0].Date.Time()
-	maxDate := time.Now()
+
+	now := time.Now()
+	type cellKey = [2]int
+	monthCats := make(map[cellKey]map[string]int)
+	monthTotals := make(map[cellKey]int)
+	minYear := user.Activities[0].Date.Time().Year()
+	maxYear := now.Year()
+
 	for _, act := range user.Activities {
-		if act.Date.Time().Before(minDate) {
-			minDate = act.Date.Time()
+		t := act.Date.Time()
+		if t.Year() < minYear {
+			minYear = t.Year()
 		}
+		mk := cellKey{t.Year(), int(t.Month())}
+		if monthCats[mk] == nil {
+			monthCats[mk] = make(map[string]int)
+		}
+		monthCats[mk][act.Category.ID]++
+		monthTotals[mk]++
 	}
 
-	bars := []ActivityMonthCategoryBar{}
-	for d := minDate; !d.After(maxDate); d = d.AddDate(0, 1, 0) {
-		counts := make(map[string]int)
-		total := 0
-		for _, catID := range categoryIDs {
-			counts[catID] = 0
+	monthNames := []string{"Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"}
+	rows := make([]ActivityHeatmapRow, 0, maxYear-minYear+1)
+	for y := minYear; y <= maxYear; y++ {
+		row := ActivityHeatmapRow{Year: y}
+		for m := 1; m <= 12; m++ {
+			mk := cellKey{y, m}
+			isCurrent := y == now.Year() && m == int(now.Month())
+			row.Months[m-1] = buildCell(monthCats[mk], monthTotals[mk], monthNames[m-1]+" "+strconv.Itoa(y), isCurrent)
 		}
-		for _, act := range user.Activities {
-			if act.Date.Time().Year() == d.Year() && act.Date.Time().Month() == d.Month() {
-				counts[act.Category.ID]++
-				total++
-			}
-		}
-		label := d.Format("01/2006")
-		segments := make([]ActivityCategorySegment, len(categoryIDs))
-		for i, cat := range categories {
-			count := counts[cat.ID]
-			pct := 0.0
-			if total > 0 {
-				pct = float64(count) * 20
-			}
-			color := ""
-			if i < len(activityCategoryPalette) {
-				color = activityCategoryPalette[i]
-			}
-			tooltip := label + ": " + cat.Name + " (" + strconv.Itoa(count) + ")"
-			segments[i] = ActivityCategorySegment{
-				CategoryID:   cat.ID,
-				CategoryName: cat.Name,
-				Color:        color,
-				Count:        count,
-				HeightPct:    pct,
-				Tooltip:      tooltip,
-			}
-		}
-		bars = append(bars, ActivityMonthCategoryBar{
-			Year:       d.Year(),
-			Month:      int(d.Month()),
-			Label:      label,
-			Categories: segments,
-			Total:      total,
-		})
+		rows = append(rows, row)
 	}
-	return bars
+	return rows
 }
 
 // GetUserByID retrieves a user by their ID
@@ -172,12 +231,13 @@ func (s *UserService) GetUserHandler(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	activityBars := s.GetUserActivityBars(user)
+	activityHeatmap := s.GetUserActivityHeatmap(user)
 
 	return ctx.Render("users/user", fiber.Map{
-		"User":         *user,
-		"ActivityBars": activityBars,
-		"Categories":   types.AllActivityCategories,
+		"User":            *user,
+		"ActivityHeatmap": activityHeatmap,
+		"HeatmapLegend":   heatmapLegend(),
+		"Categories":      types.AllActivityCategories,
 	})
 }
 
