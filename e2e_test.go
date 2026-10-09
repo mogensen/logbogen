@@ -378,3 +378,16 @@ func TestE2E_FormPostMayRedirectToTheAuthOrigin(t *testing.T) {
 		require.True(t, strings.HasPrefix(page.URL(), app), "still on the app: %s", page.URL())
 	})
 }
+
+func TestE2E_CancelledLoginGoesToTheFrontPage(t *testing.T) {
+	base := e2eServer(t)
+	page := newE2EPage(t, e2eBrowser(t))
+
+	// What Auth0 sends the browser to when the user cancels the login
+	_, err := page.Goto(base + "/auth/callback?error=access_denied&error_description=User%20did%20not%20authorize%20the%20request&state=0b9470c9")
+
+	require.NoError(t, err)
+	require.NoError(t, page.WaitForURL(base+"/"))
+	require.NoError(t, page.Locator("a[href='/auth/login']").First().WaitFor(), "the front page offers to log in")
+	page.requireNoProblems("cancelled login")
+}

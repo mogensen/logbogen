@@ -1,6 +1,8 @@
 package services
 
 import (
+	"io"
+	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
@@ -199,4 +201,59 @@ func TestAuthService_CallbackStateIsSingleUse(t *testing.T) {
 	require.Equal(t, fiber.StatusUnauthorized, callback())
 	// Replaying the same state is rejected
 	require.Equal(t, fiber.StatusBadRequest, callback())
+}
+
+func TestAuthService_CallbackWithAnErrorGoesToTheFrontPage(t *testing.T) {
+	app := fiber.New()
+	service := NewAuthService(&mocks.UserDalMock{}, &auth.Authenticator{}, false)
+	app.Get("/auth/login", service.LoginPageHandler)
+	app.Get("/auth/callback", service.CallbackHandler)
+
+	// The state of a started login, as Auth0 sends it back
+	loginResp, err := app.Test(httptest.NewRequest("GET", "/auth/login", nil), -1)
+	require.NoError(t, err)
+	redirect, err := url.Parse(loginResp.Header.Get("Location"))
+	require.NoError(t, err)
+	state := redirect.Query().Get("state")
+	require.NotEmpty(t, state)
+
+	callback := func(query string) *http.Response {
+		req := httptest.NewRequest("GET", "/auth/callback?"+query, nil)
+		for _, c := range loginResp.Cookies() {
+			req.AddCookie(c)
+		}
+		resp, err := app.Test(req, -1)
+		require.NoError(t, err)
+		return resp
+	}
+
+	t.Run("a cancelled login goes to the front page", func(t *testing.T) {
+		resp := callback("error=access_denied&error_description=User%20did%20not%20authorize%20the%20request&state=" + state)
+
+		require.Equal(t, fiber.StatusFound, resp.StatusCode)
+		require.Equal(t, "/", resp.Header.Get("Location"))
+	})
+
+	t.Run("the state of the cancelled login cannot be used afterwards", func(t *testing.T) {
+		resp := callback("code=abc&state=" + state)
+
+		require.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
+	})
+
+	t.Run("an error without a started login goes to the front page too", func(t *testing.T) {
+		resp, err := app.Test(httptest.NewRequest("GET", "/auth/callback?error=access_denied", nil), -1)
+		require.NoError(t, err)
+
+		require.Equal(t, fiber.StatusFound, resp.StatusCode)
+		require.Equal(t, "/", resp.Header.Get("Location"))
+	})
+
+	t.Run("the error is not shown to the user", func(t *testing.T) {
+		resp := callback("error=%3Cscript%3Ealert(1)%3C%2Fscript%3E&state=" + state)
+
+		body, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Empty(t, body)
+		require.Equal(t, "/", resp.Header.Get("Location"))
+	})
 }

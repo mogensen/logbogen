@@ -181,6 +181,12 @@ func (s *AuthService) CallbackHandler(ctx *fiber.Ctx) error {
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
+	// Auth0 sends the user back with an error when the login was cancelled or denied, which is no failure
+	if oauthError := ctx.Query("error"); oauthError != "" {
+		slog.Info("Login was not completed", "error", oauthError, "description", ctx.Query("error_description"))
+		return ctx.Redirect("/")
+	}
+
 	if expectedState == "" || ctx.Query("state") != expectedState {
 		slog.Warn("Invalid OAuth state on callback")
 		return ctx.Status(fiber.StatusBadRequest).SendString("Invalid state")
