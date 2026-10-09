@@ -11,7 +11,6 @@ import (
 	"github.com/mogensen/logbook/pkg/config"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
 // DB is the underlying database connection
@@ -64,7 +63,7 @@ func Connect() error {
 
 	db, err := gorm.Open(sqlite.Open(config.DB), &gorm.Config{
 		NowFunc: func() time.Time { return time.Now().Local() },
-		Logger:  logger.Default.LogMode(logger.Info),
+		Logger:  NewGormLogger(),
 	})
 	if err != nil {
 		return err

@@ -25,15 +25,18 @@ func ErrorHandler(c *fiber.Ctx, err error) error {
 		}
 	}
 
+	data := fiber.Map{
+		"Error": msg,
+		"Code":  code,
+	}
 	if code >= fiber.StatusInternalServerError {
-		slog.Error("Request failed", "method", c.Method(), "path", c.Path(), "status", code, "error", err)
+		// The id on the page matches the logged line, so a user can report it and the error is easy to find
+		data["ErrorID"] = RequestID(c)
+		Log(c).Error("request failed", "method", c.Method(), "path", c.Path(), "status", code, "error", err)
 	}
 
 	c.Status(code)
-	return c.Render("errors/error", fiber.Map{
-		"Error": msg,
-		"Code":  code,
-	})
+	return c.Render("errors/error", data)
 }
 
 // DBError logs a data layer error and turns it into a fiber error without internal details

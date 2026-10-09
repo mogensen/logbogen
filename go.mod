@@ -16,7 +16,6 @@ require (
 
 require (
 	filippo.io/edwards25519 v1.2.0 // indirect
-	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/deckarep/golang-set/v2 v2.8.0 // indirect
@@ -29,14 +28,13 @@ require (
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mattn/go-sqlite3 v1.14.46 // indirect
 	github.com/philhofer/fwd v1.1.3-0.20240916144458-20a13a1f6b7c // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.3 // indirect
 	github.com/tinylib/msgp v1.2.5 // indirect
-	go.opentelemetry.io/otel v1.44.0 // indirect
-	go.opentelemetry.io/otel/trace v1.44.0 // indirect
 	golang.org/x/crypto v0.53.0 // indirect
 	golang.org/x/text v0.38.0 // indirect
 	gorm.io/driver/mysql v1.6.0 // indirect
@@ -55,7 +53,6 @@ require (
 	github.com/mattn/go-isatty v0.0.22 // indirect
 	github.com/mattn/go-runewidth v0.0.24 // indirect
 	github.com/ruang-guru/monday v1.0.3
-	github.com/samber/slog-fiber v1.18.0
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.71.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect

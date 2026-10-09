@@ -42,6 +42,11 @@ var (
 	// AUTHRATEWINDOW is the period the limit applies to. An unset or invalid value keeps the strict default.
 	AUTHRATEWINDOW = getEnvPositiveDuration("AUTH_RATE_WINDOW", DefaultAuthRateWindow)
 
+	// LOGFORMAT is "json" for structured JSON lines, or "text" for key=value lines that are easier to read locally.
+	LOGFORMAT = getEnvChoice("LOG_FORMAT", "json", "json", "text")
+	// LOGLEVEL is the lowest level that is logged: debug, info, warn or error.
+	LOGLEVEL = getEnvLogLevel("LOG_LEVEL", slog.LevelInfo)
+
 	// DEVMODE enables the local dev login bypass (no Auth0 tenant needed).
 	// Keep this false in production.
 	DEVMODE = getEnvBool("AUTH_DEV_MODE", false)
@@ -123,4 +128,36 @@ func getEnvPositiveDuration(name string, fallback time.Duration) time.Duration {
 		return fallback
 	}
 	return parsed
+}
+
+// getEnvChoice reads one of the allowed values and falls back, with a warning, when it is unset or not allowed
+func getEnvChoice(name, fallback string, allowed ...string) string {
+	value, exists := os.LookupEnv(name)
+	if !exists {
+		return fallback
+	}
+
+	value = strings.ToLower(strings.TrimSpace(value))
+	for _, option := range allowed {
+		if value == option {
+			return value
+		}
+	}
+	slog.Warn("Ignoring invalid setting, using the default", "name", name, "value", value, "allowed", allowed)
+	return fallback
+}
+
+// getEnvLogLevel reads a log level name and falls back, with a warning, when it is unset or invalid
+func getEnvLogLevel(name string, fallback slog.Level) slog.Level {
+	value, exists := os.LookupEnv(name)
+	if !exists {
+		return fallback
+	}
+
+	var level slog.Level
+	if err := level.UnmarshalText([]byte(strings.TrimSpace(value))); err != nil {
+		slog.Warn("Ignoring invalid setting, using the default", "name", name, "value", value, "default", fallback.String())
+		return fallback
+	}
+	return level
 }

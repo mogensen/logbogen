@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
+	"runtime/debug"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -18,7 +20,6 @@ import (
 	"github.com/mogensen/logbook/pkg/services"
 	"github.com/mogensen/logbook/pkg/utils"
 	"github.com/mogensen/logbook/pkg/utils/middleware"
-	slogfiber "github.com/samber/slog-fiber"
 )
 
 // maxBodyBytes caps the size of a request body
@@ -70,7 +71,7 @@ func DefaultConfig() *Config {
 		AuthRateWindow: config.AUTHRATEWINDOW,
 		ProxyHeader:    config.PROXYHEADER,
 		TrustedProxies: config.TRUSTEDPROXIES,
-		Logger:         slog.New(slog.NewTextHandler(os.Stdout, nil)),
+		Logger:         utils.NewLogger(os.Stdout, config.LOGFORMAT, config.LOGLEVEL),
 	}
 }
 
@@ -113,18 +114,22 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 		Views:             engine,
 		ViewsLayout:       "layouts/main",
 		PassLocalsToViews: true,
-		BodyLimit:         maxBodyBytes,
-		ReadTimeout:       10 * time.Second,
-		WriteTimeout:      30 * time.Second,
-		IdleTimeout:       60 * time.Second,
+		// The startup banner is not structured, the app logs when it starts listening
+		DisableStartupMessage: true,
+		BodyLimit:             maxBodyBytes,
+		ReadTimeout:           10 * time.Second,
+		WriteTimeout:          30 * time.Second,
+		IdleTimeout:           60 * time.Second,
 
 		ProxyHeader:             cfg.ProxyHeader,
 		EnableTrustedProxyCheck: len(cfg.TrustedProxies) > 0,
 		TrustedProxies:          cfg.TrustedProxies,
 	})
 
-	app.Use(slogfiber.New(cfg.Logger))
-	app.Use(recover.New(recover.Config{EnableStackTrace: true, StackTraceHandler: recover.ConfigDefault.StackTraceHandler}))
+	// The request id comes first so every log line of a request has it, then one access line per request
+	app.Use(middleware.RequestID)
+	app.Use(middleware.AccessLog(cfg.Logger))
+	app.Use(recover.New(recover.Config{EnableStackTrace: true, StackTraceHandler: logPanic}))
 
 	app.Static("/", cfg.AssetsPath)
 	// Registered after Static, which resets the response headers for "/"
@@ -186,21 +191,31 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	return app, nil
 }
 
+// logPanic logs a recovered panic with its stack, in the same structured form as the other errors
+func logPanic(c *fiber.Ctx, recovered interface{}) {
+	utils.Log(c).Error("panic recovered", "panic", fmt.Sprint(recovered), "stack", string(debug.Stack()))
+}
+
 func main() {
 	cfg := DefaultConfig()
+	slog.SetDefault(cfg.Logger)
 
 	// Connect to database
 	err := database.Connect()
 	if err != nil {
 		cfg.Logger.Error("Error connecting to database", "error", err)
-		return
+		os.Exit(1)
 	}
 
 	app, err := setupApp(cfg)
 	if err != nil {
 		cfg.Logger.Error("Error setting up app", "error", err)
-		return
+		os.Exit(1)
 	}
 
-	app.Listen(cfg.ListenAddr)
+	cfg.Logger.Info("listening", "addr", cfg.ListenAddr, "dev_mode", cfg.DevMode)
+	if err := app.Listen(cfg.ListenAddr); err != nil {
+		cfg.Logger.Error("Server stopped", "error", err)
+		os.Exit(1)
+	}
 }

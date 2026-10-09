@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log/slog"
 	"testing"
 	"time"
 
@@ -65,4 +66,46 @@ func TestGetEnvPositiveDuration(t *testing.T) {
 func TestAuthRateLimitDefaults(t *testing.T) {
 	require.Equal(t, 30, DefaultAuthRateLimit)
 	require.Equal(t, time.Minute, DefaultAuthRateWindow)
+}
+
+func TestGetEnvChoice(t *testing.T) {
+	const name = "TEST_CHOICE"
+
+	t.Run("unset uses the default", func(t *testing.T) {
+		require.Equal(t, "json", getEnvChoice(name, "json", "json", "text"))
+	})
+
+	t.Run("an allowed value is used, whatever its case", func(t *testing.T) {
+		t.Setenv(name, " Text ")
+		require.Equal(t, "text", getEnvChoice(name, "json", "json", "text"))
+	})
+
+	t.Run("a value that is not allowed keeps the default", func(t *testing.T) {
+		t.Setenv(name, "xml")
+		require.Equal(t, "json", getEnvChoice(name, "json", "json", "text"))
+	})
+}
+
+func TestGetEnvLogLevel(t *testing.T) {
+	const name = "TEST_LOG_LEVEL"
+
+	t.Run("unset uses the default", func(t *testing.T) {
+		require.Equal(t, slog.LevelInfo, getEnvLogLevel(name, slog.LevelInfo))
+	})
+
+	for value, want := range map[string]slog.Level{
+		"debug": slog.LevelDebug, "INFO": slog.LevelInfo, "warn": slog.LevelWarn, "Error": slog.LevelError,
+	} {
+		t.Run("level "+value, func(t *testing.T) {
+			t.Setenv(name, value)
+			require.Equal(t, want, getEnvLogLevel(name, slog.LevelInfo))
+		})
+	}
+
+	for _, invalid := range []string{"", "verbose", "42x"} {
+		t.Run("invalid value "+invalid+" keeps the default", func(t *testing.T) {
+			t.Setenv(name, invalid)
+			require.Equal(t, slog.LevelWarn, getEnvLogLevel(name, slog.LevelWarn))
+		})
+	}
 }

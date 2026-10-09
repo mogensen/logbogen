@@ -5,12 +5,12 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"log/slog"
 
 	"github.com/mogensen/logbook/pkg/auth"
 	"github.com/mogensen/logbook/pkg/dal"
 	"github.com/mogensen/logbook/pkg/database"
 	"github.com/mogensen/logbook/pkg/types"
+	"github.com/mogensen/logbook/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -136,24 +136,24 @@ func (s *AuthService) LoginPageHandler(ctx *fiber.Ctx) error {
 
 	state, err := randomToken()
 	if err != nil {
-		slog.Error("Failed to generate state", "error", err)
+		utils.Log(ctx).Error("Failed to generate state", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 	nonce, err := randomToken()
 	if err != nil {
-		slog.Error("Failed to generate nonce", "error", err)
+		utils.Log(ctx).Error("Failed to generate nonce", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
 	session, err := database.SessionStore.Get(ctx)
 	if err != nil {
-		slog.Error("Failed to get session store", "error", err)
+		utils.Log(ctx).Error("Failed to get session store", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 	session.Set("oauth_state", state)
 	session.Set("oauth_nonce", nonce)
 	if err := session.Save(); err != nil {
-		slog.Error("Failed to save session", "error", err)
+		utils.Log(ctx).Error("Failed to save session", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
@@ -166,7 +166,7 @@ func (s *AuthService) LoginPageHandler(ctx *fiber.Ctx) error {
 func (s *AuthService) CallbackHandler(ctx *fiber.Ctx) error {
 	session, err := database.SessionStore.Get(ctx)
 	if err != nil {
-		slog.Error("Failed to get session store", "error", err)
+		utils.Log(ctx).Error("Failed to get session store", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
@@ -177,36 +177,36 @@ func (s *AuthService) CallbackHandler(ctx *fiber.Ctx) error {
 	session.Delete("oauth_state")
 	session.Delete("oauth_nonce")
 	if err := session.Save(); err != nil {
-		slog.Error("Failed to save session", "error", err)
+		utils.Log(ctx).Error("Failed to save session", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
 	// Auth0 sends the user back with an error when the login was cancelled or denied, which is no failure
 	if oauthError := ctx.Query("error"); oauthError != "" {
-		slog.Info("Login was not completed", "error", oauthError, "description", ctx.Query("error_description"))
+		utils.Log(ctx).Info("Login was not completed", "error", oauthError, "description", ctx.Query("error_description"))
 		return ctx.Redirect("/")
 	}
 
 	if expectedState == "" || ctx.Query("state") != expectedState {
-		slog.Warn("Invalid OAuth state on callback")
+		utils.Log(ctx).Warn("Invalid OAuth state on callback")
 		return ctx.Status(fiber.StatusBadRequest).SendString("Invalid state")
 	}
 
 	token, err := s.authenticator.Exchange(ctx.Context(), ctx.Query("code"))
 	if err != nil {
-		slog.Error("Failed to exchange auth code", "error", err)
+		utils.Log(ctx).Error("Failed to exchange auth code", "error", err)
 		return ctx.Status(fiber.StatusUnauthorized).SendString("Authentication failed")
 	}
 
 	claims, err := s.authenticator.VerifyIDToken(ctx.Context(), token, expectedNonce)
 	if err != nil {
-		slog.Error("Failed to verify ID token", "error", err)
+		utils.Log(ctx).Error("Failed to verify ID token", "error", err)
 		return ctx.Status(fiber.StatusUnauthorized).SendString("Authentication failed")
 	}
 
 	user, err := s.upsertUser(claims.Sub, claims.Name, claims.Email)
 	if err != nil {
-		slog.Error("Failed to upsert user", "error", err)
+		utils.Log(ctx).Error("Failed to upsert user", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
@@ -214,7 +214,7 @@ func (s *AuthService) CallbackHandler(ctx *fiber.Ctx) error {
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	slog.Info("Logged in via Auth0", "userID", user.ID, "email", user.Email)
+	utils.LogEvent(ctx, "user_logged_in", map[string]any{"user_id": user.ID, "login_method": "auth0"})
 	return ctx.Redirect("/")
 }
 
@@ -238,7 +238,7 @@ func (s *AuthService) DevLoginHandler(ctx *fiber.Ctx) error {
 
 	user, err := s.upsertUser("dev|"+email, name, email)
 	if err != nil {
-		slog.Error("Failed to upsert dev user", "error", err)
+		utils.Log(ctx).Error("Failed to upsert dev user", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
@@ -246,7 +246,7 @@ func (s *AuthService) DevLoginHandler(ctx *fiber.Ctx) error {
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	slog.Info("Logged in via dev bypass", "userID", user.ID, "email", user.Email)
+	utils.LogEvent(ctx, "user_logged_in", map[string]any{"user_id": user.ID, "login_method": "dev"})
 	return ctx.Redirect("/")
 }
 
@@ -255,14 +255,16 @@ func (s *AuthService) DevLoginHandler(ctx *fiber.Ctx) error {
 func (s *AuthService) LogoutHandler(ctx *fiber.Ctx) error {
 	session, err := database.SessionStore.Get(ctx)
 	if err != nil {
-		slog.Error("Failed to get session store", "error", err)
+		utils.Log(ctx).Error("Failed to get session store", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
 	if err := session.Destroy(); err != nil {
-		slog.Error("Failed to destroy session", "error", err)
+		utils.Log(ctx).Error("Failed to destroy session", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
+
+	utils.LogEvent(ctx, "user_logged_out", map[string]any{})
 
 	if !s.devMode && s.authenticator != nil {
 		return ctx.Redirect(s.authenticator.LogoutURL())
@@ -275,12 +277,12 @@ func (s *AuthService) LogoutHandler(ctx *fiber.Ctx) error {
 func (s *AuthService) establishSession(ctx *fiber.Ctx, user *dal.User) error {
 	session, err := database.SessionStore.Get(ctx)
 	if err != nil {
-		slog.Error("Failed to get session store", "error", err)
+		utils.Log(ctx).Error("Failed to get session store", "error", err)
 		return err
 	}
 
 	if err := session.Reset(); err != nil {
-		slog.Error("Failed to reset session", "error", err)
+		utils.Log(ctx).Error("Failed to reset session", "error", err)
 		return err
 	}
 	session.Set("username", user.Email)
@@ -288,7 +290,7 @@ func (s *AuthService) establishSession(ctx *fiber.Ctx, user *dal.User) error {
 	session.Set("loggedIn", true)
 
 	if err := session.Save(); err != nil {
-		slog.Error("Failed to save session", "error", err)
+		utils.Log(ctx).Error("Failed to save session", "error", err)
 		return err
 	}
 	return nil

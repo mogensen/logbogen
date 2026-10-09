@@ -236,7 +236,7 @@ func (s *UserService) GetUsersHandler(ctx *fiber.Ctx) error {
 func (s *UserService) ProfileData(viewer *types.User, user *types.User) fiber.Map {
 	certs, err := s.certificationDal.GetCertificationsByUser(user.ID)
 	if err != nil {
-		slog.Error("Failed to get certifications for user", "error", err, "userID", user.ID)
+		slog.Error("Failed to get certifications for user", "error", err, "user_id", user.ID)
 		certs = nil
 	}
 
@@ -265,7 +265,7 @@ func (s *UserService) GetUserHandler(ctx *fiber.Ctx) error {
 
 	user, err := s.GetUserByID(userId)
 	if err != nil {
-		slog.Error("Failed to get user by ID", "error", err)
+		utils.Log(ctx).Error("Failed to get user by ID", "error", err, "requested_user_id", userId)
 		return utils.DBError(err)
 	}
 
@@ -304,18 +304,19 @@ func (s *UserService) UpdateThemeHandler(ctx *fiber.Ctx) error {
 	// Get the DAL user and update
 	user, err := s.userDal.FindUserById(uint64(currentUser.ID))
 	if err != nil {
-		slog.Error("Failed to find user for theme update", "error", err, "userID", currentUser.ID)
+		utils.Log(ctx).Error("Failed to find user for theme update", "error", err)
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to update theme")
 	}
 
 	user.ThemePref = req.Theme
 	if err := s.userDal.UpdateUser(user); err != nil {
-		slog.Error("Failed to update user theme", "error", err, "userID", currentUser.ID)
+		utils.Log(ctx).Error("Failed to update user theme", "error", err)
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to update theme")
 	}
 
 	// Update the current user in context to reflect the change
 	currentUser.ThemePref = req.Theme
+	utils.LogEvent(ctx, "theme_changed", map[string]any{"theme": req.Theme})
 
 	return ctx.JSON(fiber.Map{
 		"theme":   req.Theme,

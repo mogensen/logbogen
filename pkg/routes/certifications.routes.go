@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"log/slog"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -64,12 +63,13 @@ func CertificationRoutes(app *fiber.App, certService *services.CertificationServ
 		cert.ID = uuid.New()
 
 		if _, err := certService.CreateCertification(cert); err != nil {
-			slog.Error("Failed to create certification", "error", err)
+			utils.Log(c).Error("Failed to create certification", "error", err)
 			return c.Render("certifications/create", fiber.Map{
 				"Cert":  cert,
 				"error": "Error creating certification",
 			})
 		}
+		utils.LogEvent(c, "certification_created", map[string]any{"certification_id": cert.ID, "category": cert.CategoryID, "type": cert.TypeID})
 		return c.Redirect("/certifications/" + cert.ID.String())
 	})
 
@@ -88,8 +88,10 @@ func CertificationRoutes(app *fiber.App, certService *services.CertificationServ
 		cert.ID = certId
 
 		if _, err := certService.UpdateCertification(userId, cert); err != nil {
+			utils.Log(c).Error("Failed to update certification", "error", err, "certification_id", certId)
 			return fiber.NewError(fiber.StatusInternalServerError, "Error updating certification")
 		}
+		utils.LogEvent(c, "certification_updated", map[string]any{"certification_id": certId, "category": cert.CategoryID, "type": cert.TypeID})
 		return c.Redirect("/certifications/" + cert.ID.String())
 	})
 
@@ -101,8 +103,10 @@ func CertificationRoutes(app *fiber.App, certService *services.CertificationServ
 		}
 		err = certService.DeleteCertification(certId, (userId))
 		if err != nil {
+			utils.Log(c).Error("Failed to delete certification", "error", err, "certification_id", certId)
 			return fiber.NewError(fiber.StatusInternalServerError, "Error deleting certification")
 		}
+		utils.LogEvent(c, "certification_deleted", map[string]any{"certification_id": certId})
 		return c.Redirect("/certifications/list")
 	})
 

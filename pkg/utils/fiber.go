@@ -4,7 +4,6 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"log/slog"
 	"net/url"
 	"strings"
 	"time"
@@ -21,8 +20,7 @@ var _emptyDate = types.Date{}
 // Its just a helper function to avoid writing if condition again n again.
 func ParseBody(ctx *fiber.Ctx, body interface{}) *fiber.Error {
 	if err := ctx.BodyParser(body); err != nil {
-		slog.Error("Error parsing body", "error", err)
-		fmt.Printf("Error parsing body %v\n", err)
+		Log(ctx).Warn("Error parsing body", "error", err)
 		return fiber.ErrBadRequest
 	}
 

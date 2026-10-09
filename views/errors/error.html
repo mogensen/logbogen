@@ -12,3 +12,6 @@
 {{ if .Code }}
 <p>Fejlkode: {{ .Code }}</p>
 {{ end }}
+{{ if .ErrorID }}
+<p>Fejl-id: <code>{{ .ErrorID }}</code></p>
+{{ end }}

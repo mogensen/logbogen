@@ -2,11 +2,11 @@ package middleware
 
 import (
 	"fmt"
-	"log/slog"
 
 	"github.com/mogensen/logbook/pkg/database"
 	"github.com/mogensen/logbook/pkg/services"
 	"github.com/mogensen/logbook/pkg/types"
+	"github.com/mogensen/logbook/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -55,7 +55,7 @@ func (a *AuthMiddleware) User(c *fiber.Ctx) error {
 func (a *AuthMiddleware) getCurrentUser(c *fiber.Ctx, authService *services.AuthService) (*types.User, error) {
 	session, err := database.SessionStore.Get(c)
 	if err != nil {
-		slog.Error("Failed to get session store", "error", err)
+		utils.Log(c).Error("Failed to get session store", "error", err)
 		return nil, fiber.ErrInternalServerError
 	}
 

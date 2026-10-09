@@ -136,6 +136,10 @@ func (s *ActivityService) CreateActivity(c *fiber.Ctx) error {
 		return utils.DBError(err)
 	}
 
+	utils.LogEvent(c, "activity_created", map[string]any{
+		"activity_id": activity.ID, "category": activity.Category, "type": activity.Type,
+		"date": activity.Date.Format(dayLayout), "participants": len(activity.Participants),
+	})
 	return c.Redirect("/activities/" + activity.ID.String())
 }
 
@@ -356,6 +360,7 @@ func (s *ActivityService) DeleteActivity(c *fiber.Ctx) error {
 		return utils.DBError(err)
 	}
 
+	utils.LogEvent(c, "activity_deleted", map[string]any{"activity_id": activityID})
 	return c.JSON(&types.MsgResponse{
 		Message: "Activity successfully deleted",
 	})
@@ -424,6 +429,11 @@ func (s *ActivityService) UpdateActivity(c *fiber.Ctx) error {
 		}
 	}
 
+	utils.LogEvent(c, "activity_updated", map[string]any{
+		"activity_id": activityID, "category": activity.Category, "type": activity.Type,
+		"date": activity.Date.Format(dayLayout), "participants": len(activity.Participants),
+		"day_or_place_changed": placeOrDayChanged(&existing, activity.Date, activity.Lat, activity.Lng),
+	})
 	return c.Redirect("/activities/" + activityID)
 }
 
@@ -466,6 +476,7 @@ func (s *ActivityService) CloneActivity(c *fiber.Ctx) error {
 		return utils.DBError(err)
 	}
 
+	utils.LogEvent(c, "activity_cloned", map[string]any{"activity_id": newActivity.ID, "source_activity_id": activityID})
 	return c.Redirect("/activities/" + newActivity.ID.String())
 }
 

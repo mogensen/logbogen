@@ -9,7 +9,6 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -19,6 +18,7 @@ import (
 	"github.com/mogensen/logbook/pkg/database"
 	"github.com/mogensen/logbook/pkg/services"
 	"github.com/mogensen/logbook/pkg/types"
+	"github.com/mogensen/logbook/pkg/utils"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -81,7 +81,7 @@ func newTestApp(t *testing.T, opts ...func(*Config)) *fiber.App {
 		// Tests log in many times from the same address
 		AuthRateLimit:  100000,
 		AuthRateWindow: time.Minute,
-		Logger:         slog.New(slog.NewTextHandler(os.Stdout, nil)),
+		Logger:         utils.NewLogger(io.Discard, "json", slog.LevelInfo),
 	}
 
 	// Tests never call the public weather API either

@@ -20,6 +20,19 @@ Copy `.env.example` to `.env` and adjust settings before running.
 `make help` lists them: `build`, `test`, `test-e2e`, `run` and `lint`. `make lint` fails on unformatted files,
 then runs `go vet` and `staticcheck`, which is installed into `.bin/` on first use. CI runs it too.
 
+## Logging
+
+The app logs structured lines, one JSON object per line by default (`LOG_FORMAT=text` gives key=value lines for
+local use, and `LOG_LEVEL` sets the lowest level). Every request gets an id, sent back in the `X-Request-Id`
+header and shown on error pages as the Fejl-id, and it is on every line logged for that request:
+
+* `request`: one line per request with `method`, `path`, `route`, `status`, `latency_ms`, `bytes`, `ip` and
+  `user_id`. The query string is left out, since it can hold OAuth codes.
+* Events for what users do, such as `user_logged_in`, `user_logged_out`, `activity_created`, `activity_updated`,
+  `activity_deleted`, `activity_cloned`, `certification_created`, `theme_changed`, with the ids involved.
+* `request failed` and `panic recovered` for server errors, with the cause and the stack, which the page never shows.
+* Database queries at debug level, and `slow query` and `query failed` above that.
+
 ## Browser tests
 
 `make test-e2e` runs [Playwright](https://github.com/playwright-community/playwright-go) tests in a real Chrome
