@@ -665,19 +665,14 @@ func TestStoredWeather(t *testing.T) {
 	})
 }
 
-func TestFooterCreditsTheImageAuthors(t *testing.T) {
+func TestFooterCreditsTheImagesAndData(t *testing.T) {
 	client := NewTestClient(t)
 	body := client.GetResponseBody(client.Get("/"))
 
 	for _, credit := range []string{
-		"Hammock icons created by Icon.doit - Flaticon",
-		"Mushroom icons created by Freepik - Flaticon",
-		"Berries icons created by Freepik - Flaticon",
-		"Spices icons created by Freepik - Flaticon",
-		"Harvest icons created by iconixar - Flaticon",
-		"Reminder icons created by Freepik - Flaticon",
-		"Kayak icons created by Freepik - Flaticon",
+		`<a href="https://www.flaticon.com/">Icons from Flaticon</a>`,
 		"Photo by Laura Chouette",
+		`href="https://unsplash.com/photos/black-and-silver-point-and-shoot-camera-FC8Dx3Six-k`,
 		"Weather data by Open-Meteo.com",
 	} {
 		client.AssertResponseContains(body, credit)
