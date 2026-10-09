@@ -705,3 +705,14 @@ func TestScoreboardRanksUsersWithPoints(t *testing.T) {
 	require.Less(t, strings.Index(body, "Second User"), strings.Index(body, "First User"), "most points on top")
 	client.AssertResponseNotContains(body, "Third User")
 }
+
+func TestScoreboardTableFollowsTheTheme(t *testing.T) {
+	client := NewTestClient(t)
+	body := client.GetResponseBody(client.Get("/scoreboard"))
+	css := client.GetResponseBody(client.Get("/css/application.css"))
+
+	// table-light is always white, and the Sketchy theme hard codes white for the hover color
+	client.AssertResponseNotContains(body, "table-light")
+	client.AssertResponseContains(css, "--bs-table-hover-bg: rgba(var(--bs-emphasis-color-rgb)")
+	client.AssertResponseContains(css, "--bs-table-bg: var(--bs-tertiary-bg)")
+}

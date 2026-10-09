@@ -515,3 +515,12 @@ main {
   border-radius: 4px 2px 4px 2px / 2px 4px 2px 4px;
   flex-shrink: 0;
 }
+/* Tables follow the light and dark theme, the Sketchy theme hard codes white for the hover and header colors */
+.table {
+  --bs-table-hover-bg: rgba(var(--bs-emphasis-color-rgb), 0.08);
+}
+
+.table > thead {
+  --bs-table-bg: var(--bs-tertiary-bg);
+  --bs-table-color: var(--bs-body-color);
+}
