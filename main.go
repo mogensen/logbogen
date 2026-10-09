@@ -45,6 +45,8 @@ type Config struct {
 	KeyFile     string
 	DevMode     bool
 	// ProxyHeader and TrustedProxies make c.IP() resolve the real client behind a reverse proxy
+	// Geocoder names the place of an activity, nil skips geocoding
+	Geocoder services.Geocoder
 	// AuthRateLimit is the number of auth requests a client IP may make per minute
 	AuthRateLimit  int
 	ProxyHeader    string
@@ -60,6 +62,7 @@ func DefaultConfig() *Config {
 		AssetsPath: "./assets",
 		DevMode:    config.DEVMODE,
 
+		Geocoder:       services.NewNominatimGeocoder(),
 		AuthRateLimit:  config.AUTHRATELIMIT,
 		ProxyHeader:    config.PROXYHEADER,
 		TrustedProxies: config.TRUSTEDPROXIES,
@@ -151,7 +154,7 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 
 	// Services
 	weatherService := services.NewWeatherService()
-	activitiesService := services.NewActivityService(userDal, activityDal, weatherService)
+	activitiesService := services.NewActivityService(userDal, activityDal, weatherService, cfg.Geocoder)
 	scoreboardService := services.NewScoreboardService(userDal)
 	authService := services.NewAuthService(userDal, authenticator, cfg.DevMode)
 	userService := services.NewUserService(userDal, certificationDal)

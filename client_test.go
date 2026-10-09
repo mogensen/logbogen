@@ -16,6 +16,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/mogensen/logbook/pkg/database"
+	"github.com/mogensen/logbook/pkg/services"
 	"github.com/mogensen/logbook/pkg/types"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
@@ -61,6 +62,8 @@ func NewTestClient(t *testing.T, opts ...func(*Config)) *TestClient {
 		ViewsPath:  "./views",
 		AssetsPath: "./assets",
 		DevMode:    true,
+		// Tests never call the public geocoding API
+		Geocoder: fakeGeocoder{name: "København, Danmark"},
 		// Tests log in many times from the same address
 		AuthRateLimit: 100000,
 		Logger:        slog.New(slog.NewTextHandler(os.Stdout, nil)),
@@ -307,4 +310,17 @@ func TestClientReusability(t *testing.T) {
 
 		require.NotEqual(t, email1, email2)
 	})
+}
+
+// fakeGeocoder answers every lookup with a fixed place, or an error when err is set
+type fakeGeocoder struct {
+	name string
+	err  error
+}
+
+func (f fakeGeocoder) ReverseGeocode(lat, lng float64) (*services.GeocodeResponse, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+	return &services.GeocodeResponse{Name: f.name}, nil
 }

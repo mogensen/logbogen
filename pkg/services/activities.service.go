@@ -2,7 +2,9 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,14 +21,16 @@ type ActivityService struct {
 	activityDal dal.ActivityDal
 	userDal     dal.UserDal
 	weatherSvc  *WeatherService
+	geocoder    Geocoder
 }
 
 // NewActivityService creates a new instance of ActivityService
-func NewActivityService(userDal dal.UserDal, activityDal dal.ActivityDal, weatherSvc *WeatherService) *ActivityService {
+func NewActivityService(userDal dal.UserDal, activityDal dal.ActivityDal, weatherSvc *WeatherService, geocoder Geocoder) *ActivityService {
 	return &ActivityService{
 		userDal:     userDal,
 		activityDal: activityDal,
 		weatherSvc:  weatherSvc,
+		geocoder:    geocoder,
 	}
 }
 
@@ -56,6 +60,24 @@ func (s *ActivityService) cleanParticipants(ownerID uint64, ids []uint64) ([]uin
 		return nil, fiber.NewError(fiber.StatusBadRequest, "unknown participant")
 	}
 	return unique, nil
+}
+
+// resolveLocation names the place at the coordinates. When the geocoder fails or finds nothing,
+// it falls back to the submitted location, or to the plain coordinates.
+func (s *ActivityService) resolveLocation(lat, lng float64, submitted string) string {
+	if s.geocoder != nil {
+		geo, err := s.geocoder.ReverseGeocode(lat, lng)
+		if err != nil {
+			slog.Warn("Reverse geocoding failed", "error", err)
+		} else if name := geo.SimpleDisplayName(); name != "" {
+			return name
+		}
+	}
+
+	if submitted = strings.TrimSpace(submitted); submitted != "" {
+		return submitted
+	}
+	return fmt.Sprintf("%.4f, %.4f", lat, lng)
 }
 
 // CreateActivityPage renders the create activity page
@@ -105,8 +127,7 @@ func (s *ActivityService) CreateActivity(c *fiber.Ctx) error {
 		Type:         t,
 	}
 
-	geo, _ := ReverseGeocode(b.Activity.Lat, b.Activity.Lng)
-	activity.Location = geo.SimpleDisplayName()
+	activity.Location = s.resolveLocation(b.Activity.Lat, b.Activity.Lng, b.Activity.Location)
 
 	_, err = s.activityDal.CreateActivity(activity)
 	if err != nil {
@@ -337,8 +358,7 @@ func (s *ActivityService) UpdateActivity(c *fiber.Ctx) error {
 		Type:         t,
 	}
 
-	geo, _ := ReverseGeocode(b.Activity.Lat, b.Activity.Lng)
-	activity.Location = geo.SimpleDisplayName()
+	activity.Location = s.resolveLocation(b.Activity.Lat, b.Activity.Lng, b.Activity.Location)
 
 	_, err = s.activityDal.UpdateActivity(activityID, utils.GetUser(c).ID, activity)
 	if err != nil {

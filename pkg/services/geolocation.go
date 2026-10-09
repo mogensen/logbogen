@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 )
 
 const nominatimUserAgent = "logbogen/1.0 (https://github.com/mogensen/logbook)"
@@ -77,8 +78,28 @@ type GeocodeResponse struct {
 	Address     Address `json:"address"`
 }
 
-func ReverseGeocode(lat, lng float64) (*GeocodeResponse, error) {
-	url := reverseGeocodeURL(lat, lng)
+// Geocoder turns coordinates into a place description
+type Geocoder interface {
+	ReverseGeocode(lat, lng float64) (*GeocodeResponse, error)
+}
+
+// NominatimGeocoder is a Geocoder backed by the OpenStreetMap Nominatim API
+type NominatimGeocoder struct {
+	baseURL string
+	client  *http.Client
+}
+
+// NewNominatimGeocoder creates a geocoder for the public Nominatim API with a short request timeout
+func NewNominatimGeocoder() *NominatimGeocoder {
+	return &NominatimGeocoder{
+		baseURL: "https://nominatim.openstreetmap.org",
+		client:  &http.Client{Timeout: 5 * time.Second},
+	}
+}
+
+// ReverseGeocode looks up the place at the given coordinates
+func (g *NominatimGeocoder) ReverseGeocode(lat, lng float64) (*GeocodeResponse, error) {
+	url := g.baseURL + "/reverse?" + fmt.Sprintf("format=jsonv2&zoom=16&lat=%f&lon=%f", lat, lng)
 	slog.Info("Performing HTTP GET request", "url", url)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -87,25 +108,25 @@ func ReverseGeocode(lat, lng float64) (*GeocodeResponse, error) {
 	}
 	req.Header.Set("User-Agent", nominatimUserAgent)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := g.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
-
 	defer resp.Body.Close()
-	bodyBytes, _ := io.ReadAll(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("geocode API returned status %d", resp.StatusCode)
 	}
 
-	// Convert response body to Todo struct
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
 	geocodeResponse := &GeocodeResponse{}
-	json.Unmarshal(bodyBytes, geocodeResponse)
+	if err := json.Unmarshal(bodyBytes, geocodeResponse); err != nil {
+		return nil, err
+	}
 	slog.Debug("Geocode API response", "response", geocodeResponse)
 	return geocodeResponse, nil
-}
-
-func reverseGeocodeURL(lat, lng float64) string {
-	return "https://nominatim.openstreetmap.org/reverse?" + fmt.Sprintf("format=jsonv2&zoom=16&lat=%f&lon=%f", lat, lng)
 }

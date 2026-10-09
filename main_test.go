@@ -421,3 +421,34 @@ func TestUserTextIsEscaped(t *testing.T) {
 		}
 	}
 }
+
+func TestActivitiesSurviveGeocoderFailure(t *testing.T) {
+	client := NewTestClient(t, func(cfg *Config) {
+		cfg.Geocoder = fakeGeocoder{err: errors.New("geocode API returned status 429")}
+	})
+	client.CreateUser("Other User", "password")
+	email := client.CreateUser("Geocode User", "password")
+	client.Login(email, "password")
+
+	t.Run("create falls back to the submitted location", func(t *testing.T) {
+		activity := randomActivity()
+		activity.Location = "Havnen"
+		client.CreateActivity(activity)
+
+		activities := client.GetActivities()
+		require.Len(t, activities, 1)
+		require.Equal(t, "Havnen", activities[0].Location)
+	})
+
+	t.Run("update falls back to the coordinates", func(t *testing.T) {
+		activity := client.GetActivities()[0]
+		activity.Location = ""
+		activity.Lat = 55.5
+		activity.Lng = 12.25
+		client.UpdateActivity(activity)
+
+		activities := client.GetActivities()
+		require.Len(t, activities, 1)
+		require.Equal(t, "55.5000, 12.2500", activities[0].Location)
+	})
+}
