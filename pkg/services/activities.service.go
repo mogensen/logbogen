@@ -30,6 +30,34 @@ func NewActivityService(userDal dal.UserDal, activityDal dal.ActivityDal, weathe
 	}
 }
 
+// maxParticipants bounds the participants list of a single activity
+const maxParticipants = 50
+
+// cleanParticipants de-duplicates the ids, drops the owner and rejects unknown users
+func (s *ActivityService) cleanParticipants(ownerID uint64, ids []uint64) ([]uint64, error) {
+	seen := make(map[uint64]struct{}, len(ids))
+	unique := make([]uint64, 0, len(ids))
+	for _, id := range ids {
+		if _, ok := seen[id]; ok || id == ownerID {
+			continue
+		}
+		seen[id] = struct{}{}
+		unique = append(unique, id)
+	}
+	if len(unique) > maxParticipants {
+		return nil, fiber.NewError(fiber.StatusBadRequest, "too many participants")
+	}
+
+	users, err := s.userDal.FindUsersByIDs(unique)
+	if err != nil {
+		return nil, err
+	}
+	if len(users) != len(unique) {
+		return nil, fiber.NewError(fiber.StatusBadRequest, "unknown participant")
+	}
+	return unique, nil
+}
+
 // CreateActivityPage renders the create activity page
 func (s *ActivityService) CreateActivityPage(c *fiber.Ctx) error {
 	// Render the create activity page
@@ -51,6 +79,11 @@ func (s *ActivityService) CreateActivity(c *fiber.Ctx) error {
 		})
 	}
 
+	participants, err := s.cleanParticipants(utils.GetUser(c).ID, b.Activity.ParticipantsIDs)
+	if err != nil {
+		return err
+	}
+
 	t := b.Activity.TypeID
 	if b.CategoryID == types.Other {
 		t = b.OtherType
@@ -65,7 +98,7 @@ func (s *ActivityService) CreateActivity(c *fiber.Ctx) error {
 		Category:     b.Activity.CategoryID,
 		Role:         b.Activity.Role,
 		Comment:      b.Activity.Comment,
-		Participants: b.Activity.ParticipantsIDs,
+		Participants: participants,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 		User:         &utils.GetUser(c).ID,
@@ -75,7 +108,7 @@ func (s *ActivityService) CreateActivity(c *fiber.Ctx) error {
 	geo, _ := ReverseGeocode(b.Activity.Lat, b.Activity.Lng)
 	activity.Location = geo.SimpleDisplayName()
 
-	_, err := s.activityDal.CreateActivity(activity)
+	_, err = s.activityDal.CreateActivity(activity)
 	if err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}
@@ -280,6 +313,11 @@ func (s *ActivityService) UpdateActivity(c *fiber.Ctx) error {
 		return err
 	}
 
+	participants, err := s.cleanParticipants(utils.GetUser(c).ID, b.Activity.ParticipantsIDs)
+	if err != nil {
+		return err
+	}
+
 	t := b.Activity.TypeID
 	if b.CategoryID == types.Other {
 		t = b.OtherType
@@ -293,7 +331,7 @@ func (s *ActivityService) UpdateActivity(c *fiber.Ctx) error {
 		Category:     b.Activity.CategoryID,
 		Role:         b.Activity.Role,
 		Comment:      b.Activity.Comment,
-		Participants: b.Activity.ParticipantsIDs,
+		Participants: participants,
 		UpdatedAt:    time.Now(),
 		User:         &utils.GetUser(c).ID,
 		Type:         t,
@@ -302,7 +340,7 @@ func (s *ActivityService) UpdateActivity(c *fiber.Ctx) error {
 	geo, _ := ReverseGeocode(b.Activity.Lat, b.Activity.Lng)
 	activity.Location = geo.SimpleDisplayName()
 
-	_, err := s.activityDal.UpdateActivity(activityID, utils.GetUser(c).ID, activity)
+	_, err = s.activityDal.UpdateActivity(activityID, utils.GetUser(c).ID, activity)
 	if err != nil {
 		return fiber.NewError(fiber.StatusConflict, err.Error())
 	}

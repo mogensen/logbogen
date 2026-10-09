@@ -111,3 +111,19 @@ func TestUserDal_FindUsers(t *testing.T) {
 	require.Equal(t, "Test User 2", users[1].Name)
 	require.Equal(t, "test2@example.com", users[1].Email)
 }
+
+func TestUserDal_FindUsersByIDs(t *testing.T) {
+	db := setupTestDB(t)
+	userDal := NewUserDal(db)
+	for i, email := range []string{"a@example.com", "b@example.com", "c@example.com"} {
+		require.NoError(t, userDal.CreateUser(&User{Name: email, Email: email, Auth0Sub: strPtr(email)}).Error, i)
+	}
+
+	users, err := userDal.FindUsersByIDs([]uint64{1, 3, 42})
+	require.NoError(t, err)
+	require.Len(t, users, 2)
+
+	none, err := userDal.FindUsersByIDs(nil)
+	require.NoError(t, err)
+	require.Empty(t, none)
+}

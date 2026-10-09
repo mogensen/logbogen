@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mogensen/logbook/pkg/dal"
+	"github.com/mogensen/logbook/pkg/mocks"
 	"github.com/mogensen/logbook/pkg/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -221,4 +222,50 @@ func TestFilterPending_Case4_EdgeCases(t *testing.T) {
 	filtered4, err := sut.filterPending([]dal.Activity{}, pendingActivities, map[uint64]types.User{})
 	require.NoError(t, err)
 	assert.Len(t, filtered4, 3)
+}
+
+func TestCleanParticipants(t *testing.T) {
+	ownerID := uint64(1)
+
+	t.Run("drops owner and duplicates", func(t *testing.T) {
+		userDal := &mocks.UserDalMock{}
+		userDal.On("FindUsersByIDs", []uint64{2, 3}).Return([]dal.User{{}, {}}, nil)
+		sut := ActivityService{userDal: userDal}
+
+		got, err := sut.cleanParticipants(ownerID, []uint64{2, 1, 3, 2})
+		require.NoError(t, err)
+		require.Equal(t, []uint64{2, 3}, got)
+	})
+
+	t.Run("rejects unknown user", func(t *testing.T) {
+		userDal := &mocks.UserDalMock{}
+		userDal.On("FindUsersByIDs", []uint64{2, 99}).Return([]dal.User{{}}, nil)
+		sut := ActivityService{userDal: userDal}
+
+		_, err := sut.cleanParticipants(ownerID, []uint64{2, 99})
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "unknown participant")
+	})
+
+	t.Run("rejects too many participants", func(t *testing.T) {
+		ids := make([]uint64, 0, maxParticipants+1)
+		for i := uint64(0); i <= maxParticipants; i++ {
+			ids = append(ids, i+2)
+		}
+		sut := ActivityService{userDal: &mocks.UserDalMock{}}
+
+		_, err := sut.cleanParticipants(ownerID, ids)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "too many participants")
+	})
+
+	t.Run("empty list needs no lookup", func(t *testing.T) {
+		userDal := &mocks.UserDalMock{}
+		userDal.On("FindUsersByIDs", []uint64{}).Return([]dal.User{}, nil)
+		sut := ActivityService{userDal: userDal}
+
+		got, err := sut.cleanParticipants(ownerID, nil)
+		require.NoError(t, err)
+		require.Empty(t, got)
+	})
 }

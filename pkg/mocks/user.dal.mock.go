@@ -55,3 +55,9 @@ func (m *UserDalMock) UpdateUser(user *dal.User) error {
 	args := m.Called(user)
 	return args.Error(0)
 }
+
+// FindUsersByIDs mocks the FindUsersByIDs method
+func (m *UserDalMock) FindUsersByIDs(ids []uint64) ([]dal.User, error) {
+	args := m.Called(ids)
+	return args.Get(0).([]dal.User), args.Error(1)
+}

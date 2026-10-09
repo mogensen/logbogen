@@ -25,6 +25,7 @@ type UserDal interface {
 	FindUserByEmail(email string) (*User, error)
 	FindUserByAuth0Sub(sub string) (*User, error)
 	FindUsers() ([]User, error)
+	FindUsersByIDs(ids []uint64) ([]User, error)
 }
 
 // userDalImpl implements the UserDal interface
@@ -82,4 +83,14 @@ func (d *userDalImpl) FindUsers() ([]User, error) {
 // UpdateUser updates a user in the database
 func (d *userDalImpl) UpdateUser(user *User) error {
 	return d.db.Save(user).Error
+}
+
+// FindUsersByIDs returns the users matching the given ids, without their activities
+func (d *userDalImpl) FindUsersByIDs(ids []uint64) ([]User, error) {
+	var users []User
+	if len(ids) == 0 {
+		return users, nil
+	}
+	err := d.db.Where("id IN ?", ids).Find(&users).Error
+	return users, err
 }
