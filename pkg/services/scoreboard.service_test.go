@@ -99,6 +99,30 @@ func TestScoreboardService_calculateUserStats_Ranks(t *testing.T) {
 		names = append(names, stat.User.Name)
 		ranks = append(ranks, stat.Rank)
 	}
-	require.Equal(t, []string{"Anna", "Bo", "Carl", "Dina", "Eve"}, names, "equal points are ordered by name")
-	require.Equal(t, []int{1, 1, 3, 3, 5}, ranks, "the top place is 1 and equal points share it")
+	require.Equal(t, []string{"Anna", "Bo", "Carl", "Dina"}, names, "equal points are ordered by name")
+	require.Equal(t, []int{1, 1, 3, 3}, ranks, "the top place is 1 and equal points share it")
+}
+
+func TestScoreboardService_calculateUserStats_HidesUsersWithoutPoints(t *testing.T) {
+	service := NewScoreboardService(new(mocks.UserDalMock))
+	users := []dal.User{
+		{Model: gorm.Model{ID: 1}, Name: "Nobody", Email: "nobody@test.com"},
+		{
+			Model: gorm.Model{ID: 2}, Name: "Active", Email: "active@test.com",
+			Activities: []dal.Activity{
+				{ID: uuid.New(), User: uint64Ptr(2), Type: "rock", Category: types.Climbing},
+			},
+		},
+		{Model: gorm.Model{ID: 3}, Name: "Also nobody", Email: "also@test.com"},
+	}
+
+	stats, err := service.calculateUserStats(&users)
+	require.NoError(t, err)
+	require.Len(t, stats, 1)
+	require.Equal(t, "Active", stats[0].User.Name)
+	require.Equal(t, 1, stats[0].Rank, "hidden users do not take a place")
+
+	empty, err := service.calculateUserStats(&[]dal.User{users[0], users[2]})
+	require.NoError(t, err)
+	require.Empty(t, empty)
 }

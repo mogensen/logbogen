@@ -680,11 +680,17 @@ func TestFooterCreditsTheImagesAndData(t *testing.T) {
 	}
 }
 
-func TestScoreboardStartsAtPlaceOne(t *testing.T) {
+func TestScoreboardRanksUsersWithPoints(t *testing.T) {
 	client := NewTestClient(t)
-	client.CreateUser("First User", "password")
-	email := client.CreateUser("Second User", "password")
-	client.Login(email, "password")
+	// The default participants 1 and 2 must exist, the owner is dropped from them
+	first := client.CreateUser("First User", "password")
+	second := client.CreateUser("Second User", "password")
+	client.CreateUser("Third User", "password")
+
+	client.Login(first, "password")
+	client.CreateActivity(randomActivity())
+	client.Login(second, "password")
+	client.CreateActivity(randomActivity())
 	client.CreateActivity(randomActivity())
 
 	body := client.GetResponseBody(client.Get("/scoreboard"))
@@ -695,6 +701,7 @@ func TestScoreboardStartsAtPlaceOne(t *testing.T) {
 	for _, match := range rankCell.FindAllStringSubmatch(body, -1) {
 		ranks = append(ranks, match[1])
 	}
-	require.Equal(t, []string{"1", "2"}, ranks)
+	require.Equal(t, []string{"1", "2"}, ranks, "places start at 1")
 	require.Less(t, strings.Index(body, "Second User"), strings.Index(body, "First User"), "most points on top")
+	client.AssertResponseNotContains(body, "Third User")
 }

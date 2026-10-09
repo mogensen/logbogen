@@ -29,7 +29,7 @@ func NewScoreboardService(userDal dal.UserDal) *ScoreboardService {
 	}
 }
 
-// GetScoreboard returns the scoreboard data for all users
+// GetScoreboard returns the scoreboard data for all users with points
 func (s *ScoreboardService) GetScoreboard(c *fiber.Ctx) error {
 	// Get all users
 	users, err := s.userDal.FindUsers()
@@ -57,10 +57,14 @@ func (s *ScoreboardService) calculateUserStats(users *[]dal.User) ([]UserStats, 
 				filteredAchievements = append(filteredAchievements, a)
 			}
 		}
+		points := s.summarize(user.Activities)
+		if points == 0 {
+			continue
+		}
 		userStats := UserStats{
 			User:                user,
 			AchievementsSummary: filteredAchievements,
-			Points:              s.summarize(user.Activities),
+			Points:              points,
 		}
 		res = append(res, userStats)
 	}
