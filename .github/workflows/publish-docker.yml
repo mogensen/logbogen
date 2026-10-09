@@ -31,6 +31,9 @@ jobs:
         with:
           context: .
           push: true
+          # Docker Hub rate limits anonymous pulls from shared runners (429), so pull the base images from a mirror
+          build-args: |
+            BASE_REGISTRY=mirror.gcr.io/library
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
