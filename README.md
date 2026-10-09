@@ -26,6 +26,8 @@ The image listens on `0.0.0.0:3000` (`LISTEN_ADDR`), runs as a non-root user and
 database and sessions in `/app/data`, which is the directory to mount as a volume. It runs
 against real Auth0, so set the `AUTH0_*` variables, and put a TLS reverse proxy in front of it.
 
+Pushing a git tag publishes the image to `ghcr.io/<owner>/<repo>` with the tag name and `latest`.
+
 ## Data
 
 The SQLite database (including sessions) is stored in `./data/logbog.db`, or the path in `DB`.
