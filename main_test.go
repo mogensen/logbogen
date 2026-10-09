@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -823,5 +824,114 @@ func TestFrontPageShowsTheProfileHeaderStats(t *testing.T) {
 		profile := profileStats(t, client.GetResponseBody(client.Get("/users/2")))
 
 		require.Equal(t, profile, front)
+	})
+}
+
+func TestActivitiesListCategoryFilter(t *testing.T) {
+	client := NewTestClient(t)
+	client.CreateUser("Other User", "password")
+	email := client.CreateUser("Filter User", "password")
+	client.Login(email, "password")
+
+	create := func(category, activityType string) string {
+		activity := randomActivity()
+		activity.Date = types.Date(time.Now().AddDate(0, 0, -3))
+		activity.CategoryID = category
+		activity.TypeID = activityType
+		client.CreateActivity(activity)
+		return activity.TypeID
+	}
+	create("climbing", "boulder")
+	create("climbing", "rock")
+	create("sailing", "kayak")
+
+	idsOf := func(activities []types.Activity, category string) (ids []string) {
+		for _, activity := range activities {
+			if activity.CategoryID == category {
+				ids = append(ids, activity.ID.String())
+			}
+		}
+		return ids
+	}
+	all := client.GetActivities()
+	require.Len(t, all, 3)
+	climbingIDs, sailingIDs := idsOf(all, "climbing"), idsOf(all, "sailing")
+	require.Len(t, climbingIDs, 2)
+	require.Len(t, sailingIDs, 1)
+
+	cardLinks := func(body string) []string {
+		var ids []string
+		for _, match := range regexp.MustCompile(`<a href="/activities/([0-9a-f-]{36})"`).FindAllStringSubmatch(body, -1) {
+			ids = append(ids, match[1])
+		}
+		return ids
+	}
+	list := func(query string) string {
+		resp := client.Get("/activities/list" + query)
+		require.Equal(t, fiber.StatusOK, resp.StatusCode)
+		return client.GetResponseBody(resp)
+	}
+
+	t.Run("without a filter every activity is listed, with the filter bar above", func(t *testing.T) {
+		body := list("")
+
+		require.ElementsMatch(t, append(append([]string{}, climbingIDs...), sailingIDs...), cardLinks(body))
+		client.AssertResponseContains(body, `aria-label="Filtrer efter kategori"`)
+		client.AssertResponseContains(body, `href="/activities/list?category=climbing"`)
+		client.AssertResponseContains(body, `href="/activities/list?category=sailing"`)
+		client.AssertResponseNotContains(body, `href="/activities/list?category=camping"`)
+		require.Less(t, strings.Index(body, "Filtrer efter kategori"), strings.Index(body, `class="contacts"`), "filter is above the list")
+	})
+
+	t.Run("a category only lists its own activities and is marked active", func(t *testing.T) {
+		body := list("?category=climbing")
+
+		require.ElementsMatch(t, climbingIDs, cardLinks(body))
+		require.Equal(t, 1, strings.Count(body, `aria-current="page"`))
+		client.AssertResponseContains(body, `btn btn-sm btn-primary"
+    aria-current="page">Klatring`)
+
+		require.ElementsMatch(t, sailingIDs, cardLinks(list("?category=sailing")))
+	})
+
+	t.Run("the json list is filtered too", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/activities/list?category=sailing", nil)
+		req.Header.Add("Accept", "application/json")
+		u, _ := url.Parse("http://localhost")
+		for _, cookie := range client.jar.Cookies(u) {
+			req.AddCookie(cookie)
+		}
+		resp, err := client.app.Test(req, testRequestTimeout)
+		require.NoError(t, err)
+
+		var activities []types.Activity
+		require.NoError(t, json.Unmarshal([]byte(client.GetResponseBody(resp)), &activities))
+		require.Equal(t, sailingIDs, idsOf(activities, "sailing"))
+		require.Len(t, activities, 1)
+	})
+
+	t.Run("an unknown category is ignored", func(t *testing.T) {
+		body := list("?category=not-a-category")
+
+		require.Len(t, cardLinks(body), 3)
+		client.AssertResponseNotContains(body, "not-a-category")
+	})
+
+	t.Run("a category without activities says so and can be left", func(t *testing.T) {
+		body := list("?category=camping")
+
+		require.Empty(t, cardLinks(body))
+		client.AssertResponseContains(body, "Du har ingen logninger i denne kategori.")
+		client.AssertResponseNotContains(body, "Opret første logning")
+		client.AssertResponseContains(body, `href="/activities/list"`)
+	})
+
+	t.Run("a user without activities gets no filter bar", func(t *testing.T) {
+		fresh := NewTestClient(t)
+		fresh.CreateUser("Fresh User", "password")
+		body := fresh.GetResponseBody(fresh.Get("/activities/list"))
+
+		fresh.AssertResponseNotContains(body, "Filtrer efter kategori")
+		fresh.AssertResponseContains(body, "Opret første logning")
 	})
 }

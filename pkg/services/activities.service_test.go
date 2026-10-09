@@ -269,3 +269,55 @@ func TestCleanParticipants(t *testing.T) {
 		require.Empty(t, got)
 	})
 }
+
+func TestCategoryFilters(t *testing.T) {
+	activity := func(category string) *types.Activity { return &types.Activity{ID: uuid.New(), CategoryID: category} }
+	activities := []*types.Activity{
+		activity("sailing"), activity("climbing"), activity("sailing"), activity("climbing"), activity("sailing"),
+	}
+
+	t.Run("lists the categories in use, in the configured order, with counts", func(t *testing.T) {
+		filters := categoryFilters(activities, "")
+
+		require.Equal(t, []CategoryFilter{
+			{ID: "climbing", Name: "Klatring", Count: 2},
+			{ID: "sailing", Name: "Sejlads", Count: 3},
+		}, filters)
+	})
+
+	t.Run("marks the selected category", func(t *testing.T) {
+		filters := categoryFilters(activities, "sailing")
+
+		require.False(t, filters[0].Active)
+		require.True(t, filters[1].Active)
+	})
+
+	t.Run("keeps a selected category without activities so it can be left again", func(t *testing.T) {
+		filters := categoryFilters(activities, "camping")
+
+		require.Len(t, filters, 3)
+		require.Equal(t, CategoryFilter{ID: "camping", Name: "Camping", Count: 0, Active: true}, filters[2])
+	})
+
+	t.Run("no activities, no filter buttons", func(t *testing.T) {
+		require.Empty(t, categoryFilters(nil, ""))
+	})
+}
+
+func TestFilterByCategory(t *testing.T) {
+	climbing := &types.Activity{ID: uuid.New(), CategoryID: "climbing"}
+	sailing := &types.Activity{ID: uuid.New(), CategoryID: "sailing"}
+	activities := []*types.Activity{climbing, sailing, climbing}
+
+	require.Equal(t, activities, filterByCategory(activities, ""), "no category shows everything")
+	require.Equal(t, []*types.Activity{climbing, climbing}, filterByCategory(activities, "climbing"))
+	require.Equal(t, []*types.Activity{sailing}, filterByCategory(activities, "sailing"))
+	require.Empty(t, filterByCategory(activities, "camping"))
+}
+
+func TestValidCategory(t *testing.T) {
+	require.Equal(t, "climbing", validCategory("climbing"))
+	require.Empty(t, validCategory(""))
+	require.Empty(t, validCategory("not-a-category"), "an unknown category is ignored")
+	require.Empty(t, validCategory("<script>"))
+}

@@ -11,7 +11,18 @@
   </div>
 </div>
 
-{{ if eq (len .Activities) 0 }}
+{{ if .CategoryFilters }}
+<nav class="d-flex flex-wrap gap-2 mb-3" aria-label="Filtrer efter kategori">
+  <a href="/activities/list" class="btn btn-sm {{ if not .SelectedFilter }}btn-primary{{ else }}btn-outline-secondary{{ end }}"
+    {{ if not .SelectedFilter }}aria-current="page"{{ end }}>Alle <span class="badge rounded-pill bg-body-secondary text-body">{{ .TotalCount }}</span></a>
+  {{ range .CategoryFilters }}
+  <a href="/activities/list?category={{ .ID }}" class="btn btn-sm {{ if .Active }}btn-primary{{ else }}btn-outline-secondary{{ end }}"
+    {{ if .Active }}aria-current="page"{{ end }}>{{ .Name }} <span class="badge rounded-pill bg-body-secondary text-body">{{ .Count }}</span></a>
+  {{ end }}
+</nav>
+{{ end }}
+
+{{ if eq .TotalCount 0 }}
 <div class="d-flex flex-wrap-reverse justify-content-center">
   <div class="p-2 align-self-center">
   <p>
@@ -26,6 +37,8 @@
   <img src="/images/arrow.svg">
   </div>
 </div>
+{{ else if eq (len .Activities) 0 }}
+<p>Du har ingen logninger i denne kategori.</p>
 {{end}}
 
 <div class="card-body contacts_body">

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/mogensen/logbook/pkg/config"
 	"github.com/mogensen/logbook/pkg/dal"
 	"github.com/mogensen/logbook/pkg/types"
 	"github.com/mogensen/logbook/pkg/utils"
@@ -138,6 +139,58 @@ func (s *ActivityService) CreateActivity(c *fiber.Ctx) error {
 	return c.Redirect("/activities/" + activity.ID.String())
 }
 
+// CategoryFilter is one button of the category filter above the activities list
+type CategoryFilter struct {
+	ID     string
+	Name   string
+	Count  int
+	Active bool
+}
+
+// validCategory returns the id when it is a known category, and an empty string (no filter) otherwise
+func validCategory(id string) string {
+	if config.CategoryByID(id) == nil {
+		return ""
+	}
+	return id
+}
+
+// filterByCategory returns the activities in the category, or all of them when no category is selected
+func filterByCategory(activities []*types.Activity, category string) []*types.Activity {
+	if category == "" {
+		return activities
+	}
+
+	filtered := make([]*types.Activity, 0, len(activities))
+	for _, activity := range activities {
+		if activity.CategoryID == category {
+			filtered = append(filtered, activity)
+		}
+	}
+	return filtered
+}
+
+// categoryFilters lists the categories the user has activities in, with their counts, in the configured order
+func categoryFilters(activities []*types.Activity, selected string) []CategoryFilter {
+	counts := map[string]int{}
+	for _, activity := range activities {
+		counts[activity.CategoryID]++
+	}
+
+	filters := []CategoryFilter{}
+	for _, category := range config.AllActivityCategories {
+		if counts[category.ID] > 0 || category.ID == selected {
+			filters = append(filters, CategoryFilter{
+				ID:     category.ID,
+				Name:   category.Name,
+				Count:  counts[category.ID],
+				Active: category.ID == selected,
+			})
+		}
+	}
+	return filters
+}
+
 // GetActivities returns the Activities list
 func (s *ActivityService) GetActivities(c *fiber.Ctx) error {
 	res, err := s.GetActivitiesForUser(utils.GetUser(c).ID)
@@ -145,13 +198,19 @@ func (s *ActivityService) GetActivities(c *fiber.Ctx) error {
 		return err
 	}
 
+	selected := validCategory(c.Query("category"))
+	filtered := filterByCategory(res, selected)
+
 	accept := c.Accepts("html", "json")
 	if accept == "json" {
-		return c.JSON(res)
+		return c.JSON(filtered)
 	}
 
 	return c.Render("activities/list", fiber.Map{
-		"Activities": &res,
+		"Activities":      &filtered,
+		"TotalCount":      len(res),
+		"CategoryFilters": categoryFilters(res, selected),
+		"SelectedFilter":  selected,
 	})
 }
 
