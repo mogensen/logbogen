@@ -182,6 +182,9 @@ func (s *UserService) GetUserActivityHeatmap(user *types.User) []ActivityHeatmap
 		if t.Year() < minYear {
 			minYear = t.Year()
 		}
+		if t.Year() > maxYear {
+			maxYear = t.Year()
+		}
 		mk := cellKey{t.Year(), int(t.Month())}
 		if monthCats[mk] == nil {
 			monthCats[mk] = make(map[string]int)
