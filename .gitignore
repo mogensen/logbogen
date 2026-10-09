@@ -27,3 +27,5 @@ go.work.sum
 
 tmp/
 fiber.db
+/data/
+*.db

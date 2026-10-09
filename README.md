@@ -15,6 +15,13 @@ The server starts at `http://127.0.0.1:3000` by default.
 
 Copy `.env.example` to `.env` and adjust settings before running.
 
+## Data
+
+The SQLite database (including sessions) is stored in `./data/logbog.db`, or the path in `DB`.
+The directory is created on startup, and is the one to mount as a volume when running in a container.
+An existing `fiber.db` is not migrated automatically: stop the app and move it with
+`mkdir -p data && mv fiber.db data/logbog.db`.
+
 ## Authentication
 
 Logbogen authenticates users through **Auth0** (OIDC Authorization Code flow). The

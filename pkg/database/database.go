@@ -2,6 +2,8 @@ package database
 
 import (
 	"log/slog"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/gofiber/fiber/v2/middleware/session"
@@ -16,10 +18,19 @@ import (
 var DB *gorm.DB
 var SessionStore *session.Store
 
+// ensureDir creates the directory that holds the database file when it is missing
+func ensureDir(dbPath string) error {
+	return os.MkdirAll(filepath.Dir(dbPath), 0o755)
+}
+
 func init() {
+	if err := ensureDir(config.DB); err != nil {
+		slog.Error("Failed to create the database directory", "path", config.DB, "error", err)
+	}
+
 	// Init sessions store
 	storage := sqlite3.New(sqlite3.Config{
-		Database:        "./fiber.db",
+		Database:        config.DB,
 		Table:           "sessions",
 		Reset:           false,
 		GCInterval:      10 * time.Second,
@@ -47,6 +58,10 @@ func SetCookieSecure(secure bool) {
 
 // Connect initiate the database connection and migrate all the tables
 func Connect() error {
+	if err := ensureDir(config.DB); err != nil {
+		return err
+	}
+
 	db, err := gorm.Open(sqlite.Open(config.DB), &gorm.Config{
 		NowFunc: func() time.Time { return time.Now().Local() },
 		Logger:  logger.Default.LogMode(logger.Info),

@@ -9,11 +9,14 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
+// DefaultDB is the sqlite file used when DB is not set, inside a directory that can be mounted as a volume
+const DefaultDB = "./data/logbog.db"
+
 var (
 	// PORT returns the server listening port
 	PORT = getEnv("PORT", "5000")
-	// DB returns the name of the sqlite database
-	DB = getEnv("DB", "fiber.db")
+	// DB returns the path of the sqlite database, which also holds the sessions
+	DB = getEnv("DB", DefaultDB)
 
 	// PROXYHEADER is the header carrying the client IP when behind a reverse proxy, e.g. "X-Forwarded-For".
 	PROXYHEADER = getEnv("PROXY_HEADER", "")
