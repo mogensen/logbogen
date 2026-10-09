@@ -77,8 +77,8 @@ type CategoryLegendItem struct {
 	Color template.CSS
 }
 
-// heatmapLegend returns per-category legend items plus a "Flere kategorier" entry.
-func heatmapLegend() []CategoryLegendItem {
+// HeatmapLegend returns per-category legend items plus a "Flere kategorier" entry.
+func HeatmapLegend() []CategoryLegendItem {
 	items := make([]CategoryLegendItem, 0, len(types.AllActivityCategories)+1)
 	for _, cat := range types.AllActivityCategories {
 		hex := categoryColors[cat.ID]
@@ -262,7 +262,7 @@ func (s *UserService) GetUserHandler(ctx *fiber.Ctx) error {
 	return ctx.Render("users/user", fiber.Map{
 		"User":              *user,
 		"ActivityHeatmap":   activityHeatmap,
-		"HeatmapLegend":     heatmapLegend(),
+		"HeatmapLegend":     HeatmapLegend(),
 		"Categories":        types.AllActivityCategories,
 		"IsOwnProfile":      isOwnProfile,
 		"MemberSinceLabel":  formatMemberSince(user.MemberSince),

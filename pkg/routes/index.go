@@ -14,10 +14,19 @@ func HomeRoutes(app fiber.Router, userService *services.UserService, authMiddlew
 
 func IndexPage(userService *services.UserService) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		return c.Render("home/index", fiber.Map{
-			"User":       utils.GetUser(c),
+		user := utils.GetUser(c)
+
+		data := fiber.Map{
+			"User":       user,
 			"Categories": config.AllActivityCategories,
 			"Types":      config.AllActivityTypes,
-		})
+		}
+		if user != nil {
+			data["ActivityHeatmap"] = userService.GetUserActivityHeatmap(user)
+			data["HeatmapLegend"] = services.HeatmapLegend()
+			// The heatmap goes below the map on the front page, not in the profile header
+			data["HeatmapBelow"] = true
+		}
+		return c.Render("home/index", data)
 	}
 }

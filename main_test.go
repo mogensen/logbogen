@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -727,4 +728,41 @@ func TestScoreboardTableFollowsTheTheme(t *testing.T) {
 	client.AssertResponseNotContains(body, "table-light")
 	client.AssertResponseContains(css, "--bs-table-hover-bg: rgba(var(--bs-emphasis-color-rgb)")
 	client.AssertResponseContains(css, "--bs-table-bg: var(--bs-tertiary-bg)")
+}
+
+func TestActivityHeatmapOnTheFrontPage(t *testing.T) {
+	const heatmap = `class="activity-heatmap"`
+	client := NewTestClient(t)
+
+	t.Run("logged out visitors do not get it", func(t *testing.T) {
+		client.AssertResponseNotContains(client.GetResponseBody(client.Get("/")), heatmap)
+	})
+
+	client.CreateUser("Other User", "password")
+	email := client.CreateUser("Heatmap User", "password")
+	client.Login(email, "password")
+
+	t.Run("a user without activities has no heatmap", func(t *testing.T) {
+		client.AssertResponseNotContains(client.GetResponseBody(client.Get("/")), heatmap)
+	})
+
+	activity := randomActivity()
+	activity.Date = types.Date(time.Now().AddDate(0, 0, -3))
+	client.CreateActivity(activity)
+
+	t.Run("a logged in user gets it once, below the map", func(t *testing.T) {
+		body := client.GetResponseBody(client.Get("/"))
+
+		require.Equal(t, 1, strings.Count(body, heatmap))
+		require.Less(t, strings.Index(body, `id="user-show-map"`), strings.Index(body, heatmap), "heatmap is below the map")
+		client.AssertResponseContains(body, "activity-heatmap-legend")
+		client.AssertResponseContains(body, fmt.Sprintf(`<span class="activity-heatmap-year">'%02d</span>`, time.Now().Year()%100))
+	})
+
+	t.Run("the profile page still shows it once, in the profile", func(t *testing.T) {
+		body := client.GetResponseBody(client.Get("/users/2"))
+
+		require.Equal(t, 1, strings.Count(body, heatmap))
+		client.AssertResponseContains(body, "activity-heatmap-legend")
+	})
 }
