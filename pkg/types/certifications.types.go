@@ -11,15 +11,15 @@ import (
 type Certification struct {
 	ID              uuid.UUID         `json:"id" form:"id"`
 	UserID          *uint64           `json:"user_id" form:"user_id"`
-	CategoryID      string            `form:"category" validate:"required"`
+	CategoryID      string            `form:"category" validate:"required,max=50"`
 	Category        Category          `json:"category"`
-	TypeID          string            `form:"type" validate:"required_unless=CategoryID other"`
+	TypeID          string            `form:"type" validate:"required_unless=CategoryID other,max=50"`
 	Type            CertificationType `json:"type"`
-	OtherType       string            `json:"otherType" form:"otherType" validate:"required_if=Type other"`
-	Provider        string            `json:"provider" form:"provider"`
+	OtherType       string            `json:"otherType" form:"otherType" validate:"required_if=Type other,max=100"`
+	Provider        string            `json:"provider" form:"provider" validate:"max=100"`
 	StartDate       Date              `json:"start_date" form:"start_date"`
 	EndDate         Date              `json:"end_date" form:"end_date"`
-	ParticipantsIDs []uint64          `form:"participants"`
+	ParticipantsIDs []uint64          `form:"participants" validate:"max=50"`
 	Participants    []User            `json:"participants"`
 }
 

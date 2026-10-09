@@ -19,6 +19,9 @@ import (
 	slogfiber "github.com/samber/slog-fiber"
 )
 
+// maxBodyBytes caps the size of a request body
+const maxBodyBytes = 64 * 1024
+
 // Config holds the application configuration
 type Config struct {
 	ListenAddr  string
@@ -68,6 +71,7 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 		Views:             engine,
 		ViewsLayout:       "layouts/main",
 		PassLocalsToViews: true,
+		BodyLimit:         maxBodyBytes,
 	})
 
 	app.Use(slogfiber.New(cfg.Logger))

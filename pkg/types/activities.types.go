@@ -33,20 +33,20 @@ type Activity struct {
 	UserId   *uint64   `form:"user"`
 	User     User      `json:"user"`
 	Date     Date      `json:"date" form:"date"`
-	Lat      float64   `json:"lat" form:"lat"`
-	Lng      float64   `json:"lng" form:"lng"`
-	Location string    `json:"location" form:"location"`
+	Lat      float64   `json:"lat" form:"lat" validate:"gte=-90,lte=90"`
+	Lng      float64   `json:"lng" form:"lng" validate:"gte=-180,lte=180"`
+	Location string    `json:"location" form:"location" validate:"max=200"`
 
-	CategoryID string   `form:"category" validate:"required"`
+	CategoryID string   `form:"category" validate:"required,max=50"`
 	Category   Category `json:"category"`
 
-	TypeID    string       `form:"type" validate:"required_unless=CategoryID other"`
+	TypeID    string       `form:"type" validate:"required_unless=CategoryID other,max=50"`
 	Type      ActivityType `json:"type"`
-	OtherType string       `json:"otherType" form:"otherType" validate:"required_if=Type other"`
+	OtherType string       `json:"otherType" form:"otherType" validate:"required_if=Type other,max=100"`
 
-	Role            string    `json:"role" form:"role"`
-	Comment         string    `json:"comment" form:"comment"`
-	ParticipantsIDs []uint64  `form:"participants"`
+	Role            string    `json:"role" form:"role" validate:"max=100"`
+	Comment         string    `json:"comment" form:"comment" validate:"max=2000"`
+	ParticipantsIDs []uint64  `form:"participants" validate:"max=50"`
 	Participants    []User    `json:"participants"`
 	CreatedAt       time.Time `json:"createdAt" form:"createdAt"`
 	UpdatedAt       time.Time `json:"updatedAt" form:"updatedAt"`

@@ -2,6 +2,8 @@ package main
 
 import (
 	"math/rand"
+	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -123,4 +125,43 @@ func randomActivity() types.Activity {
 
 func randomDate() types.Date {
 	return types.Date(time.Now().AddDate(0, 0, rand.Intn(3650))) // Random date up to 10 years ago
+}
+
+func TestInputBounds(t *testing.T) {
+	client := NewTestClient(t)
+	email := client.CreateUser("Bounds User", "password")
+	client.Login(email, "password")
+
+	t.Run("oversized comment is rejected", func(t *testing.T) {
+		activity := randomActivity()
+		activity.Comment = strings.Repeat("a", 2001)
+		client.CreateActivity(activity)
+		require.Len(t, client.GetActivities(), 0)
+	})
+
+	t.Run("out of range coordinates are rejected", func(t *testing.T) {
+		activity := randomActivity()
+		activity.Lat = 91
+		client.CreateActivity(activity)
+		activity = randomActivity()
+		activity.Lng = -181
+		client.CreateActivity(activity)
+		require.Len(t, client.GetActivities(), 0)
+	})
+
+	t.Run("too many participants are rejected", func(t *testing.T) {
+		activity := randomActivity()
+		for i := uint64(0); i < 51; i++ {
+			activity.ParticipantsIDs = append(activity.ParticipantsIDs, i+10)
+		}
+		client.CreateActivity(activity)
+		require.Len(t, client.GetActivities(), 0)
+	})
+
+	t.Run("body above the limit is refused", func(t *testing.T) {
+		req := httptest.NewRequest("POST", "/activities/create", strings.NewReader(strings.Repeat("a", maxBodyBytes+1)))
+		req.Header.Add("Content-Type", "application/json")
+		_, err := client.app.Test(req, testRequestTimeout)
+		require.ErrorContains(t, err, "body size exceeds the given limit")
+	})
 }
