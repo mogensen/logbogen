@@ -17,8 +17,16 @@ Copy `.env.example` to `.env` and adjust settings before running.
 
 ## Make targets
 
-`make help` lists them: `build`, `test`, `run` and `lint`. `make lint` fails on unformatted files,
+`make help` lists them: `build`, `test`, `test-e2e`, `run` and `lint`. `make lint` fails on unformatted files,
 then runs `go vet` and `staticcheck`, which is installed into `.bin/` on first use. CI runs it too.
+
+## Browser tests
+
+`make test-e2e` runs [Playwright](https://github.com/playwright-community/playwright-go) tests in a real Chrome
+against the app, which catch what the Go tests cannot: content security policy violations, script errors and
+the JavaScript behavior (logout, the category filter, the scoreboard and the theme toggle). They need Google
+Chrome and network access, since the pages load their scripts, fonts, map tiles and avatars from public hosts.
+The first run downloads the Playwright driver, and the tests are left out of `make test`.
 
 ## Docker
 

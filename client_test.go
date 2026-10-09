@@ -53,11 +53,24 @@ type TestClient struct {
 
 // NewTestClient creates a new test client with an in-memory database
 func NewTestClient(t *testing.T, opts ...func(*Config)) *TestClient {
-	// Setup test database
+	app := newTestApp(t, opts...)
+
+	// Create cookie jar
+	jar, err := cookiejar.New(nil)
+	require.NoError(t, err)
+
+	return &TestClient{
+		app: app,
+		jar: jar,
+		t:   t,
+	}
+}
+
+// newTestApp creates the app on an in-memory database. DevMode enables the local dev-login bypass so
+// the suite never reaches Auth0, and the geocoder and weather services are fakes.
+func newTestApp(t *testing.T, opts ...func(*Config)) *fiber.App {
 	db := setupTestDB(t)
 
-	// Create test configuration. DevMode enables the local dev-login bypass so
-	// the suite never reaches Auth0.
 	cfg := &Config{
 		ListenAddr: "127.0.0.1:0",
 		ViewsPath:  "./views",
@@ -82,21 +95,9 @@ func NewTestClient(t *testing.T, opts ...func(*Config)) *TestClient {
 		opt(cfg)
 	}
 
-	// Setup app
 	app, err := setupApp(cfg)
 	require.NoError(t, err)
 
-	// Create cookie jar
-	jar, err := cookiejar.New(nil)
-	require.NoError(t, err)
-
-	client := &TestClient{
-		app: app,
-		jar: jar,
-		t:   t,
-	}
-
-	// Cleanup function
 	t.Cleanup(func() {
 		sqlDB, err := db.DB()
 		if err == nil {
@@ -104,7 +105,7 @@ func NewTestClient(t *testing.T, opts ...func(*Config)) *TestClient {
 		}
 	})
 
-	return client
+	return app
 }
 
 // Get makes a GET request to the specified path
