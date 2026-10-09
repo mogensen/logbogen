@@ -45,6 +45,8 @@ type Config struct {
 	KeyFile     string
 	DevMode     bool
 	// ProxyHeader and TrustedProxies make c.IP() resolve the real client behind a reverse proxy
+	// AuthRateLimit is the number of auth requests a client IP may make per minute
+	AuthRateLimit  int
 	ProxyHeader    string
 	TrustedProxies []string
 	Logger         *slog.Logger
@@ -58,6 +60,7 @@ func DefaultConfig() *Config {
 		AssetsPath: "./assets",
 		DevMode:    config.DEVMODE,
 
+		AuthRateLimit:  config.AUTHRATELIMIT,
 		ProxyHeader:    config.PROXYHEADER,
 		TrustedProxies: config.TRUSTEDPROXIES,
 		Logger:         slog.New(slog.NewTextHandler(os.Stdout, nil)),
@@ -165,7 +168,7 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 
 	// Route for the root path
 	routes.HomeRoutes(app, userService, authMiddleware)
-	routes.AuthRoutes(app, authService, cfg.DevMode)
+	routes.AuthRoutes(app, authService, cfg.DevMode, cfg.AuthRateLimit)
 	routes.UserRoutes(app, userService, authMiddleware)
 	routes.ActivitiesRoutes(app, activitiesService, authMiddleware)
 	routes.ScoreboardRoutes(app, scoreboardService, authMiddleware)

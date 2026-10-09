@@ -344,3 +344,40 @@ func TestErrorPagesHideInternals(t *testing.T) {
 		client.AssertResponseNotContains(body, "SELECT")
 	})
 }
+
+func TestAuthRateLimit(t *testing.T) {
+	client := NewTestClient(t, func(cfg *Config) { cfg.AuthRateLimit = 3 })
+
+	for i := 0; i < 3; i++ {
+		require.Equal(t, fiber.StatusOK, client.Get("/auth/login").StatusCode)
+	}
+
+	resp := client.Get("/auth/login")
+	require.Equal(t, fiber.StatusTooManyRequests, resp.StatusCode)
+	client.AssertResponseContains(client.GetResponseBody(resp), "For mange forsøg")
+
+	t.Run("other pages are not limited", func(t *testing.T) {
+		require.Equal(t, fiber.StatusOK, client.Get("/").StatusCode)
+	})
+}
+
+func TestAuthRateLimitIsPerClientIP(t *testing.T) {
+	client := NewTestClient(t, func(cfg *Config) {
+		cfg.AuthRateLimit = 1
+		cfg.ProxyHeader = "X-Forwarded-For"
+		cfg.TrustedProxies = []string{"0.0.0.0"}
+	})
+
+	getAs := func(ip string) int {
+		req := httptest.NewRequest("GET", "/auth/login", nil)
+		req.Header.Set("X-Forwarded-For", ip)
+		resp, err := client.app.Test(req, testRequestTimeout)
+		require.NoError(t, err)
+		return resp.StatusCode
+	}
+
+	require.Equal(t, fiber.StatusOK, getAs("203.0.113.1"))
+	require.Equal(t, fiber.StatusTooManyRequests, getAs("203.0.113.1"))
+	// A second client behind the same proxy is not locked out
+	require.Equal(t, fiber.StatusOK, getAs("203.0.113.2"))
+}

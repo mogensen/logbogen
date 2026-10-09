@@ -61,7 +61,9 @@ func NewTestClient(t *testing.T, opts ...func(*Config)) *TestClient {
 		ViewsPath:  "./views",
 		AssetsPath: "./assets",
 		DevMode:    true,
-		Logger:     slog.New(slog.NewTextHandler(os.Stdout, nil)),
+		// Tests log in many times from the same address
+		AuthRateLimit: 100000,
+		Logger:        slog.New(slog.NewTextHandler(os.Stdout, nil)),
 	}
 
 	for _, opt := range opts {

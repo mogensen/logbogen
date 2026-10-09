@@ -20,6 +20,9 @@ var (
 	// TRUSTEDPROXIES is a comma separated list of proxy IPs allowed to set PROXYHEADER.
 	TRUSTEDPROXIES = splitList(getEnv("TRUSTED_PROXIES", ""))
 
+	// AUTHRATELIMIT is the number of login, callback and logout requests allowed per client IP per minute.
+	AUTHRATELIMIT = getEnvInt("AUTH_RATE_LIMIT", 30)
+
 	// DEVMODE enables the local dev login bypass (no Auth0 tenant needed).
 	// Keep this false in production.
 	DEVMODE = getEnvBool("AUTH_DEV_MODE", false)
@@ -71,4 +74,17 @@ func splitList(value string) []string {
 		}
 	}
 	return items
+}
+
+func getEnvInt(name string, fallback int) int {
+	value, exists := os.LookupEnv(name)
+	if !exists {
+		return fallback
+	}
+
+	parsed, err := strconv.Atoi(value)
+	if err != nil || parsed <= 0 {
+		panic(fmt.Sprintf(`Environment variable %v must be a positive integer :: %v`, name, value))
+	}
+	return parsed
 }
