@@ -96,7 +96,6 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	engine.AddFunc("fmtDate", utils.FormatDate)
 	engine.AddFunc("fmtDateHuman", utils.FormatDateHuman)
 	engine.AddFunc("is_same_user", utils.IsSameUser)
-	engine.AddFunc("json", utils.ToJSON)
 	engine.AddFunc("firstSix", utils.FirstSix)
 	engine.AddFunc("userImage", utils.UserImage)
 	engine.AddFunc("ctxActivity", utils.CtxActivity)

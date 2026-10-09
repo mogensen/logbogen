@@ -381,3 +381,43 @@ func TestAuthRateLimitIsPerClientIP(t *testing.T) {
 	// A second client behind the same proxy is not locked out
 	require.Equal(t, fiber.StatusOK, getAs("203.0.113.2"))
 }
+
+func TestUserTextIsEscaped(t *testing.T) {
+	const payload = `<script>alert("xss")</script>`
+	const escaped = `&lt;script&gt;`
+
+	client := NewTestClient(t)
+	client.CreateUser("Other User", "password")
+	client.devLogin(payload, "xss-user@example.com")
+
+	activity := randomActivity()
+	activity.CategoryID = types.Other
+	activity.TypeID = ""
+	activity.OtherType = payload
+	activity.Role = payload
+	activity.Comment = payload
+	client.CreateActivity(activity)
+	activities := client.GetActivities()
+	require.Len(t, activities, 1)
+	id := activities[0].ID.String()
+
+	paths := []string{
+		"/activities/" + id,
+		"/activities/" + id + "/edit",
+		"/activities/list",
+		"/activities/pending",
+		"/users/" + "2",
+		"/scoreboard",
+		"/",
+	}
+	for _, path := range paths {
+		resp := client.Get(path)
+		require.Equal(t, fiber.StatusOK, resp.StatusCode, path)
+		body := client.GetResponseBody(resp)
+		client.AssertResponseNotContains(body, payload)
+		client.AssertResponseNotContains(body, `<script>alert`)
+		if path == "/activities/"+id {
+			client.AssertResponseContains(body, escaped)
+		}
+	}
+}

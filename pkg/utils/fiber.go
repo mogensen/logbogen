@@ -3,9 +3,7 @@ package utils
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
-	"html/template"
 	"log/slog"
 	"net/url"
 	"strings"
@@ -87,14 +85,6 @@ func IsSameUser(a, b *uint64) bool {
 	return *a == *b
 }
 
-func ToJSON(v []types.Activity) (template.HTML, error) {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return "", err
-	}
-	return template.HTML(string(b)), nil
-}
-
 func FirstSix(s []types.User) []types.User {
 	if len(s) > 6 {
 		return s[:6]
@@ -110,7 +100,7 @@ func UserImage(user types.User) string {
 	}
 	color := colors[hash%len(colors)]
 
-	fallBack := fmt.Sprintf("https://ui-avatars.com/api/%s/256/%s", user.Name, color)
+	fallBack := fmt.Sprintf("https://ui-avatars.com/api/%s/256/%s", url.PathEscape(user.Name), color)
 	encoded := url.QueryEscape(fallBack)
 	hasher := md5.Sum([]byte(strings.TrimSpace(user.Email)))
 	emailHash := hex.EncodeToString(hasher[:])
