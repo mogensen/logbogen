@@ -57,7 +57,7 @@ func NewWeatherService() *WeatherService {
 	return NewWeatherServiceWithBaseURLs(forecastBaseURL, archiveBaseURL)
 }
 
-// NewWeatherServiceWithBaseURLs creates a service that talks to other forecast and archive endpoints, like a test server
+// NewWeatherServiceWithBaseURLs creates a service for other forecast and archive endpoints, like a test server
 func NewWeatherServiceWithBaseURLs(forecastURL, archiveURL string) *WeatherService {
 	return &WeatherService{
 		client:      &http.Client{Timeout: weatherTimeout},

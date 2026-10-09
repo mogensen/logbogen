@@ -63,9 +63,8 @@ func setWeather(activity *dal.Activity, weather *types.Weather) {
 	activity.WeatherCode = &weather.Code
 }
 
-// weatherForView returns the weather to show for an activity. Stored weather is used as is. Today's
-// weather is looked up live, since it changes during the day, and a past day without stored weather
-// is looked up once and stored.
+// weatherForView returns the weather to show: stored weather as is, today's looked up live,
+// and a past day without stored weather looked up once and stored.
 func (s *ActivityService) weatherForView(activity *dal.Activity, userID uint64) *types.Weather {
 	if activity.WeatherTemperature != nil && activity.WeatherCode != nil {
 		return &types.Weather{Temperature: *activity.WeatherTemperature, Code: *activity.WeatherCode}

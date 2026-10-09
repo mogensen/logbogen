@@ -110,7 +110,7 @@ func getEnvPositiveInt(name string, fallback int) int {
 	return parsed
 }
 
-// getEnvPositiveDuration reads a positive duration like "30s" and falls back, with a warning, when it is unset or invalid
+// getEnvPositiveDuration reads a positive duration like "30s", and falls back with a warning when it is invalid
 func getEnvPositiveDuration(name string, fallback time.Duration) time.Duration {
 	value, exists := os.LookupEnv(name)
 	if !exists {

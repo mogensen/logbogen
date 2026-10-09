@@ -7,9 +7,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 )
 
-// contentSecurityPolicy allows the CDNs, map tiles and avatar hosts the pages load from.
+// contentSecurityPolicy allows the CDNs, map tiles and avatar hosts (Gravatar redirects through *.wp.com) in use.
 // Inline scripts and styles are used by the templates, so 'unsafe-inline' is still required.
-// Gravatar redirects the avatar fallback to ui-avatars through the *.wp.com image CDN, so img-src needs it too.
 var contentSecurityPolicy = strings.Join([]string{
 	"default-src 'self'",
 	"script-src 'self' 'unsafe-inline' https://code.jquery.com https://unpkg.com https://cdn.jsdelivr.net",
