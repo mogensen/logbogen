@@ -110,7 +110,7 @@ func (s *ActivityService) CreateActivity(c *fiber.Ctx) error {
 
 	_, err = s.activityDal.CreateActivity(activity)
 	if err != nil {
-		return fiber.NewError(fiber.StatusConflict, err.Error())
+		return utils.DBError(err)
 	}
 
 	return c.Redirect("/activities/" + activity.ID.String())
@@ -136,7 +136,7 @@ func (s *ActivityService) GetActivities(c *fiber.Ctx) error {
 func (s *ActivityService) GetActivitiesForUser(userId uint64) ([]*types.Activity, error) {
 	activities, err := s.activityDal.FindActivitiesByUser(userId)
 	if err != nil {
-		return nil, fiber.NewError(fiber.StatusConflict, err.Error())
+		return nil, utils.DBError(err)
 	}
 
 	userMap, err := s.getUserMap()
@@ -157,13 +157,13 @@ func (s *ActivityService) GetPendingActivitiesForUser(c *fiber.Ctx) error {
 	// Fetch pending activities (where user is a participant, but not the owner)
 	pendingActivities, err := s.activityDal.FindPendingActivitiesByUser(userID)
 	if err != nil {
-		return fiber.NewError(fiber.StatusConflict, err.Error())
+		return utils.DBError(err)
 	}
 
 	// Fetch all activities logged by the user
 	loggedActivities, err := s.activityDal.FindActivitiesByUser(userID)
 	if err != nil {
-		return fiber.NewError(fiber.StatusConflict, err.Error())
+		return utils.DBError(err)
 	}
 
 	userMap, err := s.getUserMap()
@@ -218,7 +218,7 @@ func (s *ActivityService) GetActivity(c *fiber.Ctx) error {
 		return c.JSON(&types.CreateDTO{})
 	}
 	if err != nil {
-		return fiber.NewError(fiber.StatusConflict, err.Error())
+		return utils.DBError(err)
 	}
 
 	userMap, err := s.getUserMap()
@@ -269,7 +269,7 @@ func (s *ActivityService) EditActivity(c *fiber.Ctx) error {
 		return c.JSON(&types.CreateDTO{})
 	}
 	if err != nil {
-		return fiber.NewError(fiber.StatusConflict, err.Error())
+		return utils.DBError(err)
 	}
 
 	userMap, err := s.getUserMap()
@@ -292,7 +292,7 @@ func (s *ActivityService) DeleteActivity(c *fiber.Ctx) error {
 
 	err := s.activityDal.DeleteActivity(activityID, utils.GetUser(c).ID)
 	if err != nil {
-		return fiber.NewError(fiber.StatusConflict, err.Error())
+		return utils.DBError(err)
 	}
 
 	return c.JSON(&types.MsgResponse{
@@ -342,7 +342,7 @@ func (s *ActivityService) UpdateActivity(c *fiber.Ctx) error {
 
 	_, err = s.activityDal.UpdateActivity(activityID, utils.GetUser(c).ID, activity)
 	if err != nil {
-		return fiber.NewError(fiber.StatusConflict, err.Error())
+		return utils.DBError(err)
 	}
 
 	return c.Redirect("/activities/" + activityID)
@@ -358,7 +358,7 @@ func (s *ActivityService) CloneActivity(c *fiber.Ctx) error {
 
 	activity, err := s.activityDal.FindActivityToClone(activityID, utils.GetUser(c).ID)
 	if err != nil {
-		return fiber.NewError(fiber.StatusConflict, err.Error())
+		return utils.DBError(err)
 	}
 
 	// Create a new activity with the same data but new ID and user
@@ -380,7 +380,7 @@ func (s *ActivityService) CloneActivity(c *fiber.Ctx) error {
 
 	_, err = s.activityDal.CreateActivity(newActivity)
 	if err != nil {
-		return fiber.NewError(fiber.StatusConflict, err.Error())
+		return utils.DBError(err)
 	}
 
 	return c.Redirect("/activities/" + newActivity.ID.String())

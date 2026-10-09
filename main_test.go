@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -285,5 +286,61 @@ func TestProxyConfig(t *testing.T) {
 			cfg.TrustedProxies = []string{"10.0.0.1"}
 		})
 		require.NotEqual(t, "203.0.113.7", got)
+	})
+}
+
+func TestErrorPagesHideInternals(t *testing.T) {
+	client := NewTestClient(t)
+	client.app.Get("/boom", func(c *fiber.Ctx) error {
+		return errors.New("Error 1146: table users_secret doesn't exist")
+	})
+	client.app.Get("/wrapped", func(c *fiber.Ctx) error {
+		return fiber.NewError(fiber.StatusInternalServerError, "sql: connection refused to db-host")
+	})
+	client.app.Get("/conflict", func(c *fiber.Ctx) error {
+		return fiber.NewError(fiber.StatusConflict, "Already exists")
+	})
+
+	t.Run("plain errors are hidden and return 500", func(t *testing.T) {
+		resp := client.Get("/boom")
+		require.Equal(t, fiber.StatusInternalServerError, resp.StatusCode)
+		body := client.GetResponseBody(resp)
+		client.AssertResponseNotContains(body, "users_secret")
+		client.AssertResponseContains(body, "Der opstod en fejl.")
+	})
+
+	t.Run("5xx fiber errors are hidden", func(t *testing.T) {
+		resp := client.Get("/wrapped")
+		require.Equal(t, fiber.StatusInternalServerError, resp.StatusCode)
+		client.AssertResponseNotContains(client.GetResponseBody(resp), "db-host")
+	})
+
+	t.Run("4xx fiber errors keep their message and status", func(t *testing.T) {
+		resp := client.Get("/conflict")
+		require.Equal(t, fiber.StatusConflict, resp.StatusCode)
+		client.AssertResponseContains(client.GetResponseBody(resp), "Already exists")
+	})
+
+	t.Run("unknown routes return 404", func(t *testing.T) {
+		require.Equal(t, fiber.StatusNotFound, client.Get("/no-such-page").StatusCode)
+	})
+
+	t.Run("validation errors do not echo field names or constraints", func(t *testing.T) {
+		email := client.CreateUser("Error User", "password")
+		client.Login(email, "password")
+		activity := randomActivity()
+		activity.Comment = strings.Repeat("secret-value", 200)
+		resp := client.CreateActivity(activity)
+		body := client.GetResponseBody(resp)
+		client.AssertResponseContains(body, `role="alert">Invalid input</div>`)
+		client.AssertResponseNotContains(body, "constraint")
+		client.AssertResponseNotContains(body, "`Comment`")
+	})
+
+	t.Run("missing records return 404 without driver text", func(t *testing.T) {
+		resp := client.Post("/activities/"+uuid.NewString()+"/delete", url.Values{})
+		body := client.GetResponseBody(resp)
+		client.AssertResponseNotContains(body, "record not found")
+		client.AssertResponseNotContains(body, "SELECT")
 	})
 }

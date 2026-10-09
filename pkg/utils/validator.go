@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -10,22 +12,22 @@ import (
 
 var validate = validator.New()
 
-// Validate validates the input struct
+// Validate validates the input struct. The details only go to the log, since they echo field names and values.
 func Validate(payload interface{}) *fiber.Error {
 	err := validate.Struct(payload)
 	if err != nil {
-		var errors []string
-		for _, err := range err.(validator.ValidationErrors) {
-			errors = append(
-				errors,
-				fmt.Sprintf("`%v` with value `%v` doesn't satisfy the `%v` constraint", err.Field(), err.Value(), err.Tag()),
-			)
+		var invalid validator.ValidationErrors
+		if errors.As(err, &invalid) {
+			var details []string
+			for _, fieldErr := range invalid {
+				details = append(details, fmt.Sprintf("%v:%v", fieldErr.Field(), fieldErr.Tag()))
+			}
+			slog.Warn("Validation failed", "fields", strings.Join(details, ","))
+		} else {
+			slog.Error("Validation error", "error", err)
 		}
 
-		return &fiber.Error{
-			Code:    fiber.StatusBadRequest,
-			Message: strings.Join(errors, ","),
-		}
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid input")
 	}
 
 	return nil

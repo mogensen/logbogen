@@ -222,7 +222,7 @@ func (s *UserService) GetUsersHandler(ctx *fiber.Ctx) error {
 	currentUser := utils.GetUser(ctx)
 	resp, err := s.GetUsers(currentUser.ID)
 	if err != nil {
-		return fiber.NewError(fiber.StatusConflict, err.Error())
+		return utils.DBError(err)
 	}
 
 	return ctx.JSON(resp.Users)
@@ -243,7 +243,7 @@ func (s *UserService) GetUserHandler(ctx *fiber.Ctx) error {
 	user, err := s.GetUserByID(userId)
 	if err != nil {
 		slog.Error("Failed to get user by ID", "error", err)
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return utils.DBError(err)
 	}
 
 	activityHeatmap := s.GetUserActivityHeatmap(user)

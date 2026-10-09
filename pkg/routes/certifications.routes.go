@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"log/slog"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -63,9 +64,10 @@ func CertificationRoutes(app *fiber.App, certService *services.CertificationServ
 		cert.ID = uuid.New()
 
 		if _, err := certService.CreateCertification(cert); err != nil {
+			slog.Error("Failed to create certification", "error", err)
 			return c.Render("certifications/create", fiber.Map{
 				"Cert":  cert,
-				"error": err.Error(),
+				"error": "Error creating certification",
 			})
 		}
 		return c.Redirect("/certifications/" + cert.ID.String())
