@@ -766,3 +766,62 @@ func TestActivityHeatmapOnTheFrontPage(t *testing.T) {
 		client.AssertResponseContains(body, "activity-heatmap-legend")
 	})
 }
+
+// profileStats reads the number of every stat in the profile header, keyed by its label
+func profileStats(t *testing.T, body string) map[string]string {
+	stat := regexp.MustCompile(`<div class="profile-header-stat-num">(.*?)</div>\s*<div class="profile-header-stat-lbl">(.*?)</div>`)
+	tags := regexp.MustCompile(`<[^>]+>`)
+
+	stats := map[string]string{}
+	for _, match := range stat.FindAllStringSubmatch(body, -1) {
+		stats[match[2]] = tags.ReplaceAllString(match[1], "")
+	}
+	require.NotEmpty(t, stats, "no profile header stats found")
+	return stats
+}
+
+func TestFrontPageShowsTheProfileHeaderStats(t *testing.T) {
+	client := NewTestClient(t)
+	client.CreateUser("Other User", "password")
+	email := client.CreateUser("Stats User", "password")
+	client.Login(email, "password")
+
+	t.Run("a new user starts at zero", func(t *testing.T) {
+		body := client.GetResponseBody(client.Get("/"))
+
+		stats := profileStats(t, body)
+		require.Equal(t, "0", stats["Aktiviteter"])
+		require.Equal(t, fmt.Sprintf("0/%d", len(types.AllActivityTypes)), stats["Achievements"], "total number of achievements")
+		require.Equal(t, "0", stats["Certifikater"])
+		client.AssertResponseContains(body, "Min profil")
+	})
+
+	activity := randomActivity()
+	activity.Date = types.Date(time.Now().AddDate(0, 0, -3))
+	client.CreateActivity(activity)
+	userID := uint64(2)
+	cert := types.Certification{
+		UserID:     &userID,
+		CategoryID: config.AllCertificationCategories[0].ID,
+		TypeID:     config.AllCertificationTypes[0].ID,
+		Provider:   "Falk",
+		StartDate:  types.Date(time.Now().AddDate(-1, 0, 0)),
+		EndDate:    types.Date(time.Now().AddDate(1, 0, 0)),
+	}
+	require.Equal(t, fiber.StatusFound, client.PostJSON("/certifications/create", cert).StatusCode)
+
+	t.Run("the numbers follow the user's activities, achievements and certificates", func(t *testing.T) {
+		front := profileStats(t, client.GetResponseBody(client.Get("/")))
+
+		require.Equal(t, "1", front["Aktiviteter"])
+		require.Equal(t, "1", front["Certifikater"])
+		require.Equal(t, fmt.Sprintf("1/%d", len(types.AllActivityTypes)), front["Achievements"])
+	})
+
+	t.Run("the front page and the profile page agree", func(t *testing.T) {
+		front := profileStats(t, client.GetResponseBody(client.Get("/")))
+		profile := profileStats(t, client.GetResponseBody(client.Get("/users/2")))
+
+		require.Equal(t, profile, front)
+	})
+}

@@ -231,6 +231,26 @@ func (s *UserService) GetUsersHandler(ctx *fiber.Ctx) error {
 	return ctx.JSON(resp.Users)
 }
 
+// ProfileData returns what the profile header and the activity heatmap need for user, as seen by viewer.
+// The profile page and the front page share it.
+func (s *UserService) ProfileData(viewer *types.User, user *types.User) fiber.Map {
+	certs, err := s.certificationDal.GetCertificationsByUser(user.ID)
+	if err != nil {
+		slog.Error("Failed to get certifications for user", "error", err, "userID", user.ID)
+		certs = nil
+	}
+
+	return fiber.Map{
+		"User":              *user,
+		"ActivityHeatmap":   s.GetUserActivityHeatmap(user),
+		"HeatmapLegend":     HeatmapLegend(),
+		"IsOwnProfile":      viewer != nil && viewer.ID == user.ID,
+		"MemberSinceLabel":  formatMemberSince(user.MemberSince),
+		"TotalAchievements": len(types.AllActivityTypes),
+		"CertCount":         len(certs),
+	}
+}
+
 // GetUserHandler handles the get user HTTP request
 func (s *UserService) GetUserHandler(ctx *fiber.Ctx) error {
 	userIdParam := ctx.Params("UserID")
@@ -249,26 +269,9 @@ func (s *UserService) GetUserHandler(ctx *fiber.Ctx) error {
 		return utils.DBError(err)
 	}
 
-	activityHeatmap := s.GetUserActivityHeatmap(user)
-	currentUser := utils.GetUser(ctx)
-	isOwnProfile := currentUser != nil && currentUser.ID == userId
-
-	certs, err := s.certificationDal.GetCertificationsByUser(userId)
-	if err != nil {
-		slog.Error("Failed to get certifications for user", "error", err, "userID", userId)
-		certs = nil
-	}
-
-	return ctx.Render("users/user", fiber.Map{
-		"User":              *user,
-		"ActivityHeatmap":   activityHeatmap,
-		"HeatmapLegend":     HeatmapLegend(),
-		"Categories":        types.AllActivityCategories,
-		"IsOwnProfile":      isOwnProfile,
-		"MemberSinceLabel":  formatMemberSince(user.MemberSince),
-		"TotalAchievements": len(types.AllActivityTypes),
-		"CertCount":         len(certs),
-	})
+	data := s.ProfileData(utils.GetUser(ctx), user)
+	data["Categories"] = types.AllActivityCategories
+	return ctx.Render("users/user", data)
 }
 
 // UpdateUser updates a user's properties

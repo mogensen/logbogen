@@ -16,17 +16,17 @@ func IndexPage(userService *services.UserService) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		user := utils.GetUser(c)
 
-		data := fiber.Map{
-			"User":       user,
-			"Categories": config.AllActivityCategories,
-			"Types":      config.AllActivityTypes,
-		}
+		data := fiber.Map{}
 		if user != nil {
-			data["ActivityHeatmap"] = userService.GetUserActivityHeatmap(user)
-			data["HeatmapLegend"] = services.HeatmapLegend()
+			data = userService.ProfileData(user, user)
 			// The heatmap goes below the map on the front page, not in the profile header
 			data["HeatmapBelow"] = true
 		}
+		if user == nil {
+			data["User"] = user
+		}
+		data["Categories"] = config.AllActivityCategories
+		data["Types"] = config.AllActivityTypes
 		return c.Render("home/index", data)
 	}
 }
