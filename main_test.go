@@ -696,7 +696,7 @@ func TestScoreboardRanksUsersWithPoints(t *testing.T) {
 	body := client.GetResponseBody(client.Get("/scoreboard"))
 
 	// The rank is the first cell of each row, the user cell follows it
-	rankCell := regexp.MustCompile(`<tr>\s*<td>(\d+)</td>\s*<td>\s*<div class="d-flex align-items-center">`)
+	rankCell := regexp.MustCompile(`<tr data-href="/users/\d+/">\s*<td>(\d+)</td>\s*<td>\s*<div class="d-flex align-items-center">`)
 	var ranks []string
 	for _, match := range rankCell.FindAllStringSubmatch(body, -1) {
 		ranks = append(ranks, match[1])
@@ -704,6 +704,18 @@ func TestScoreboardRanksUsersWithPoints(t *testing.T) {
 	require.Equal(t, []string{"1", "2"}, ranks, "places start at 1")
 	require.Less(t, strings.Index(body, "Second User"), strings.Index(body, "First User"), "most points on top")
 	client.AssertResponseNotContains(body, "Third User")
+
+	t.Run("the whole row links to the user", func(t *testing.T) {
+		client.AssertResponseContains(body, `<tr data-href="/users/1/">`)
+		client.AssertResponseContains(body, `<tr data-href="/users/2/">`)
+		client.AssertResponseContains(body, `<script src="/js/clickable-rows.js"></script>`)
+		// The name stays a real link for keyboard and middle click use
+		client.AssertResponseContains(body, `<a href="/users/2/">`)
+
+		resp := client.Get("/js/clickable-rows.js")
+		require.Equal(t, fiber.StatusOK, resp.StatusCode)
+		client.AssertResponseContains(client.GetResponseBody(resp), "tr[data-href]")
+	})
 }
 
 func TestScoreboardTableFollowsTheTheme(t *testing.T) {

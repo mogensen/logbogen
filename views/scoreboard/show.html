@@ -13,7 +13,7 @@
             </thead>
             <tbody>
                 {{range $stat := .UserStats}}
-                <tr>
+                <tr data-href="/users/{{ $stat.User.ID }}/">
                     <td>{{ $stat.Rank }}</td>
                     <td>
                         <div class="d-flex align-items-center">

@@ -524,3 +524,7 @@ main {
   --bs-table-bg: var(--bs-tertiary-bg);
   --bs-table-color: var(--bs-body-color);
 }
+
+tr[data-href] {
+  cursor: pointer;
+}
