@@ -73,3 +73,9 @@ func TestValidateAuthConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestFormActionOrigins(t *testing.T) {
+	require.Equal(t, []string{"https://tenant.eu.auth0.com"}, formActionOrigins(false, "tenant.eu.auth0.com"))
+	require.Empty(t, formActionOrigins(true, "tenant.eu.auth0.com"), "dev mode logs out locally")
+	require.Empty(t, formActionOrigins(false, ""))
+}

@@ -128,7 +128,7 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 
 	app.Static("/", cfg.AssetsPath)
 	// Registered after Static, which resets the response headers for "/"
-	app.Use(middleware.SecurityHeaders())
+	app.Use(middleware.SecurityHeaders(formActionOrigins(cfg.DevMode, auth0Config.Domain)...))
 
 	// CSRF tokens are checked on every unsafe request, from the header (fetch/ajax) or the _csrf form field
 	app.Use(csrf.New(csrf.Config{

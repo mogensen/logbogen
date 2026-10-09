@@ -64,3 +64,12 @@ func validateAuthConfig(cfg *Config, auth0 auth.Config, allowDevMode bool) error
 	}
 	return nil
 }
+
+// formActionOrigins lists the origins a form post may redirect to. Logout posts a form and then redirects
+// to Auth0 to end the Auth0 session too, which the form-action policy would otherwise block.
+func formActionOrigins(devMode bool, auth0Domain string) []string {
+	if devMode || auth0Domain == "" {
+		return nil
+	}
+	return []string{"https://" + auth0Domain}
+}
