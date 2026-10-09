@@ -15,6 +15,17 @@ The server starts at `http://127.0.0.1:3000` by default.
 
 Copy `.env.example` to `.env` and adjust settings before running.
 
+## Docker
+
+```bash
+docker build -t logbogen .
+docker run -p 3000:3000 -v logbogen-data:/app/data --env-file .env logbogen
+```
+
+The image listens on `0.0.0.0:3000` (`LISTEN_ADDR`), runs as a non-root user and keeps the
+database and sessions in `/app/data`, which is the directory to mount as a volume. It runs
+against real Auth0, so set the `AUTH0_*` variables, and put a TLS reverse proxy in front of it.
+
 ## Data
 
 The SQLite database (including sessions) is stored in `./data/logbog.db`, or the path in `DB`.

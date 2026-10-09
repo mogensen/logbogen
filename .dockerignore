@@ -1,0 +1,13 @@
+.git
+.github
+.claude
+.bin
+tmp
+data
+.env
+.env.example
+*.db
+*.md
+.DS_Store
+Dockerfile
+.dockerignore

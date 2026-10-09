@@ -9,10 +9,15 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
+// DefaultListenAddr only accepts local connections, containers set LISTEN_ADDR to listen on all interfaces
+const DefaultListenAddr = "127.0.0.1:3000"
+
 // DefaultDB is the sqlite file used when DB is not set, inside a directory that can be mounted as a volume
 const DefaultDB = "./data/logbog.db"
 
 var (
+	// LISTENADDR is the host and port the server listens on.
+	LISTENADDR = getEnv("LISTEN_ADDR", DefaultListenAddr)
 	// PORT returns the server listening port
 	PORT = getEnv("PORT", "5000")
 	// DB returns the path of the sqlite database, which also holds the sessions

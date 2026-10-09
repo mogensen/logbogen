@@ -55,7 +55,7 @@ type Config struct {
 // DefaultConfig returns the default configuration
 func DefaultConfig() *Config {
 	return &Config{
-		ListenAddr: "127.0.0.1:3000",
+		ListenAddr: config.LISTENADDR,
 		ViewsPath:  "./views",
 		AssetsPath: "./assets",
 		DevMode:    config.DEVMODE,
