@@ -19,6 +19,7 @@ func ErrorHandler(c *fiber.Ctx, err error) error {
 		code = e.Code
 	}
 
+	c.Status(code)
 	return c.Render("errors/error", fiber.Map{
 		"Error": err.Error(),
 		"Code":  code,

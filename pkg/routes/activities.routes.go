@@ -21,5 +21,5 @@ func ActivitiesRoutes(app fiber.Router, activityService *services.ActivityServic
 	r.Post("/:ActivityID", activityService.UpdateActivity)
 	r.Post("/:ActivityID/delete", activityService.DeleteActivity)
 
-	r.Get("/clone/:ActivityID", activityService.CloneActivity)
+	r.Post("/clone/:ActivityID", activityService.CloneActivity)
 }

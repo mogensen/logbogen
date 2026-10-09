@@ -2,12 +2,15 @@ package main
 
 import (
 	"math/rand"
+	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/mogensen/logbook/pkg/config"
 	"github.com/mogensen/logbook/pkg/types"
 	"github.com/stretchr/testify/require"
@@ -129,6 +132,8 @@ func randomDate() types.Date {
 
 func TestInputBounds(t *testing.T) {
 	client := NewTestClient(t)
+	// The default participant ids 1 and 2 must refer to existing users
+	client.CreateUser("Other User", "password")
 	email := client.CreateUser("Bounds User", "password")
 	client.Login(email, "password")
 
@@ -163,5 +168,73 @@ func TestInputBounds(t *testing.T) {
 		req.Header.Add("Content-Type", "application/json")
 		_, err := client.app.Test(req, testRequestTimeout)
 		require.ErrorContains(t, err, "body size exceeds the given limit")
+	})
+
+	t.Run("a valid activity is accepted", func(t *testing.T) {
+		client.CreateActivity(randomActivity())
+		require.Len(t, client.GetActivities(), 1)
+	})
+}
+
+func TestCSRF(t *testing.T) {
+	client := NewTestClient(t)
+	client.CreateUser("Other User", "password")
+	email := client.CreateUser("CSRF User", "password")
+	client.Login(email, "password")
+	client.CreateActivity(randomActivity())
+	activities := client.GetActivities()
+	require.Len(t, activities, 1)
+
+	// rawPost sends a form POST with the session cookies but no automatic CSRF token
+	rawPost := func(path string, header http.Header, form url.Values) *http.Response {
+		req := httptest.NewRequest("POST", path, strings.NewReader(form.Encode()))
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+		for key, values := range header {
+			req.Header[key] = values
+		}
+		u, _ := url.Parse("http://localhost")
+		for _, cookie := range client.jar.Cookies(u) {
+			req.AddCookie(cookie)
+		}
+		resp, err := client.app.Test(req, testRequestTimeout)
+		require.NoError(t, err)
+		return resp
+	}
+
+	t.Run("POST without a token is forbidden", func(t *testing.T) {
+		resp := rawPost("/activities/"+activities[0].ID.String()+"/delete", nil, url.Values{})
+		require.Equal(t, fiber.StatusForbidden, resp.StatusCode)
+		require.Len(t, client.GetActivities(), 1)
+	})
+
+	t.Run("POST with a wrong token is forbidden", func(t *testing.T) {
+		resp := rawPost("/users/theme", http.Header{"X-Csrf-Token": {"wrong"}}, url.Values{})
+		require.Equal(t, fiber.StatusForbidden, resp.StatusCode)
+	})
+
+	t.Run("form field token is accepted", func(t *testing.T) {
+		form := url.Values{"_csrf": {client.csrfToken()}}
+		resp := rawPost("/activities/"+activities[0].ID.String()+"/delete", nil, form)
+		require.Equal(t, fiber.StatusOK, resp.StatusCode)
+		require.Len(t, client.GetActivities(), 0)
+	})
+
+	t.Run("logout and clone no longer accept GET", func(t *testing.T) {
+		require.Equal(t, fiber.StatusMethodNotAllowed, client.Get("/auth/logout").StatusCode)
+		require.Equal(t, fiber.StatusMethodNotAllowed, client.Get("/activities/clone/"+uuid.NewString()).StatusCode)
+		// Still logged in
+		require.Equal(t, fiber.StatusOK, client.Get("/activities/list").StatusCode)
+	})
+
+	t.Run("forms and layout carry the token", func(t *testing.T) {
+		token := client.csrfToken()
+		for _, path := range []string{"/", "/activities/create", "/certifications/create"} {
+			body := client.GetResponseBody(client.Get(path))
+			client.AssertResponseContains(body, `<meta name="csrf-token" content="`+token+`">`)
+		}
+		for _, path := range []string{"/activities/create", "/certifications/create"} {
+			body := client.GetResponseBody(client.Get(path))
+			client.AssertResponseContains(body, `name="_csrf" value="`+token+`"`)
+		}
 	})
 }

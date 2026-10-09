@@ -1,3 +1,28 @@
+// CSRF token for fetch/ajax calls, rendered into the page by the layout
+window.csrfToken = function () {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.content : '';
+};
+
+// Links with data-post submit a POST form carrying the CSRF token instead of navigating
+document.addEventListener('click', function (e) {
+    const link = e.target.closest('a[data-post]');
+    if (!link) {
+        return;
+    }
+    e.preventDefault();
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = link.dataset.post;
+    const token = document.createElement('input');
+    token.type = 'hidden';
+    token.name = '_csrf';
+    token.value = window.csrfToken();
+    form.appendChild(token);
+    document.body.appendChild(form);
+    form.submit();
+});
+
 // require("expose-loader?$!expose-loader?jQuery!jquery");
 // require("bootstrap/dist/js/bootstrap.bundle.js");
 // require("@fortawesome/fontawesome-free/js/all.js");
@@ -390,7 +415,7 @@ $(() => {
         var id = $(this).data('recordId');
 
         $modalDiv.addClass('loading');
-        $.post('/activities/' + id + '/delete').then(function () {
+        $.ajax({ method: 'POST', url: '/activities/' + id + '/delete', headers: { 'X-Csrf-Token': window.csrfToken() } }).then(function () {
             location.href = '/activities/list';
         });
     });

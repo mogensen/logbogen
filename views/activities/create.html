@@ -85,6 +85,7 @@
 </style>
 
 <form method="POST" action="/activities/create" id="activity-form" class="act-edit-wrap needs-validation" novalidate>
+  <input type="hidden" name="_csrf" value="{{ .csrf }}">
   <input type="hidden" id="activity-lat" name="lat" value="{{.Activity.Lat}}">
   <input type="hidden" id="activity-lng" name="lng" value="{{.Activity.Lng}}">
 

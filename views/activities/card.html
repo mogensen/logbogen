@@ -5,7 +5,7 @@
   {{ if (is_same_user $user $activity.User.ID) }}
     <a href="/activities/{{ $activity.ID }}" style="text-decoration: none; color: inherit;">
   {{ else }}
-    <a href="/activities/clone/{{ $activity.ID }}" style="text-decoration: none; color: inherit;">
+    <a href="#" data-post="/activities/clone/{{ $activity.ID }}" style="text-decoration: none; color: inherit;">
   {{end}}
     <div class="userInfo">
       <div class="d-flex">

@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await fetch('/users/theme', {
                 method: 'POST',
                 body: JSON.stringify({ theme: newTheme }),
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json', 'X-Csrf-Token': window.csrfToken() }
             });
         } catch (err) {
             console.error('Failed to update theme:', err);

@@ -4,8 +4,10 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/csrf"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/template/html/v2"
 	"github.com/mogensen/logbook/pkg/auth"
@@ -21,6 +23,17 @@ import (
 
 // maxBodyBytes caps the size of a request body
 const maxBodyBytes = 64 * 1024
+
+// csrfToken reads the CSRF token from the X-Csrf-Token header, falling back to the _csrf form field
+func csrfToken(c *fiber.Ctx) (string, error) {
+	if token := c.Get("X-Csrf-Token"); token != "" {
+		return token, nil
+	}
+	if token := c.FormValue("_csrf"); token != "" {
+		return token, nil
+	}
+	return "", csrf.ErrTokenNotFound
+}
 
 // Config holds the application configuration
 type Config struct {
@@ -80,6 +93,17 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	app.Use(recover.New(recover.Config{EnableStackTrace: true, StackTraceHandler: recover.ConfigDefault.StackTraceHandler}))
 
 	app.Static("/", cfg.AssetsPath)
+
+	// CSRF tokens are checked on every unsafe request, from the header (fetch/ajax) or the _csrf form field
+	app.Use(csrf.New(csrf.Config{
+		Extractor:      csrfToken,
+		CookieName:     "csrf_",
+		CookieSameSite: "Lax",
+		CookieSecure:   !cfg.DevMode,
+		CookieHTTPOnly: true,
+		Expiration:     time.Hour,
+		ContextKey:     "csrf",
+	}))
 
 	// Data Layer
 	userDal := dal.NewUserDal(database.DB)

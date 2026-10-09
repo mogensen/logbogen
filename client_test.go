@@ -108,10 +108,26 @@ func (tc *TestClient) Get(path string) *http.Response {
 	return resp
 }
 
+// csrfToken returns the CSRF token cookie, visiting the home page first when none has been issued yet
+func (tc *TestClient) csrfToken() string {
+	u, _ := url.Parse("http://localhost")
+	for attempt := 0; attempt < 2; attempt++ {
+		for _, cookie := range tc.jar.Cookies(u) {
+			if cookie.Name == "csrf_" {
+				return cookie.Value
+			}
+		}
+		tc.Get("/")
+	}
+	require.Fail(tc.t, "no CSRF token was issued")
+	return ""
+}
+
 // Post makes a POST request to the specified path with form data
 func (tc *TestClient) Post(path string, formData url.Values) *http.Response {
 	req := httptest.NewRequest("POST", path, strings.NewReader(formData.Encode()))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("X-Csrf-Token", tc.csrfToken())
 
 	// Add cookies
 	u, _ := url.Parse("http://localhost")
@@ -135,6 +151,7 @@ func (tc *TestClient) PostJSON(path string, data interface{}) *http.Response {
 
 	req := httptest.NewRequest("POST", path, strings.NewReader(string(jsonData)))
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("X-Csrf-Token", tc.csrfToken())
 
 	// Add cookies
 	u, _ := url.Parse("http://localhost")
@@ -179,7 +196,7 @@ func (tc *TestClient) Login(email, password string) {
 
 // Logout logs out the current user
 func (tc *TestClient) Logout() {
-	resp := tc.Get("/auth/logout")
+	resp := tc.Post("/auth/logout", url.Values{})
 	require.Equal(tc.t, fiber.StatusFound, resp.StatusCode)
 	require.Equal(tc.t, "/", resp.Header.Get("Location"))
 }
