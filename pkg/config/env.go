@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -13,6 +14,11 @@ var (
 	PORT = getEnv("PORT", "5000")
 	// DB returns the name of the sqlite database
 	DB = getEnv("DB", "fiber.db")
+
+	// PROXYHEADER is the header carrying the client IP when behind a reverse proxy, e.g. "X-Forwarded-For".
+	PROXYHEADER = getEnv("PROXY_HEADER", "")
+	// TRUSTEDPROXIES is a comma separated list of proxy IPs allowed to set PROXYHEADER.
+	TRUSTEDPROXIES = splitList(getEnv("TRUSTED_PROXIES", ""))
 
 	// DEVMODE enables the local dev login bypass (no Auth0 tenant needed).
 	// Keep this false in production.
@@ -52,4 +58,14 @@ func getEnvBool(name string, fallback bool) bool {
 		panic(fmt.Sprintf(`Environment variable %v must be a boolean :: %v`, name, value))
 	}
 	return parsed
+}
+
+func splitList(value string) []string {
+	var items []string
+	for _, item := range strings.Split(value, ",") {
+		if item = strings.TrimSpace(item); item != "" {
+			items = append(items, item)
+		}
+	}
+	return items
 }

@@ -50,7 +50,7 @@ type TestClient struct {
 }
 
 // NewTestClient creates a new test client with an in-memory database
-func NewTestClient(t *testing.T) *TestClient {
+func NewTestClient(t *testing.T, opts ...func(*Config)) *TestClient {
 	// Setup test database
 	db := setupTestDB(t)
 
@@ -62,6 +62,10 @@ func NewTestClient(t *testing.T) *TestClient {
 		AssetsPath: "./assets",
 		DevMode:    true,
 		Logger:     slog.New(slog.NewTextHandler(os.Stdout, nil)),
+	}
+
+	for _, opt := range opts {
+		opt(cfg)
 	}
 
 	// Setup app

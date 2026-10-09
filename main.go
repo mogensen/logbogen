@@ -44,7 +44,10 @@ type Config struct {
 	CertFile    string
 	KeyFile     string
 	DevMode     bool
-	Logger      *slog.Logger
+	// ProxyHeader and TrustedProxies make c.IP() resolve the real client behind a reverse proxy
+	ProxyHeader    string
+	TrustedProxies []string
+	Logger         *slog.Logger
 }
 
 // DefaultConfig returns the default configuration
@@ -54,7 +57,10 @@ func DefaultConfig() *Config {
 		ViewsPath:  "./views",
 		AssetsPath: "./assets",
 		DevMode:    config.DEVMODE,
-		Logger:     slog.New(slog.NewTextHandler(os.Stdout, nil)),
+
+		ProxyHeader:    config.PROXYHEADER,
+		TrustedProxies: config.TRUSTEDPROXIES,
+		Logger:         slog.New(slog.NewTextHandler(os.Stdout, nil)),
 	}
 }
 
@@ -87,12 +93,21 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 		ViewsLayout:       "layouts/main",
 		PassLocalsToViews: true,
 		BodyLimit:         maxBodyBytes,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
+
+		ProxyHeader:             cfg.ProxyHeader,
+		EnableTrustedProxyCheck: len(cfg.TrustedProxies) > 0,
+		TrustedProxies:          cfg.TrustedProxies,
 	})
 
 	app.Use(slogfiber.New(cfg.Logger))
 	app.Use(recover.New(recover.Config{EnableStackTrace: true, StackTraceHandler: recover.ConfigDefault.StackTraceHandler}))
 
 	app.Static("/", cfg.AssetsPath)
+	// Registered after Static, which resets the response headers for "/"
+	app.Use(middleware.SecurityHeaders())
 
 	// CSRF tokens are checked on every unsafe request, from the header (fetch/ajax) or the _csrf form field
 	app.Use(csrf.New(csrf.Config{

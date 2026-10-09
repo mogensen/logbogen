@@ -238,3 +238,52 @@ func TestCSRF(t *testing.T) {
 		}
 	})
 }
+
+func TestSecurityHeaders(t *testing.T) {
+	client := NewTestClient(t)
+	email := client.CreateUser("Header User", "password")
+	client.Login(email, "password")
+
+	for _, path := range []string{"/", "/activities/list", "/does-not-exist"} {
+		resp := client.Get(path)
+		require.Equal(t, "DENY", resp.Header.Get("X-Frame-Options"), path)
+		require.Equal(t, "nosniff", resp.Header.Get("X-Content-Type-Options"), path)
+		require.Equal(t, "strict-origin-when-cross-origin", resp.Header.Get("Referrer-Policy"), path)
+		csp := resp.Header.Get("Content-Security-Policy")
+		require.Contains(t, csp, "default-src 'self'", path)
+		require.Contains(t, csp, "frame-ancestors 'none'", path)
+		require.Contains(t, csp, "https://unpkg.com", path)
+	}
+}
+
+func TestProxyConfig(t *testing.T) {
+	clientIP := func(t *testing.T, opts ...func(*Config)) string {
+		client := NewTestClient(t, opts...)
+		client.app.Get("/ip", func(c *fiber.Ctx) error { return c.SendString(c.IP()) })
+		req := httptest.NewRequest("GET", "/ip", nil)
+		req.Header.Set("X-Forwarded-For", "203.0.113.7")
+		resp, err := client.app.Test(req, testRequestTimeout)
+		require.NoError(t, err)
+		return client.GetResponseBody(resp)
+	}
+
+	t.Run("forwarded header is ignored by default", func(t *testing.T) {
+		require.NotEqual(t, "203.0.113.7", clientIP(t))
+	})
+
+	t.Run("forwarded header is used for a trusted proxy", func(t *testing.T) {
+		got := clientIP(t, func(cfg *Config) {
+			cfg.ProxyHeader = "X-Forwarded-For"
+			cfg.TrustedProxies = []string{"0.0.0.0"}
+		})
+		require.Equal(t, "203.0.113.7", got)
+	})
+
+	t.Run("forwarded header is ignored for an untrusted proxy", func(t *testing.T) {
+		got := clientIP(t, func(cfg *Config) {
+			cfg.ProxyHeader = "X-Forwarded-For"
+			cfg.TrustedProxies = []string{"10.0.0.1"}
+		})
+		require.NotEqual(t, "203.0.113.7", got)
+	})
+}
