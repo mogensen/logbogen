@@ -664,3 +664,22 @@ func TestStoredWeather(t *testing.T) {
 		client.AssertResponseContains(view(client, activities[0]), "Edited")
 	})
 }
+
+func TestFooterCreditsTheImageAuthors(t *testing.T) {
+	client := NewTestClient(t)
+	body := client.GetResponseBody(client.Get("/"))
+
+	for _, credit := range []string{
+		"Hammock icons created by Icon.doit - Flaticon",
+		"Mushroom icons created by Freepik - Flaticon",
+		"Berries icons created by Freepik - Flaticon",
+		"Spices icons created by Freepik - Flaticon",
+		"Harvest icons created by iconixar - Flaticon",
+		"Reminder icons created by Freepik - Flaticon",
+		"Kayak icons created by Freepik - Flaticon",
+		"Photo by Laura Chouette",
+		"Weather data by Open-Meteo.com",
+	} {
+		client.AssertResponseContains(body, credit)
+	}
+}
