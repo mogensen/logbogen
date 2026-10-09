@@ -33,11 +33,16 @@ func init() {
 		Storage:        storage,
 		Expiration:     30 * time.Minute, // Expire sessions after 30 minutes of inactivity
 		KeyLookup:      "cookie:session", // Removed __Host- prefix
-		CookieSecure:   false,            // Set to false for non-TLS
+		CookieSecure:   true,
 		CookieHTTPOnly: true,
 		CookieSameSite: "Lax",
 	}
 	SessionStore = session.New(sessConfig)
+}
+
+// SetCookieSecure toggles the Secure flag on the session cookie. Only dev mode over plain HTTP should turn it off.
+func SetCookieSecure(secure bool) {
+	SessionStore.CookieSecure = secure
 }
 
 // Connect initiate the database connection and migrate all the tables

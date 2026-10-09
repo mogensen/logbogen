@@ -1,13 +1,18 @@
 package services
 
 import (
+	"net/http/httptest"
+	"net/url"
 	"testing"
 
+	"github.com/gofiber/fiber/v2"
+	"github.com/mogensen/logbook/pkg/auth"
 	"github.com/mogensen/logbook/pkg/dal"
 	"github.com/mogensen/logbook/pkg/mocks"
 	"github.com/mogensen/logbook/pkg/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
 
@@ -163,4 +168,35 @@ func TestGetUserByID(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAuthService_CallbackStateIsSingleUse(t *testing.T) {
+	app := fiber.New()
+	service := NewAuthService(&mocks.UserDalMock{}, &auth.Authenticator{}, false)
+	app.Get("/auth/login", service.LoginPageHandler)
+	app.Get("/auth/callback", service.CallbackHandler)
+
+	loginResp, err := app.Test(httptest.NewRequest("GET", "/auth/login", nil), -1)
+	require.NoError(t, err)
+	require.Equal(t, fiber.StatusFound, loginResp.StatusCode)
+	redirect, err := url.Parse(loginResp.Header.Get("Location"))
+	require.NoError(t, err)
+	state := redirect.Query().Get("state")
+	require.NotEmpty(t, state)
+	require.NotEmpty(t, loginResp.Cookies())
+
+	callback := func() int {
+		req := httptest.NewRequest("GET", "/auth/callback?code=abc&state="+state, nil)
+		for _, c := range loginResp.Cookies() {
+			req.AddCookie(c)
+		}
+		resp, err := app.Test(req, -1)
+		require.NoError(t, err)
+		return resp.StatusCode
+	}
+
+	// The first attempt passes the state check and fails later at the token exchange
+	require.Equal(t, fiber.StatusUnauthorized, callback())
+	// Replaying the same state is rejected
+	require.Equal(t, fiber.StatusBadRequest, callback())
 }

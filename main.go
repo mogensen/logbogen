@@ -53,6 +53,8 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 		return nil, err
 	}
 
+	database.SetCookieSecure(!cfg.DevMode)
+
 	// HTML templates
 	engine := html.New(cfg.ViewsPath, ".html")
 	engine.AddFunc("current_user", utils.GetUser)

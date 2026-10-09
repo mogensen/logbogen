@@ -172,6 +172,15 @@ func (s *AuthService) CallbackHandler(ctx *fiber.Ctx) error {
 
 	expectedState, _ := session.Get("oauth_state").(string)
 	expectedNonce, _ := session.Get("oauth_nonce").(string)
+
+	// State and nonce are single use, whatever the outcome of the callback
+	session.Delete("oauth_state")
+	session.Delete("oauth_nonce")
+	if err := session.Save(); err != nil {
+		slog.Error("Failed to save session", "error", err)
+		return ctx.SendStatus(fiber.StatusInternalServerError)
+	}
+
 	if expectedState == "" || ctx.Query("state") != expectedState {
 		slog.Warn("Invalid OAuth state on callback")
 		return ctx.Status(fiber.StatusBadRequest).SendString("Invalid state")
