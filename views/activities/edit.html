@@ -87,6 +87,10 @@
   <input type="hidden" id="activity-lat" name="lat" value="{{.Activity.Lat}}">
   <input type="hidden" id="activity-lng" name="lng" value="{{.Activity.Lng}}">
 
+  {{ if .error }}
+  <div class="alert alert-danger" role="alert">{{ .error }}</div>
+  {{ end }}
+
   <div class="act-edit-header">
     <img id="act-edit-type-icon" src="/images/activities/{{.Activity.Type.ID}}.png" width="50" height="50" alt="{{.Activity.Type.Name}}" style="flex:none;">
     <div style="flex:1 1 auto;">
@@ -109,7 +113,7 @@
       <div class="act-edit-divEdge"></div>
 
       <div class="act-edit-lbl">Rolle</div>
-      <input type="text" class="act-edit-field" id="activity-role" name="role"
+      <input type="text" class="act-edit-field" id="activity-role" name="role" maxlength="{{ activityMax "Role" }}"
         value="{{.Activity.Role}}" placeholder="Instruktør, deltager" list="role-options">
       <datalist id="role-options">
         <option value="Instruktør">
@@ -122,7 +126,7 @@
       <div class="act-edit-divEdge"></div>
 
       <div class="act-edit-lbl">Andre deltagere</div>
-      <select id="participants" name="participants" class="form-control" multiple="multiple">
+      <select id="participants" name="participants" class="form-control" multiple="multiple" data-max="{{ activityMax "ParticipantsIDs" }}">
         {{range .Activity.Participants}}
         <option value="{{.ID}}" selected>{{.Name}}</option>
         {{end}}
@@ -156,7 +160,7 @@
 
       <div style="margin-top:18px;display:none;" id="activity-othertype-group">
         <div class="act-edit-lbl">Anden type</div>
-        <input type="text" class="act-edit-field" id="activity-othertype" name="otherType" value="{{.Activity.Type.Name}}" placeholder="Beskriv aktivitetstype">
+        <input type="text" class="act-edit-field" id="activity-othertype" name="otherType" maxlength="{{ activityMax "OtherType" }}" value="{{.Activity.Type.Name}}" placeholder="Beskriv aktivitetstype">
         <div id="othertype-error" style="display:none;margin-top:8px;font-weight:700;font-size:14px;color:#dc3545;">
           Angiv venligst en aktivitetstype.
         </div>
@@ -164,7 +168,9 @@
 
       <div style="margin-top:22px;">
         <div class="act-edit-lbl">Kommentar</div>
-        <textarea class="act-edit-ruled" id="activity-comment" name="comment" rows="6">{{.Activity.Comment}}</textarea>
+        <textarea class="act-edit-ruled" id="activity-comment" name="comment" rows="6"
+          maxlength="{{ activityMax "Comment" }}" data-counter="comment-count">{{.Activity.Comment}}</textarea>
+        <div class="act-edit-count"><span id="comment-count">0</span>/{{ activityMax "Comment" }}</div>
       </div>
     </div>
   </div>

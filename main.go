@@ -18,6 +18,7 @@ import (
 	"github.com/mogensen/logbook/pkg/database"
 	"github.com/mogensen/logbook/pkg/routes"
 	"github.com/mogensen/logbook/pkg/services"
+	"github.com/mogensen/logbook/pkg/types"
 	"github.com/mogensen/logbook/pkg/utils"
 	"github.com/mogensen/logbook/pkg/utils/middleware"
 )
@@ -99,6 +100,8 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 
 	// HTML templates
 	engine := html.New(cfg.ViewsPath, ".html")
+	engine.AddFunc("activityMax", types.ActivityMax)
+	engine.AddFunc("certificationMax", types.CertificationMax)
 	engine.AddFunc("current_user", utils.GetUser)
 	engine.AddFunc("is_current_user", utils.IsCurrentUser)
 	engine.AddFunc("fmtDate", utils.FormatDate)

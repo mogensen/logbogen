@@ -339,7 +339,7 @@ func TestErrorPagesHideInternals(t *testing.T) {
 		activity.Comment = strings.Repeat("secret-value", 200)
 		resp := client.CreateActivity(activity)
 		body := client.GetResponseBody(resp)
-		client.AssertResponseContains(body, `role="alert">Invalid input</div>`)
+		client.AssertResponseContains(body, `role="alert">Kommentaren må højst være 2000 tegn lang.</div>`)
 		client.AssertResponseNotContains(body, "constraint")
 		client.AssertResponseNotContains(body, "`Comment`")
 	})

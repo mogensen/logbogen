@@ -82,6 +82,13 @@ $(() => {
                 minimumInputLength: 3,
                 data: data,
                 placeholder: "Andre deltagere...",
+                // The server accepts at most this many participants
+                maximumSelectionLength: $('#participants').data('max'),
+                language: {
+                    maximumSelected: function (args) {
+                        return 'Du kan højst vælge ' + args.maximum + ' deltagere';
+                    },
+                },
             });
         });
     })
@@ -136,7 +143,7 @@ $(() => {
             map.fitBounds(poly.getBounds());
 
             // Update the marker position and form fields
-            var center = poly.getBounds().getCenter();
+            var center = poly.getBounds().getCenter().wrap();
             $('#activity-lat').val(center.lat);
             $('#activity-lng').val(center.lng);
             updateMarker(center.lat, center.lng);
@@ -183,9 +190,11 @@ $(() => {
         };
 
         map.on('click', function (e) {
-            $('#activity-lat').val(e.latlng.lat);
-            $('#activity-lng').val(e.latlng.lng);
-            updateMarker(e.latlng.lat, e.latlng.lng);
+            // Clicking a repeated copy of the world gives a longitude beyond 180, which the server rejects
+            var position = e.latlng.wrap();
+            $('#activity-lat').val(position.lat);
+            $('#activity-lng').val(position.lng);
+            updateMarker(position.lat, position.lng);
             $('#location-error').hide();
         });
 

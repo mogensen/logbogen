@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/url"
+	"reflect"
 	"strings"
 	"time"
 
@@ -24,7 +25,29 @@ func ParseBody(ctx *fiber.Ctx, body interface{}) *fiber.Error {
 		return fiber.ErrBadRequest
 	}
 
+	normalizeNewlines(reflect.ValueOf(body))
 	return nil
+}
+
+// normalizeNewlines turns the CRLF line breaks of a submitted textarea into LF in every string field. Browsers
+// count a break as one character in maxlength but submit two, so text that fits the form could fail validation.
+func normalizeNewlines(v reflect.Value) {
+	switch v.Kind() {
+	case reflect.Pointer, reflect.Interface:
+		if !v.IsNil() {
+			normalizeNewlines(v.Elem())
+		}
+	case reflect.Struct:
+		for i := 0; i < v.NumField(); i++ {
+			if v.Type().Field(i).IsExported() {
+				normalizeNewlines(v.Field(i))
+			}
+		}
+	case reflect.String:
+		if v.CanSet() {
+			v.SetString(strings.ReplaceAll(v.String(), "\r\n", "\n"))
+		}
+	}
 }
 
 // ParseBodyAndValidate is helper function for parsing the body.

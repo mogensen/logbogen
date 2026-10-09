@@ -81,6 +81,47 @@ func (s *ActivityService) resolveLocation(lat, lng float64, submitted string) st
 	return fmt.Sprintf("%.4f, %.4f", lat, lng)
 }
 
+// renderActivityForm shows the form again with what the user filled in and a message about what to fix,
+// instead of an error page. Problems that are not the user's, like a failing database, are still errors.
+func (s *ActivityService) renderActivityForm(c *fiber.Ctx, view string, dto *types.CreateDTO, activityID string, problem error) error {
+	var fiberErr *fiber.Error
+	if !errors.As(problem, &fiberErr) || fiberErr.Code >= fiber.StatusInternalServerError {
+		return problem
+	}
+
+	if dto.Activity == nil {
+		dto.Activity = &types.Activity{}
+	}
+	activity := dto.Activity
+
+	// The form shows the chosen category, type and participants by their objects, which the form post only has ids for
+	if category := config.CategoryByID(activity.CategoryID); category != nil {
+		activity.Category = *category
+	}
+	typeID := activity.TypeID
+	if activity.CategoryID == types.Other {
+		typeID = activity.OtherType
+	}
+	if typeID != "" {
+		activity.Type = *config.ActivityTypeByID(typeID)
+	}
+	if id, err := uuid.Parse(activityID); err == nil {
+		activity.ID = id
+	}
+	if len(activity.ParticipantsIDs) <= maxParticipants {
+		if users, err := s.userDal.FindUsersByIDs(activity.ParticipantsIDs); err == nil {
+			for _, user := range users {
+				activity.Participants = append(activity.Participants, *types.UserFromDal(&user))
+			}
+		}
+	}
+
+	return c.Status(fiber.StatusBadRequest).Render(view, fiber.Map{
+		"Activity": activity,
+		"error":    fiberErr.Message,
+	})
+}
+
 // CreateActivityPage renders the create activity page
 func (s *ActivityService) CreateActivityPage(c *fiber.Ctx) error {
 	// Render the create activity page
@@ -96,15 +137,12 @@ func (s *ActivityService) CreateActivity(c *fiber.Ctx) error {
 	b := new(types.CreateDTO)
 
 	if err := utils.ParseBodyAndValidate(c, b); err != nil {
-		return c.Render("activities/create", fiber.Map{
-			"Activity": b.Activity,
-			"error":    err.Message,
-		})
+		return s.renderActivityForm(c, "activities/create", b, "", err)
 	}
 
 	participants, err := s.cleanParticipants(utils.GetUser(c).ID, b.Activity.ParticipantsIDs)
 	if err != nil {
-		return err
+		return s.renderActivityForm(c, "activities/create", b, "", err)
 	}
 
 	t := b.Activity.TypeID
@@ -376,12 +414,12 @@ func (s *ActivityService) UpdateActivity(c *fiber.Ctx) error {
 	}
 
 	if err := utils.ParseBodyAndValidate(c, b); err != nil {
-		return err
+		return s.renderActivityForm(c, "activities/edit", b, activityID, err)
 	}
 
 	participants, err := s.cleanParticipants(utils.GetUser(c).ID, b.Activity.ParticipantsIDs)
 	if err != nil {
-		return err
+		return s.renderActivityForm(c, "activities/edit", b, activityID, err)
 	}
 
 	t := b.Activity.TypeID

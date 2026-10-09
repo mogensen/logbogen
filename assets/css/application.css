@@ -540,3 +540,14 @@ tr[data-href] {
   --bs-btn-active-bg: var(--bs-body-color);
   --bs-btn-active-border-color: var(--bs-body-color);
 }
+
+.act-edit-count {
+  text-align: right;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--bs-secondary-color);
+}
+
+.act-edit-count--near {
+  color: var(--bs-danger);
+}

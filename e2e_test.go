@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -390,4 +392,111 @@ func TestE2E_CancelledLoginGoesToTheFrontPage(t *testing.T) {
 	require.NoError(t, page.WaitForURL(base+"/"))
 	require.NoError(t, page.Locator("a[href='/auth/login']").First().WaitFor(), "the front page offers to log in")
 	page.requireNoProblems("cancelled login")
+}
+
+// fillActivityForm picks a category and type in the create form
+func (p *e2ePage) chooseTypeInTheForm(category, activityType string) {
+	require.NoError(p.t, p.Locator(".act-edit-pill", playwright.PageLocatorOptions{
+		Has: p.Locator("input[name='category'][value='" + category + "']"),
+	}).WaitFor())
+	require.NoError(p.t, p.Locator(".act-edit-pill", playwright.PageLocatorOptions{
+		Has: p.Locator("input[name='category'][value='" + category + "']"),
+	}).Click())
+	typePill := p.Locator(".act-edit-pill", playwright.PageLocatorOptions{
+		Has: p.Locator("input[name='type'][value='" + activityType + "']"),
+	})
+	require.NoError(p.t, typePill.WaitFor())
+	require.NoError(p.t, typePill.Click())
+}
+
+func TestE2E_ActivityFormStopsTypingAtTheLimitAndSaves(t *testing.T) {
+	base := e2eServer(t)
+	page := newE2EPage(t, e2eBrowser(t))
+	page.login(base, "Limit User", "limit@example.com")
+
+	_, err := page.Goto(base + "/activities/create")
+	require.NoError(t, err)
+	comment := page.Locator("#activity-comment")
+	counter := page.Locator("#comment-count")
+	require.NoError(t, comment.WaitFor())
+
+	t.Run("the counter follows the typing", func(t *testing.T) {
+		require.Equal(t, "0", mustInnerText(t, counter))
+
+		require.NoError(t, comment.PressSequentially("Hej verden"))
+
+		require.Equal(t, "10", mustInnerText(t, counter))
+	})
+
+	t.Run("typing stops at the limit and the counter warns", func(t *testing.T) {
+		require.NoError(t, comment.Fill(""))
+		require.NoError(t, comment.PressSequentially(strings.Repeat("a", 2100)))
+
+		value, err := comment.InputValue()
+		require.NoError(t, err)
+		require.Len(t, value, 2000, "the browser stops at the maxlength")
+		require.Equal(t, "2000", mustInnerText(t, counter))
+		class, err := page.Locator(".act-edit-count").GetAttribute("class")
+		require.NoError(t, err)
+		require.Contains(t, class, "act-edit-count--near")
+	})
+
+	t.Run("the other fields stop at their limits too", func(t *testing.T) {
+		require.NoError(t, page.Locator("#activity-role").PressSequentially(strings.Repeat("r", 150)))
+
+		value, err := page.Locator("#activity-role").InputValue()
+		require.NoError(t, err)
+		require.Len(t, value, 100)
+	})
+
+	t.Run("clicking a repeated copy of the world still gives a longitude the server accepts", func(t *testing.T) {
+		// Zoomed out the world repeats, and the right edge shows the copy east of 180 degrees. The map ignores a
+		// zoom click during the animation, so each step waits for the tiles of its new level and for the animation to end.
+		for level := 6; level >= 1; level-- {
+			require.NoError(t, page.Locator(".leaflet-control-zoom-out").Click())
+			require.NoError(t, page.Locator(fmt.Sprintf("#activity-form-map img.leaflet-tile[src*='tile.openstreetmap.org/%d/']", level)).First().WaitFor(
+				playwright.LocatorWaitForOptions{State: playwright.WaitForSelectorStateAttached}))
+			require.NoError(t, page.Locator(".leaflet-map-pane:not(.leaflet-zoom-anim)").WaitFor(playwright.LocatorWaitForOptions{
+				State: playwright.WaitForSelectorStateAttached,
+			}))
+		}
+		box, err := page.Locator("#activity-form-map").BoundingBox()
+		require.NoError(t, err)
+		require.NoError(t, page.Locator("#activity-form-map").Click(playwright.LocatorClickOptions{
+			Position: &playwright.Position{X: box.Width * 0.95, Y: box.Height / 2},
+		}))
+
+		lng, err := page.Locator("#activity-lng").InputValue()
+		require.NoError(t, err)
+		value, err := strconv.ParseFloat(lng, 64)
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, value, -180.0, lng)
+		require.LessOrEqual(t, value, 180.0, lng)
+	})
+
+	t.Run("a comment of many lines fits, and is saved, though the browser submits two characters per line break", func(t *testing.T) {
+		require.NoError(t, comment.Fill(""))
+		for i := 0; i < 105; i++ {
+			require.NoError(t, comment.PressSequentially(strings.Repeat("a", 18)))
+			require.NoError(t, page.Keyboard().Press("Enter"))
+		}
+		value, err := comment.InputValue()
+		require.NoError(t, err)
+		require.Len(t, value, 1995, "within the limit as the browser counts it")
+
+		page.chooseTypeInTheForm("climbing", "boulder")
+		require.NoError(t, page.Locator(".act-edit-header-actions .act-edit-save").Click())
+
+		require.NoError(t, page.WaitForURL(regexp.MustCompile(`/activities/[0-9a-f-]{36}$`)), "saved, not an error page: "+page.URL())
+		body, err := page.Locator("body").InnerText()
+		require.NoError(t, err)
+		require.NotContains(t, body, "Der er sket en fejl")
+	})
+	page.requireNoProblems("activity form")
+}
+
+func mustInnerText(t *testing.T, locator playwright.Locator) string {
+	text, err := locator.InnerText()
+	require.NoError(t, err)
+	return text
 }
