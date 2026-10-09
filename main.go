@@ -66,6 +66,18 @@ func DefaultConfig() *Config {
 
 // setupApp creates and configures the Fiber application
 func setupApp(cfg *Config) (*fiber.App, error) {
+	auth0Config := auth.Config{
+		Domain:          config.AUTH0DOMAIN,
+		ClientID:        config.AUTH0CLIENTID,
+		ClientSecret:    config.AUTH0CLIENTSECRET,
+		CallbackURL:     config.AUTH0CALLBACKURL,
+		LogoutReturnURL: config.AUTH0LOGOUTRETURNURL,
+	}
+	if err := validateAuthConfig(cfg, auth0Config, config.ALLOWDEVMODE); err != nil {
+		cfg.Logger.Error("Invalid configuration", "error", err)
+		return nil, err
+	}
+
 	err := database.Migrate(&dal.User{}, &dal.Activity{}, &dal.Certification{})
 	if err != nil {
 		cfg.Logger.Error("Error migrating database", "error", err)
@@ -128,13 +140,7 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	// Auth0 authenticator (skipped in dev mode, which uses the dev-login bypass)
 	var authenticator *auth.Authenticator
 	if !cfg.DevMode {
-		authenticator, err = auth.New(context.Background(), auth.Config{
-			Domain:          config.AUTH0DOMAIN,
-			ClientID:        config.AUTH0CLIENTID,
-			ClientSecret:    config.AUTH0CLIENTSECRET,
-			CallbackURL:     config.AUTH0CALLBACKURL,
-			LogoutReturnURL: config.AUTH0LOGOUTRETURNURL,
-		})
+		authenticator, err = auth.New(context.Background(), auth0Config)
 		if err != nil {
 			cfg.Logger.Error("Error initializing Auth0 authenticator", "error", err)
 			return nil, err

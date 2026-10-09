@@ -27,6 +27,9 @@ Set `AUTH_DEV_MODE=true` in `.env` (the default in `.env.example`). The login pa
 then shows a small dev-login form: enter any name/email and you're signed in. No Auth0
 tenant or network access is required, and the test suite runs in this mode too.
 
+Dev mode refuses to start on a non loopback address, since it lets anyone sign in as any
+user. Set `ALLOW_DEV_MODE=true` to override this on a trusted network.
+
 ### Running against real Auth0
 
 1. Create a **Regular Web Application** in the Auth0 dashboard.

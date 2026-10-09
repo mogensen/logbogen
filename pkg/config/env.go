@@ -24,6 +24,9 @@ var (
 	// Keep this false in production.
 	DEVMODE = getEnvBool("AUTH_DEV_MODE", false)
 
+	// ALLOWDEVMODE lets the dev login run on a non loopback address. Never set this in production.
+	ALLOWDEVMODE = getEnvBool("ALLOW_DEV_MODE", false)
+
 	// AUTH0DOMAIN is the Auth0 tenant domain, e.g. "my-tenant.eu.auth0.com".
 	AUTH0DOMAIN = getEnv("AUTH0_DOMAIN", "")
 	// AUTH0CLIENTID is the Auth0 application client ID.
