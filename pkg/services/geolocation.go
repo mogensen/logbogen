@@ -106,10 +106,6 @@ func ReverseGeocode(lat, lng float64) (*GeocodeResponse, error) {
 	return geocodeResponse, nil
 }
 
-func geocodeURL(address string) string {
-	return "https://nominatim.openstreetmap.org/search?format=jsonv2&zoom=16&limit=1&q=" + address
-}
-
 func reverseGeocodeURL(lat, lng float64) string {
 	return "https://nominatim.openstreetmap.org/reverse?" + fmt.Sprintf("format=jsonv2&zoom=16&lat=%f&lon=%f", lat, lng)
 }

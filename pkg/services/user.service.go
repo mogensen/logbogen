@@ -16,14 +16,14 @@ import (
 
 // UserService handles authentication related operations
 type UserService struct {
-	userDal        dal.UserDal
+	userDal          dal.UserDal
 	certificationDal *dal.CertificationService
 }
 
 // NewUserService creates a new instance of UserService
 func NewUserService(userDal dal.UserDal, certificationDal *dal.CertificationService) *UserService {
 	return &UserService{
-		userDal:        userDal,
+		userDal:          userDal,
 		certificationDal: certificationDal,
 	}
 }
@@ -157,10 +157,10 @@ func buildCell(catCounts map[string]int, total int, dateLabel string, isCurrent 
 	}
 
 	return ActivityHeatmapCell{
-		Count:         total,
-		Color:         categoryGradient(catCounts),
+		Count:           total,
+		Color:           categoryGradient(catCounts),
 		IsCurrentPeriod: isCurrent,
-		Tooltip:       dateLabel + ": " + strings.Join(tooltipParts, ", "),
+		Tooltip:         dateLabel + ": " + strings.Join(tooltipParts, ", "),
 	}
 }
 
@@ -312,7 +312,7 @@ func (s *UserService) UpdateThemeHandler(ctx *fiber.Ctx) error {
 	currentUser.ThemePref = req.Theme
 
 	return ctx.JSON(fiber.Map{
-		"theme": req.Theme,
+		"theme":   req.Theme,
 		"message": "Theme updated successfully",
 	})
 }

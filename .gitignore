@@ -27,5 +27,7 @@ go.work.sum
 
 tmp/
 fiber.db
+.bin/
 /data/
 *.db
+/logbogen

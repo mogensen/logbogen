@@ -74,11 +74,14 @@ func (s *CertificationService) CreateCertification(cert *types.Certification) (t
 
 func (s *CertificationService) UpdateCertification(userID uint64, cert *types.Certification) (types.Certification, error) {
 	updated, err := s.dal.UpdateCertification(userID, cert.ToDB())
+	if err != nil {
+		return types.Certification{}, err
+	}
 	userMap, err := s.getUserMap()
 	if err != nil {
 		return types.Certification{}, err
 	}
-	return types.CertificationFromDB(updated, userMap), err
+	return types.CertificationFromDB(updated, userMap), nil
 }
 
 func (s *CertificationService) DeleteCertification(certID uuid.UUID, userID uint64) error {

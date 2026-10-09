@@ -11,7 +11,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-var ErrNotLoggedIn = fmt.Errorf("User is not logged in")
+var ErrNotLoggedIn = fmt.Errorf("user is not logged in")
 
 type AuthMiddleware struct {
 	authService *services.AuthService

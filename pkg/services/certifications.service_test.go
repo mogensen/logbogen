@@ -9,6 +9,7 @@ import (
 	"github.com/mogensen/logbook/pkg/dal"
 	"github.com/mogensen/logbook/pkg/mocks"
 	"github.com/mogensen/logbook/pkg/types"
+	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -73,4 +74,19 @@ func TestCertificationService_CRUD(t *testing.T) {
 	if len(certs) != 0 {
 		t.Errorf("expected 0 certs, got %d", len(certs))
 	}
+}
+
+func TestCertificationService_UpdateMissingCertificationFails(t *testing.T) {
+	userID := uint64(1)
+	cat := config.AllCertificationCategories[0]
+	typeObj := config.AllCertificationTypes[0]
+	svc := NewCertificationService(setupTestDAL(t), &mocks.UserDalMock{})
+
+	_, err := svc.UpdateCertification(userID, &types.Certification{
+		ID:         uuid.New(),
+		UserID:     &userID,
+		CategoryID: cat.ID,
+		TypeID:     typeObj.ID,
+	})
+	require.ErrorIs(t, err, gorm.ErrRecordNotFound)
 }

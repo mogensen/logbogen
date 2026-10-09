@@ -12,10 +12,6 @@ import (
 	"gorm.io/gorm"
 )
 
-func dummyActivityService() *ActivityService {
-	return &ActivityService{userDal: new(mocks.UserDalMock)}
-}
-
 func TestScoreboardService_Summarize(t *testing.T) {
 	// Arrange
 	mockUserDal := new(mocks.UserDalMock)

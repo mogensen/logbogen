@@ -16,7 +16,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var ErrNotLoggedIn = fmt.Errorf("User is not logged in")
+var ErrNotLoggedIn = fmt.Errorf("user is not logged in")
 
 // AuthService handles authentication related operations
 type AuthService struct {

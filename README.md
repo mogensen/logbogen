@@ -15,6 +15,11 @@ The server starts at `http://127.0.0.1:3000` by default.
 
 Copy `.env.example` to `.env` and adjust settings before running.
 
+## Make targets
+
+`make help` lists them: `build`, `test`, `run` and `lint`. `make lint` fails on unformatted files,
+then runs `go vet` and `staticcheck`, which is installed into `.bin/` on first use. CI runs it too.
+
 ## Docker
 
 ```bash

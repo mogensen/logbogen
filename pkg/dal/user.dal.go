@@ -7,8 +7,8 @@ import (
 // User struct defines the user
 type User struct {
 	gorm.Model
-	Name          string     `gorm:"not null"`
-	ThemePref     string     `gorm:"default:'auto'"`
+	Name      string `gorm:"not null"`
+	ThemePref string `gorm:"default:'auto'"`
 	// Auth0Sub is the Auth0 subject (sub) claim, the stable external identity.
 	// It is a pointer with a unique index so that NULLs (e.g. legacy rows) do
 	// not collide on the unique constraint.
