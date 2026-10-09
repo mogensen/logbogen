@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -677,4 +678,23 @@ func TestFooterCreditsTheImagesAndData(t *testing.T) {
 	} {
 		client.AssertResponseContains(body, credit)
 	}
+}
+
+func TestScoreboardStartsAtPlaceOne(t *testing.T) {
+	client := NewTestClient(t)
+	client.CreateUser("First User", "password")
+	email := client.CreateUser("Second User", "password")
+	client.Login(email, "password")
+	client.CreateActivity(randomActivity())
+
+	body := client.GetResponseBody(client.Get("/scoreboard"))
+
+	// The rank is the first cell of each row, the user cell follows it
+	rankCell := regexp.MustCompile(`<tr>\s*<td>(\d+)</td>\s*<td>\s*<div class="d-flex align-items-center">`)
+	var ranks []string
+	for _, match := range rankCell.FindAllStringSubmatch(body, -1) {
+		ranks = append(ranks, match[1])
+	}
+	require.Equal(t, []string{"1", "2"}, ranks)
+	require.Less(t, strings.Index(body, "Second User"), strings.Index(body, "First User"), "most points on top")
 }

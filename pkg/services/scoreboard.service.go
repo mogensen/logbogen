@@ -13,6 +13,8 @@ type UserStats struct {
 	User                *types.User
 	AchievementsSummary []types.Achievement
 	Points              int
+	// Rank is the place on the scoreboard starting at 1, users with equal points share a place
+	Rank int
 }
 
 // ScoreboardService handles scoreboard-related operations
@@ -63,10 +65,20 @@ func (s *ScoreboardService) calculateUserStats(users *[]dal.User) ([]UserStats, 
 		res = append(res, userStats)
 	}
 
-	// Sort UserStats by Points in descending order
-	sort.Slice(res, func(i, j int) bool {
-		return res[i].Points > res[j].Points
+	// Sort UserStats by Points in descending order, and by name so equal points have a stable order
+	sort.SliceStable(res, func(i, j int) bool {
+		if res[i].Points != res[j].Points {
+			return res[i].Points > res[j].Points
+		}
+		return res[i].User.Name < res[j].User.Name
 	})
+
+	for i := range res {
+		res[i].Rank = i + 1
+		if i > 0 && res[i].Points == res[i-1].Points {
+			res[i].Rank = res[i-1].Rank
+		}
+	}
 	return res, nil
 }
 

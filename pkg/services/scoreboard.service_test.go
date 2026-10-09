@@ -70,3 +70,35 @@ func TestScoreboardService_calculateUserStats(t *testing.T) {
 func uint64Ptr(n uint64) *uint64 {
 	return &n
 }
+
+func TestScoreboardService_calculateUserStats_Ranks(t *testing.T) {
+	service := NewScoreboardService(new(mocks.UserDalMock))
+	userWith := func(id uint, name string, activities int) dal.User {
+		user := dal.User{Model: gorm.Model{ID: id}, Name: name, Email: name + "@test.com"}
+		for i := 0; i < activities; i++ {
+			user.Activities = append(user.Activities,
+				dal.Activity{ID: uuid.New(), User: uint64Ptr(uint64(id)), Type: "rock", Category: types.Climbing})
+		}
+		return user
+	}
+
+	users := []dal.User{
+		userWith(1, "Dina", 1),
+		userWith(2, "Anna", 3),
+		userWith(3, "Carl", 1),
+		userWith(4, "Bo", 3),
+		userWith(5, "Eve", 0),
+	}
+
+	stats, err := service.calculateUserStats(&users)
+	require.NoError(t, err)
+
+	var names []string
+	var ranks []int
+	for _, stat := range stats {
+		names = append(names, stat.User.Name)
+		ranks = append(ranks, stat.Rank)
+	}
+	require.Equal(t, []string{"Anna", "Bo", "Carl", "Dina", "Eve"}, names, "equal points are ordered by name")
+	require.Equal(t, []int{1, 1, 3, 3, 5}, ranks, "the top place is 1 and equal points share it")
+}
