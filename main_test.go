@@ -452,3 +452,38 @@ func TestActivitiesSurviveGeocoderFailure(t *testing.T) {
 		require.Equal(t, "55.5000, 12.2500", activities[0].Location)
 	})
 }
+
+func TestAuthRateLimitDefaultAndOverride(t *testing.T) {
+	hit := func(client *TestClient, n int) (limitedAt int) {
+		for i := 1; i <= n; i++ {
+			if client.Get("/auth/login").StatusCode == fiber.StatusTooManyRequests {
+				return i
+			}
+		}
+		return 0
+	}
+
+	t.Run("the production default returns 429", func(t *testing.T) {
+		client := NewTestClient(t, func(cfg *Config) {
+			cfg.AuthRateLimit = config.DefaultAuthRateLimit
+			cfg.AuthRateWindow = config.DefaultAuthRateWindow
+		})
+		require.Equal(t, config.DefaultAuthRateLimit+1, hit(client, config.DefaultAuthRateLimit+5))
+	})
+
+	t.Run("the test override lifts the limit", func(t *testing.T) {
+		client := NewTestClient(t)
+		require.Zero(t, hit(client, config.DefaultAuthRateLimit*3))
+	})
+
+	t.Run("requests are allowed again after the window", func(t *testing.T) {
+		client := NewTestClient(t, func(cfg *Config) {
+			cfg.AuthRateLimit = 1
+			cfg.AuthRateWindow = time.Second
+		})
+		require.Equal(t, fiber.StatusOK, client.Get("/auth/login").StatusCode)
+		require.Equal(t, fiber.StatusTooManyRequests, client.Get("/auth/login").StatusCode)
+		time.Sleep(1200 * time.Millisecond)
+		require.Equal(t, fiber.StatusOK, client.Get("/auth/login").StatusCode)
+	})
+}

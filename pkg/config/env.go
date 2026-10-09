@@ -2,15 +2,23 @@ package config
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	_ "github.com/joho/godotenv/autoload"
 )
 
 // DefaultListenAddr only accepts local connections, containers set LISTEN_ADDR to listen on all interfaces
 const DefaultListenAddr = "127.0.0.1:3000"
+
+// DefaultAuthRateLimit and DefaultAuthRateWindow are the production limits on auth requests per client IP
+const (
+	DefaultAuthRateLimit  = 30
+	DefaultAuthRateWindow = time.Minute
+)
 
 // DefaultDB is the sqlite file used when DB is not set, inside a directory that can be mounted as a volume
 const DefaultDB = "./data/logbog.db"
@@ -28,8 +36,11 @@ var (
 	// TRUSTEDPROXIES is a comma separated list of proxy IPs allowed to set PROXYHEADER.
 	TRUSTEDPROXIES = splitList(getEnv("TRUSTED_PROXIES", ""))
 
-	// AUTHRATELIMIT is the number of login, callback and logout requests allowed per client IP per minute.
-	AUTHRATELIMIT = getEnvInt("AUTH_RATE_LIMIT", 30)
+	// AUTHRATELIMIT is the number of login, callback and logout requests allowed per client IP per window.
+	// An unset or invalid value keeps the strict default.
+	AUTHRATELIMIT = getEnvPositiveInt("AUTH_RATE_LIMIT", DefaultAuthRateLimit)
+	// AUTHRATEWINDOW is the period the limit applies to. An unset or invalid value keeps the strict default.
+	AUTHRATEWINDOW = getEnvPositiveDuration("AUTH_RATE_WINDOW", DefaultAuthRateWindow)
 
 	// DEVMODE enables the local dev login bypass (no Auth0 tenant needed).
 	// Keep this false in production.
@@ -84,7 +95,8 @@ func splitList(value string) []string {
 	return items
 }
 
-func getEnvInt(name string, fallback int) int {
+// getEnvPositiveInt reads a positive integer and falls back, with a warning, when it is unset or invalid
+func getEnvPositiveInt(name string, fallback int) int {
 	value, exists := os.LookupEnv(name)
 	if !exists {
 		return fallback
@@ -92,7 +104,23 @@ func getEnvInt(name string, fallback int) int {
 
 	parsed, err := strconv.Atoi(value)
 	if err != nil || parsed <= 0 {
-		panic(fmt.Sprintf(`Environment variable %v must be a positive integer :: %v`, name, value))
+		slog.Warn("Ignoring invalid setting, using the default", "name", name, "value", value, "default", fallback)
+		return fallback
+	}
+	return parsed
+}
+
+// getEnvPositiveDuration reads a positive duration like "30s" and falls back, with a warning, when it is unset or invalid
+func getEnvPositiveDuration(name string, fallback time.Duration) time.Duration {
+	value, exists := os.LookupEnv(name)
+	if !exists {
+		return fallback
+	}
+
+	parsed, err := time.ParseDuration(value)
+	if err != nil || parsed <= 0 {
+		slog.Warn("Ignoring invalid setting, using the default", "name", name, "value", value, "default", fallback)
+		return fallback
 	}
 	return parsed
 }

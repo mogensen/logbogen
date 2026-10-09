@@ -47,8 +47,9 @@ type Config struct {
 	// ProxyHeader and TrustedProxies make c.IP() resolve the real client behind a reverse proxy
 	// Geocoder names the place of an activity, nil skips geocoding
 	Geocoder services.Geocoder
-	// AuthRateLimit is the number of auth requests a client IP may make per minute
+	// AuthRateLimit is the number of auth requests a client IP may make per AuthRateWindow
 	AuthRateLimit  int
+	AuthRateWindow time.Duration
 	ProxyHeader    string
 	TrustedProxies []string
 	Logger         *slog.Logger
@@ -64,6 +65,7 @@ func DefaultConfig() *Config {
 
 		Geocoder:       services.NewNominatimGeocoder(),
 		AuthRateLimit:  config.AUTHRATELIMIT,
+		AuthRateWindow: config.AUTHRATEWINDOW,
 		ProxyHeader:    config.PROXYHEADER,
 		TrustedProxies: config.TRUSTEDPROXIES,
 		Logger:         slog.New(slog.NewTextHandler(os.Stdout, nil)),
@@ -170,7 +172,7 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 
 	// Route for the root path
 	routes.HomeRoutes(app, userService, authMiddleware)
-	routes.AuthRoutes(app, authService, cfg.DevMode, cfg.AuthRateLimit)
+	routes.AuthRoutes(app, authService, cfg.DevMode, cfg.AuthRateLimit, cfg.AuthRateWindow)
 	routes.UserRoutes(app, userService, authMiddleware)
 	routes.ActivitiesRoutes(app, activitiesService, authMiddleware)
 	routes.ScoreboardRoutes(app, scoreboardService, authMiddleware)
