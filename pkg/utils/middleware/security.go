@@ -14,7 +14,7 @@ var contentSecurityPolicy = strings.Join([]string{
 	"script-src 'self' 'unsafe-inline' https://code.jquery.com https://unpkg.com https://cdn.jsdelivr.net",
 	"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
 	"font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com",
-	"img-src 'self' data: https://*.tile.openstreetmap.org https://unpkg.com https://*.gravatar.com https://ui-avatars.com",
+	"img-src 'self' data: https://*.tile.openstreetmap.org https://unpkg.com https://*.gravatar.com https://ui-avatars.com https://openweathermap.org",
 	"connect-src 'self' https://nominatim.openstreetmap.org",
 	"object-src 'none'",
 	"base-uri 'self'",

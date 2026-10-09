@@ -254,6 +254,8 @@ func TestSecurityHeaders(t *testing.T) {
 		require.Contains(t, csp, "default-src 'self'", path)
 		require.Contains(t, csp, "frame-ancestors 'none'", path)
 		require.Contains(t, csp, "https://unpkg.com", path)
+		// The activity page loads its weather icons from here
+		require.Contains(t, csp, "https://openweathermap.org", path)
 	}
 }
 
