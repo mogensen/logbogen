@@ -1,94 +1,99 @@
 package services
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
-func TestGetWeather(t *testing.T) {
-	// Create a new weather service
-	service := NewWeatherService()
+// newTestWeatherService serves the handler for both the forecast and the archive endpoint
+func newTestWeatherService(t *testing.T, handler http.HandlerFunc) *WeatherService {
+	server := httptest.NewServer(handler)
+	t.Cleanup(server.Close)
+	return NewWeatherServiceWithBaseURLs(server.URL+"/forecast", server.URL+"/archive")
+}
 
-	// Test case: Copenhagen, Denmark on a specific date
-	// Using coordinates for Copenhagen
-	lat := 55.676098
-	lng := 12.568337
+func TestGetWeather_Historical(t *testing.T) {
+	service := newTestWeatherService(t, func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, "/archive", r.URL.Path)
+		require.Equal(t, "55.676098", r.URL.Query().Get("latitude"))
+		require.Equal(t, "12.568337", r.URL.Query().Get("longitude"))
+		require.Equal(t, "2024-03-15", r.URL.Query().Get("start_date"))
+		require.Equal(t, "2024-03-15", r.URL.Query().Get("end_date"))
+		_, _ = w.Write([]byte(`{"daily":{"temperature_2m_max":[11.9],"weathercode":[53]}}`))
+	})
+
+	weather, err := service.GetWeather(55.676098, 12.568337, time.Date(2024, 3, 15, 0, 0, 0, 0, time.UTC))
+	require.NoError(t, err)
+	require.Equal(t, []float64{11.9}, weather.Daily.Temperature2mMax)
+	require.Equal(t, []int{53}, weather.Daily.WeatherCode)
+	require.Equal(t, "09d", GetWeatherIcon(weather.Daily.WeatherCode[0]))
+}
+
+func TestGetWeather_Today(t *testing.T) {
+	service := newTestWeatherService(t, func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, "/forecast", r.URL.Path)
+		require.Equal(t, "90.000000", r.URL.Query().Get("latitude"))
+		_, _ = w.Write([]byte(`{"current":{"temperature_2m":-21.5,"weathercode":3}}`))
+	})
+
+	weather, err := service.GetWeather(90, 0, time.Now())
+	require.NoError(t, err)
+	// The current weather is returned in the same shape as the daily weather
+	require.Equal(t, []float64{-21.5}, weather.Daily.Temperature2mMax)
+	require.Equal(t, []int{3}, weather.Daily.WeatherCode)
+}
+
+func TestGetWeather_Failures(t *testing.T) {
 	date := time.Date(2024, 3, 15, 0, 0, 0, 0, time.UTC)
 
-	// Get weather data
-	weather, err := service.GetWeather(lat, lng, date)
-	if err != nil {
-		t.Fatalf("Failed to get weather data: %v", err)
+	tests := []struct {
+		name    string
+		handler http.HandlerFunc
+		wantErr string
+	}{
+		{
+			name:    "non-200 status",
+			handler: func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusTooManyRequests) },
+			wantErr: "non-200 status code: 429",
+		},
+		{
+			name:    "invalid json",
+			handler: func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte("<html>")) },
+			wantErr: "failed to decode",
+		},
 	}
 
-	// Verify response structure
-	if len(weather.Daily.Temperature2mMax) == 0 {
-		t.Error("Expected temperature data, got empty array")
-	}
-	if len(weather.Daily.WeatherCode) == 0 {
-		t.Error("Expected weather code data, got empty array")
-	}
-
-	// Verify temperature at that date is 11.9°C
-	temp := weather.Daily.Temperature2mMax[0]
-	if temp < 11 || temp > 12 {
-		t.Errorf("Temperature %.1f°C should be around 11.9°C", temp)
-	}
-
-	// Verify weather code is 53 (partly cloudy) for that date
-	code := weather.Daily.WeatherCode[0]
-	if code != 53 {
-		t.Errorf("Weather code %d should be 53", code)
-	}
-
-	// Test weather icon mapping
-	icon := GetWeatherIcon(code)
-	if icon == "" {
-		t.Error("Expected weather icon code, got empty string")
+	for _, tt := range tests {
+		for _, day := range []time.Time{date, time.Now()} {
+			t.Run(tt.name+" "+day.Format("2006-01-02"), func(t *testing.T) {
+				weather, err := newTestWeatherService(t, tt.handler).GetWeather(55, 12, day)
+				require.ErrorContains(t, err, tt.wantErr)
+				require.Nil(t, weather)
+			})
+		}
 	}
 }
 
-func TestGetWeatherToday(t *testing.T) {
-	// Create a new weather service
+func TestGetWeather_SlowServerTimesOut(t *testing.T) {
+	service := newTestWeatherService(t, func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(300 * time.Millisecond)
+	})
+	service.client.Timeout = 30 * time.Millisecond
+
+	_, err := service.GetWeather(55, 12, time.Date(2024, 3, 15, 0, 0, 0, 0, time.UTC))
+	require.Error(t, err)
+}
+
+func TestNewWeatherService_HasTimeoutAndPublicEndpoints(t *testing.T) {
 	service := NewWeatherService()
 
-	// Test case: North Pole
-	lat := 90.0 // North Pole latitude
-	lng := 0.0  // North Pole longitude
-	date := time.Now()
-
-	// Get weather data
-	weather, err := service.GetWeather(lat, lng, date)
-	if err != nil {
-		t.Fatalf("Failed to get weather data: %v", err)
-	}
-
-	// Verify response structure
-	if len(weather.Daily.Temperature2mMax) == 0 {
-		t.Error("Expected temperature data, got empty array")
-	}
-	if len(weather.Daily.WeatherCode) == 0 {
-		t.Error("Expected weather code data, got empty array")
-	}
-
-	// Verify temperature is within reasonable range for North Pole
-	// North Pole temperatures typically range from -40°C to 0°C
-	temp := weather.Daily.Temperature2mMax[0]
-	if temp > 10 {
-		t.Errorf("Temperature %.1f°C is above 0°C at the North Pole", temp)
-	}
-
-	// Verify weather code is valid (0-99)
-	code := weather.Daily.WeatherCode[0]
-	if code < 0 || code > 99 {
-		t.Errorf("Weather code %d is outside valid range (0-99)", code)
-	}
-
-	// Test weather icon mapping
-	icon := GetWeatherIcon(code)
-	if icon == "" {
-		t.Error("Expected weather icon code, got empty string")
-	}
+	require.Equal(t, 5*time.Second, service.client.Timeout)
+	require.Equal(t, "https://api.open-meteo.com/v1/forecast", service.forecastURL)
+	require.Equal(t, "https://archive-api.open-meteo.com/v1/archive", service.archiveURL)
 }
 
 func TestGetWeatherIcon(t *testing.T) {

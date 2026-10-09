@@ -7,7 +7,18 @@ import (
 	"time"
 )
 
-type WeatherService struct{}
+const (
+	forecastBaseURL = "https://api.open-meteo.com/v1/forecast"
+	archiveBaseURL  = "https://archive-api.open-meteo.com/v1/archive"
+	weatherTimeout  = 5 * time.Second
+)
+
+// WeatherService looks up the weather at a place and date using the Open-Meteo API
+type WeatherService struct {
+	client      *http.Client
+	forecastURL string
+	archiveURL  string
+}
 
 type WeatherResponse struct {
 	Daily struct {
@@ -23,8 +34,18 @@ type currentWeatherResponse struct {
 	} `json:"current"`
 }
 
+// NewWeatherService creates a service for the public Open-Meteo API with a short request timeout
 func NewWeatherService() *WeatherService {
-	return &WeatherService{}
+	return NewWeatherServiceWithBaseURLs(forecastBaseURL, archiveBaseURL)
+}
+
+// NewWeatherServiceWithBaseURLs creates a service that talks to other forecast and archive endpoints, like a test server
+func NewWeatherServiceWithBaseURLs(forecastURL, archiveURL string) *WeatherService {
+	return &WeatherService{
+		client:      &http.Client{Timeout: weatherTimeout},
+		forecastURL: forecastURL,
+		archiveURL:  archiveURL,
+	}
 }
 
 // GetWeather gets the weather for a specific date and location
@@ -39,10 +60,10 @@ func (s *WeatherService) GetWeather(lat, lng float64, date time.Time) (*WeatherR
 
 // getCurrentWeather gets the current weather for a location
 func (s *WeatherService) getCurrentWeather(lat, lng float64) (*WeatherResponse, error) {
-	url := fmt.Sprintf("https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&current=temperature_2m,weathercode&timezone=auto",
-		lat, lng)
+	url := fmt.Sprintf("%s?latitude=%f&longitude=%f&current=temperature_2m,weathercode&timezone=auto",
+		s.forecastURL, lat, lng)
 
-	resp, err := http.Get(url)
+	resp, err := s.client.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch current weather data: %w", err)
 	}
@@ -71,10 +92,10 @@ func (s *WeatherService) getCurrentWeather(lat, lng float64) (*WeatherResponse, 
 
 // getHistoricalWeather gets the historical weather for a specific date and location
 func (s *WeatherService) getHistoricalWeather(lat, lng float64, date time.Time) (*WeatherResponse, error) {
-	url := fmt.Sprintf("https://archive-api.open-meteo.com/v1/archive?latitude=%f&longitude=%f&start_date=%s&end_date=%s&daily=temperature_2m_max,weathercode&timezone=auto",
-		lat, lng, date.Format("2006-01-02"), date.Format("2006-01-02"))
+	url := fmt.Sprintf("%s?latitude=%f&longitude=%f&start_date=%s&end_date=%s&daily=temperature_2m_max,weathercode&timezone=auto",
+		s.archiveURL, lat, lng, date.Format("2006-01-02"), date.Format("2006-01-02"))
 
-	resp, err := http.Get(url)
+	resp, err := s.client.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch historical weather data: %w", err)
 	}

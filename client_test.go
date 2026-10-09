@@ -70,6 +70,13 @@ func NewTestClient(t *testing.T, opts ...func(*Config)) *TestClient {
 		Logger:         slog.New(slog.NewTextHandler(os.Stdout, nil)),
 	}
 
+	// Tests never call the public weather API either
+	weatherServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"daily":{"temperature_2m_max":[12.5],"weathercode":[3]},"current":{"temperature_2m":12.5,"weathercode":3}}`))
+	}))
+	t.Cleanup(weatherServer.Close)
+	cfg.Weather = services.NewWeatherServiceWithBaseURLs(weatherServer.URL, weatherServer.URL)
+
 	for _, opt := range opts {
 		opt(cfg)
 	}

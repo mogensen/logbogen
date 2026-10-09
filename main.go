@@ -45,6 +45,8 @@ type Config struct {
 	KeyFile     string
 	DevMode     bool
 	// ProxyHeader and TrustedProxies make c.IP() resolve the real client behind a reverse proxy
+	// Weather looks up the weather of an activity, nil uses the public Open-Meteo API
+	Weather *services.WeatherService
 	// Geocoder names the place of an activity, nil skips geocoding
 	Geocoder services.Geocoder
 	// AuthRateLimit is the number of auth requests a client IP may make per AuthRateWindow
@@ -155,7 +157,10 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	}
 
 	// Services
-	weatherService := services.NewWeatherService()
+	weatherService := cfg.Weather
+	if weatherService == nil {
+		weatherService = services.NewWeatherService()
+	}
 	activitiesService := services.NewActivityService(userDal, activityDal, weatherService, cfg.Geocoder)
 	scoreboardService := services.NewScoreboardService(userDal)
 	authService := services.NewAuthService(userDal, authenticator, cfg.DevMode)

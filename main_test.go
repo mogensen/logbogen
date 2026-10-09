@@ -489,3 +489,16 @@ func TestAuthRateLimitDefaultAndOverride(t *testing.T) {
 		require.Equal(t, fiber.StatusOK, client.Get("/auth/login").StatusCode)
 	})
 }
+
+func TestActivityPageShowsWeatherFromTheWeatherService(t *testing.T) {
+	client := NewTestClient(t)
+	client.CreateUser("Other User", "password")
+	email := client.CreateUser("Weather User", "password")
+	client.Login(email, "password")
+	client.CreateActivity(randomActivity())
+	activities := client.GetActivities()
+	require.Len(t, activities, 1)
+
+	body := client.GetResponseBody(client.Get("/activities/" + activities[0].ID.String()))
+	client.AssertResponseContains(body, "12.5")
+}
