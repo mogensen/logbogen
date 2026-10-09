@@ -22,8 +22,12 @@ type Activity struct {
 	Role         string                      `gorm:"not null"`
 	Comment      string                      `gorm:"not null"`
 	Participants datatypes.JSONSlice[uint64] `gorm:"type:json"`
-	CreatedAt    time.Time                   `gorm:"not null"`
-	UpdatedAt    time.Time                   `gorm:"not null"`
+	// The weather of the day, stored once it is final so pages do not look it up on every view
+	WeatherTemperature *float64
+	WeatherCode        *int
+	WeatherFetchedAt   *time.Time
+	CreatedAt          time.Time `gorm:"not null"`
+	UpdatedAt          time.Time `gorm:"not null"`
 }
 
 type ActivityDal interface {
@@ -35,6 +39,7 @@ type ActivityDal interface {
 	DeleteActivity(ActivityIden string, userIden uint64) error
 	UpdateActivity(ActivityIden string, userIden uint64, data interface{}) (Activity, error)
 	FindPendingActivitiesByUser(userIden uint64) ([]Activity, error)
+	UpdateWeather(ActivityIden string, userIden uint64, temperature *float64, code *int) error
 }
 
 // ActivityService handles all database operations for activities
@@ -103,4 +108,22 @@ func (s *ActivityService) FindPendingActivitiesByUser(userIden uint64) ([]Activi
 		Where(datatypes.JSONArrayQuery("participants").Contains(userIden)).
 		Find(&activities, "user != ?", userIden)
 	return activities, result.Error
+}
+
+// UpdateWeather stores the weather of an Activity, or clears it when temperature or code is nil
+func (s *ActivityService) UpdateWeather(ActivityIden string, userIden uint64, temperature *float64, code *int) error {
+	var fetchedAt *time.Time
+	if temperature != nil && code != nil {
+		now := time.Now()
+		fetchedAt = &now
+	} else {
+		temperature, code = nil, nil
+	}
+
+	return s.db.Model(&Activity{}).Where("id = ? AND user = ?", ActivityIden, userIden).
+		Updates(map[string]interface{}{
+			"weather_temperature": temperature,
+			"weather_code":        code,
+			"weather_fetched_at":  fetchedAt,
+		}).Error
 }

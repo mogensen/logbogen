@@ -27,6 +27,12 @@ var (
 	AllActivityTypes      = config.AllActivityTypes
 )
 
+// Weather is the stored weather of the day of an activity
+type Weather struct {
+	Temperature float64 `json:"temperature"`
+	Code        int     `json:"code"`
+}
+
 // Activity struct contains all activity fields
 type Activity struct {
 	ID       uuid.UUID `json:"id" form:"id"`
@@ -48,6 +54,7 @@ type Activity struct {
 	Comment         string    `json:"comment" form:"comment" validate:"max=2000"`
 	ParticipantsIDs []uint64  `form:"participants" validate:"max=50"`
 	Participants    []User    `json:"participants"`
+	Weather         *Weather  `json:"weather,omitempty" form:"-"`
 	CreatedAt       time.Time `json:"createdAt" form:"createdAt"`
 	UpdatedAt       time.Time `json:"updatedAt" form:"updatedAt"`
 }
@@ -65,6 +72,11 @@ func ActivityFromDal(activity *dal.Activity, userMap map[uint64]User) *Activity 
 		}
 	}
 
+	var weather *Weather
+	if activity.WeatherTemperature != nil && activity.WeatherCode != nil {
+		weather = &Weather{Temperature: *activity.WeatherTemperature, Code: *activity.WeatherCode}
+	}
+
 	return &Activity{
 		ID:              activity.ID,
 		Date:            Date(activity.Date),
@@ -79,6 +91,7 @@ func ActivityFromDal(activity *dal.Activity, userMap map[uint64]User) *Activity 
 		Comment:         activity.Comment,
 		Participants:    participants,
 		ParticipantsIDs: activity.Participants,
+		Weather:         weather,
 		CreatedAt:       activity.CreatedAt,
 		UpdatedAt:       activity.UpdatedAt,
 		User:            userMap[*activity.User],

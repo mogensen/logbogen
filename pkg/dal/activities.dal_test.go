@@ -6,7 +6,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gorm.io/datatypes"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func TestActivityService_CreateActivity(t *testing.T) {
@@ -231,4 +234,78 @@ func TestActivityService_FindActivityToClone(t *testing.T) {
 	// Test that user1 cannot find their own activity to clone
 	_, err = service.FindActivityToClone(activity.ID.String(), userID1)
 	assert.Error(t, err)
+}
+
+func TestActivityService_UpdateWeather(t *testing.T) {
+	db := setupTestDB(t)
+	service := NewActivityService(db)
+	userID := uint64(1)
+	otherUserID := uint64(2)
+	activity := &Activity{ID: uuid.New(), User: &userID, Date: time.Now(), Location: "Home", Type: "t", Category: "c", Role: "r", Comment: "c"}
+	_, err := service.CreateActivity(activity)
+	require.NoError(t, err)
+
+	temperature, code := 0.0, 0
+
+	t.Run("stores the weather, including a real zero", func(t *testing.T) {
+		require.NoError(t, service.UpdateWeather(activity.ID.String(), userID, &temperature, &code))
+
+		stored, err := service.FindActivityByUser(activity.ID.String(), userID)
+		require.NoError(t, err)
+		require.NotNil(t, stored.WeatherTemperature)
+		require.NotNil(t, stored.WeatherCode)
+		require.Zero(t, *stored.WeatherTemperature)
+		require.Zero(t, *stored.WeatherCode)
+		require.NotNil(t, stored.WeatherFetchedAt)
+	})
+
+	t.Run("another user cannot change it", func(t *testing.T) {
+		other, otherCode := 99.0, 99
+		require.NoError(t, service.UpdateWeather(activity.ID.String(), otherUserID, &other, &otherCode))
+
+		stored, err := service.FindActivityByUser(activity.ID.String(), userID)
+		require.NoError(t, err)
+		require.Zero(t, *stored.WeatherTemperature)
+	})
+
+	t.Run("a general update leaves the weather alone", func(t *testing.T) {
+		_, err := service.UpdateActivity(activity.ID.String(), userID, &Activity{Comment: "Edited"})
+		require.NoError(t, err)
+
+		stored, err := service.FindActivityByUser(activity.ID.String(), userID)
+		require.NoError(t, err)
+		require.NotNil(t, stored.WeatherTemperature)
+	})
+
+	t.Run("nil clears everything, and a half value clears too", func(t *testing.T) {
+		require.NoError(t, service.UpdateWeather(activity.ID.String(), userID, &temperature, nil))
+
+		stored, err := service.FindActivityByUser(activity.ID.String(), userID)
+		require.NoError(t, err)
+		require.Nil(t, stored.WeatherTemperature)
+		require.Nil(t, stored.WeatherCode)
+		require.Nil(t, stored.WeatherFetchedAt)
+	})
+}
+
+func TestActivity_MigrationAddsWeatherColumnsToAnExistingTable(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	require.NoError(t, err)
+
+	// The table as it was before the weather columns existed
+	require.NoError(t, db.Exec(`CREATE TABLE activities (
+		id text NOT NULL, user integer NOT NULL, date datetime NOT NULL, lat real NOT NULL, lng real NOT NULL,
+		location text NOT NULL, type text NOT NULL, category text NOT NULL, role text NOT NULL, comment text NOT NULL,
+		participants json, created_at datetime NOT NULL, updated_at datetime NOT NULL, deleted_at datetime)`).Error)
+	require.NoError(t, db.Exec(`INSERT INTO activities (id, user, date, lat, lng, location, type, category, role, comment, created_at, updated_at)
+		VALUES ('a', 1, '2024-01-01', 1, 2, 'Home', 't', 'c', 'r', 'c', '2024-01-01', '2024-01-01')`).Error)
+
+	require.NoError(t, db.AutoMigrate(&Activity{}))
+
+	for _, column := range []string{"weather_temperature", "weather_code", "weather_fetched_at"} {
+		require.True(t, db.Migrator().HasColumn(&Activity{}, column), column)
+	}
+	var count int64
+	require.NoError(t, db.Model(&Activity{}).Where("weather_temperature IS NULL").Count(&count).Error)
+	require.Equal(t, int64(1), count, "existing rows keep working with empty weather")
 }

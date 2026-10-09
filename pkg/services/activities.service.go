@@ -20,12 +20,12 @@ import (
 type ActivityService struct {
 	activityDal dal.ActivityDal
 	userDal     dal.UserDal
-	weatherSvc  *WeatherService
+	weatherSvc  WeatherProvider
 	geocoder    Geocoder
 }
 
 // NewActivityService creates a new instance of ActivityService
-func NewActivityService(userDal dal.UserDal, activityDal dal.ActivityDal, weatherSvc *WeatherService, geocoder Geocoder) *ActivityService {
+func NewActivityService(userDal dal.UserDal, activityDal dal.ActivityDal, weatherSvc WeatherProvider, geocoder Geocoder) *ActivityService {
 	return &ActivityService{
 		userDal:     userDal,
 		activityDal: activityDal,
@@ -128,6 +128,7 @@ func (s *ActivityService) CreateActivity(c *fiber.Ctx) error {
 	}
 
 	activity.Location = s.resolveLocation(b.Activity.Lat, b.Activity.Lng, b.Activity.Location)
+	setWeather(activity, s.pastWeather(activity.Lat, activity.Lng, activity.Date))
 
 	_, err = s.activityDal.CreateActivity(activity)
 	if err != nil {
@@ -249,31 +250,11 @@ func (s *ActivityService) GetActivity(c *fiber.Ctx) error {
 
 	res := types.ActivityFromDal(&activity, userMap)
 
-	// Get weather data for the activity
-	weather, err := s.weatherSvc.GetWeather(activity.Lat, activity.Lng, activity.Date)
-	if err != nil {
-		slog.Error("Error getting weather data", "error", err)
-	}
-
-	// Create a weather view model
-	type WeatherViewModel struct {
-		Temperature float64
-		Icon        string
-	}
-
-	var weatherVM *WeatherViewModel
-	if weather != nil && len(weather.Daily.Temperature2mMax) > 0 && len(weather.Daily.WeatherCode) > 0 {
-		weatherVM = &WeatherViewModel{
-			Temperature: weather.Daily.Temperature2mMax[0],
-			Icon:        GetWeatherIcon(weather.Daily.WeatherCode[0]),
-		}
-	}
-
-	slog.Info("Weather", "weather", weatherVM)
+	res.Weather = s.weatherForView(&activity, utils.GetUser(c).ID)
 
 	return c.Render("activities/show", fiber.Map{
 		"Activity": res,
-		"Weather":  weatherVM,
+		"Weather":  weatherViewModel(res.Weather),
 	})
 }
 
@@ -360,9 +341,28 @@ func (s *ActivityService) UpdateActivity(c *fiber.Ctx) error {
 
 	activity.Location = s.resolveLocation(b.Activity.Lat, b.Activity.Lng, b.Activity.Location)
 
-	_, err = s.activityDal.UpdateActivity(activityID, utils.GetUser(c).ID, activity)
+	userID := utils.GetUser(c).ID
+	existing, err := s.activityDal.FindActivityByUser(activityID, userID)
 	if err != nil {
 		return utils.DBError(err)
+	}
+
+	_, err = s.activityDal.UpdateActivity(activityID, userID, activity)
+	if err != nil {
+		return utils.DBError(err)
+	}
+
+	// The stored weather belongs to the old day and place, so replace it, or clear it when it is not available
+	if placeOrDayChanged(&existing, activity.Date, activity.Lat, activity.Lng) {
+		weather := s.pastWeather(activity.Lat, activity.Lng, activity.Date)
+		var temperature *float64
+		var code *int
+		if weather != nil {
+			temperature, code = &weather.Temperature, &weather.Code
+		}
+		if err := s.activityDal.UpdateWeather(activityID, userID, temperature, code); err != nil {
+			slog.Error("Error storing weather data", "error", err)
+		}
 	}
 
 	return c.Redirect("/activities/" + activityID)
@@ -396,6 +396,10 @@ func (s *ActivityService) CloneActivity(c *fiber.Ctx) error {
 		UpdatedAt:    time.Now(),
 		User:         &utils.GetUser(c).ID,
 		Type:         activity.Type,
+
+		WeatherTemperature: activity.WeatherTemperature,
+		WeatherCode:        activity.WeatherCode,
+		WeatherFetchedAt:   activity.WeatherFetchedAt,
 	}
 
 	_, err = s.activityDal.CreateActivity(newActivity)

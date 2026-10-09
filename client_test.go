@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -331,4 +332,45 @@ func (f fakeGeocoder) ReverseGeocode(lat, lng float64) (*services.GeocodeRespons
 		return nil, f.err
 	}
 	return &services.GeocodeResponse{Name: f.name}, nil
+}
+
+// fakeWeather answers weather lookups with fixed values and records the requested dates
+type fakeWeather struct {
+	mu          sync.Mutex
+	dates       []string
+	temperature float64
+	code        int
+	err         error
+	missing     bool
+}
+
+func (f *fakeWeather) GetWeather(lat, lng float64, date time.Time) (*services.WeatherResponse, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.dates = append(f.dates, date.Format("2006-01-02"))
+	if f.err != nil {
+		return nil, f.err
+	}
+
+	response := &services.WeatherResponse{}
+	if f.missing {
+		response.Daily.Temperature2mMax = []*float64{nil}
+		response.Daily.WeatherCode = []*int{nil}
+		return response, nil
+	}
+	response.Daily.Temperature2mMax = []*float64{&f.temperature}
+	response.Daily.WeatherCode = []*int{&f.code}
+	return response, nil
+}
+
+func (f *fakeWeather) calls() int {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return len(f.dates)
+}
+
+func (f *fakeWeather) set(fn func(*fakeWeather)) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	fn(f)
 }

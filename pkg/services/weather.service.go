@@ -20,11 +20,29 @@ type WeatherService struct {
 	archiveURL  string
 }
 
+// WeatherProvider looks up the weather at a place and date
+type WeatherProvider interface {
+	GetWeather(lat, lng float64, date time.Time) (*WeatherResponse, error)
+}
+
+// WeatherResponse holds the daily values of a forecast or archive lookup. Values the API has not
+// computed yet come back as null, which is why they are pointers.
 type WeatherResponse struct {
 	Daily struct {
-		Temperature2mMax []float64 `json:"temperature_2m_max"`
-		WeatherCode      []int     `json:"weathercode"`
+		Temperature2mMax []*float64 `json:"temperature_2m_max"`
+		WeatherCode      []*int     `json:"weathercode"`
 	} `json:"daily"`
+}
+
+// Day returns the maximum temperature and weather code of the first day, and false when either is missing
+func (w *WeatherResponse) Day() (temperature float64, code int, ok bool) {
+	if w == nil || len(w.Daily.Temperature2mMax) == 0 || len(w.Daily.WeatherCode) == 0 {
+		return 0, 0, false
+	}
+	if w.Daily.Temperature2mMax[0] == nil || w.Daily.WeatherCode[0] == nil {
+		return 0, 0, false
+	}
+	return *w.Daily.Temperature2mMax[0], *w.Daily.WeatherCode[0], true
 }
 
 type currentWeatherResponse struct {
@@ -79,15 +97,10 @@ func (s *WeatherService) getCurrentWeather(lat, lng float64) (*WeatherResponse, 
 	}
 
 	// Convert current weather response to historical format
-	return &WeatherResponse{
-		Daily: struct {
-			Temperature2mMax []float64 `json:"temperature_2m_max"`
-			WeatherCode      []int     `json:"weathercode"`
-		}{
-			Temperature2mMax: []float64{currentResp.Current.Temperature2m},
-			WeatherCode:      []int{currentResp.Current.WeatherCode},
-		},
-	}, nil
+	converted := &WeatherResponse{}
+	converted.Daily.Temperature2mMax = []*float64{&currentResp.Current.Temperature2m}
+	converted.Daily.WeatherCode = []*int{&currentResp.Current.WeatherCode}
+	return converted, nil
 }
 
 // getHistoricalWeather gets the historical weather for a specific date and location

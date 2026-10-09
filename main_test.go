@@ -495,10 +495,170 @@ func TestActivityPageShowsWeatherFromTheWeatherService(t *testing.T) {
 	client.CreateUser("Other User", "password")
 	email := client.CreateUser("Weather User", "password")
 	client.Login(email, "password")
-	client.CreateActivity(randomActivity())
+	activity := randomActivity()
+	activity.Date = types.Date(time.Now().AddDate(0, 0, -10))
+	client.CreateActivity(activity)
 	activities := client.GetActivities()
 	require.Len(t, activities, 1)
 
 	body := client.GetResponseBody(client.Get("/activities/" + activities[0].ID.String()))
-	client.AssertResponseContains(body, "12.5")
+	client.AssertResponseContains(body, "12.5°C")
+}
+
+func TestStoredWeather(t *testing.T) {
+	daysAgo := func(n int) types.Date { return types.Date(time.Now().AddDate(0, 0, -n)) }
+
+	newClient := func(t *testing.T, weather *fakeWeather) *TestClient {
+		client := NewTestClient(t, func(cfg *Config) { cfg.Weather = weather })
+		client.CreateUser("Other User", "password")
+		email := client.CreateUser("Weather User", "password")
+		client.Login(email, "password")
+		return client
+	}
+	create := func(client *TestClient, date types.Date) types.Activity {
+		activity := randomActivity()
+		activity.Date = date
+		client.CreateActivity(activity)
+		activities := client.GetActivities()
+		return activities[len(activities)-1]
+	}
+	view := func(client *TestClient, activity types.Activity) string {
+		resp := client.Get("/activities/" + activity.ID.String())
+		require.Equal(t, fiber.StatusOK, resp.StatusCode)
+		return client.GetResponseBody(resp)
+	}
+
+	t.Run("a past activity stores the weather when it is created and never looks it up again", func(t *testing.T) {
+		weather := &fakeWeather{temperature: 17.5, code: 3}
+		client := newClient(t, weather)
+
+		activity := create(client, daysAgo(10))
+		require.Equal(t, 1, weather.calls())
+		require.Equal(t, &types.Weather{Temperature: 17.5, Code: 3}, activity.Weather)
+
+		client.AssertResponseContains(view(client, activity), "17.5")
+		view(client, activity)
+		view(client, activity)
+		client.GetActivities()
+		require.Equal(t, 1, weather.calls(), "page views and lists must not call the weather API")
+	})
+
+	t.Run("a past activity without stored weather is looked up once and stored", func(t *testing.T) {
+		weather := &fakeWeather{err: errors.New("status 429")}
+		client := newClient(t, weather)
+
+		activity := create(client, daysAgo(10))
+		require.Nil(t, activity.Weather, "a failing lookup must not block saving")
+		require.Equal(t, 1, weather.calls())
+
+		// The API is down during a view too, so nothing is shown or stored
+		view(client, activity)
+		require.Equal(t, 2, weather.calls())
+		require.Nil(t, client.GetActivities()[0].Weather)
+
+		weather.set(func(f *fakeWeather) { f.err = nil; f.temperature = 8.25; f.code = 61 })
+		client.AssertResponseContains(view(client, activity), "8.25")
+		require.Equal(t, 3, weather.calls())
+		require.Equal(t, &types.Weather{Temperature: 8.25, Code: 61}, client.GetActivities()[0].Weather)
+
+		view(client, activity)
+		view(client, activity)
+		require.Equal(t, 3, weather.calls(), "stored weather is served from the database")
+	})
+
+	t.Run("weather the API has not computed yet is not stored as zero", func(t *testing.T) {
+		weather := &fakeWeather{missing: true}
+		client := newClient(t, weather)
+
+		activity := create(client, daysAgo(2))
+		view(client, activity)
+
+		require.Nil(t, client.GetActivities()[0].Weather)
+	})
+
+	t.Run("today is looked up on every view and never stored", func(t *testing.T) {
+		weather := &fakeWeather{temperature: 21.5, code: 1}
+		client := newClient(t, weather)
+
+		activity := create(client, daysAgo(0))
+		require.Zero(t, weather.calls(), "no lookup when saving today")
+
+		client.AssertResponseContains(view(client, activity), "21.5")
+		view(client, activity)
+		require.Equal(t, 2, weather.calls())
+		require.Nil(t, client.GetActivities()[0].Weather)
+	})
+
+	t.Run("a future activity has no weather", func(t *testing.T) {
+		weather := &fakeWeather{temperature: 30, code: 0}
+		client := newClient(t, weather)
+
+		activity := create(client, types.Date(time.Now().AddDate(0, 0, 5)))
+		view(client, activity)
+
+		require.Zero(t, weather.calls())
+		require.Nil(t, client.GetActivities()[0].Weather)
+	})
+
+	t.Run("an update refetches only when the day or place changed", func(t *testing.T) {
+		weather := &fakeWeather{temperature: 10, code: 2}
+		client := newClient(t, weather)
+		activity := create(client, daysAgo(10))
+		require.Equal(t, 1, weather.calls())
+
+		// Only the comment changes
+		activity.Comment = "Edited"
+		client.UpdateActivity(activity)
+		require.Equal(t, 1, weather.calls())
+		require.Equal(t, &types.Weather{Temperature: 10, Code: 2}, client.GetActivities()[0].Weather)
+
+		// A new day gets the weather of that day
+		weather.set(func(f *fakeWeather) { f.temperature = 12.5; f.code = 63 })
+		activity.Date = daysAgo(20)
+		client.UpdateActivity(activity)
+		require.Equal(t, 2, weather.calls())
+		require.Equal(t, &types.Weather{Temperature: 12.5, Code: 63}, client.GetActivities()[0].Weather)
+
+		// A new place gets the weather of that place
+		weather.set(func(f *fakeWeather) { f.temperature = 14; f.code = 80 })
+		activity.Lat = 56.1
+		client.UpdateActivity(activity)
+		require.Equal(t, 3, weather.calls())
+		require.Equal(t, &types.Weather{Temperature: 14, Code: 80}, client.GetActivities()[0].Weather)
+	})
+
+	t.Run("an update to a day without weather clears the old weather", func(t *testing.T) {
+		weather := &fakeWeather{temperature: 10, code: 2}
+		client := newClient(t, weather)
+		activity := create(client, daysAgo(10))
+		require.NotNil(t, activity.Weather)
+
+		activity.Date = types.Date(time.Now().AddDate(0, 0, 3))
+		client.UpdateActivity(activity)
+		require.Nil(t, client.GetActivities()[0].Weather)
+
+		// A failed lookup for the new day clears it too
+		activity.Date = daysAgo(10)
+		client.UpdateActivity(activity)
+		require.NotNil(t, client.GetActivities()[0].Weather)
+		weather.set(func(f *fakeWeather) { f.err = errors.New("down") })
+		activity.Date = daysAgo(11)
+		client.UpdateActivity(activity)
+		require.Nil(t, client.GetActivities()[0].Weather)
+	})
+
+	t.Run("a failing weather service does not block saving or the page", func(t *testing.T) {
+		weather := &fakeWeather{err: errors.New("connection refused")}
+		client := newClient(t, weather)
+
+		activity := create(client, daysAgo(10))
+		activity.Comment = "Edited"
+		activity.Date = daysAgo(12)
+		client.UpdateActivity(activity)
+
+		activities := client.GetActivities()
+		require.Len(t, activities, 1)
+		require.Equal(t, "Edited", activities[0].Comment)
+		client.AssertResponseContains(view(client, activities[0]), "Edited")
+	})
 }

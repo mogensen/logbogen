@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -28,9 +29,11 @@ func TestGetWeather_Historical(t *testing.T) {
 
 	weather, err := service.GetWeather(55.676098, 12.568337, time.Date(2024, 3, 15, 0, 0, 0, 0, time.UTC))
 	require.NoError(t, err)
-	require.Equal(t, []float64{11.9}, weather.Daily.Temperature2mMax)
-	require.Equal(t, []int{53}, weather.Daily.WeatherCode)
-	require.Equal(t, "09d", GetWeatherIcon(weather.Daily.WeatherCode[0]))
+	temperature, code, ok := weather.Day()
+	require.True(t, ok)
+	require.Equal(t, 11.9, temperature)
+	require.Equal(t, 53, code)
+	require.Equal(t, "09d", GetWeatherIcon(code))
 }
 
 func TestGetWeather_Today(t *testing.T) {
@@ -43,8 +46,10 @@ func TestGetWeather_Today(t *testing.T) {
 	weather, err := service.GetWeather(90, 0, time.Now())
 	require.NoError(t, err)
 	// The current weather is returned in the same shape as the daily weather
-	require.Equal(t, []float64{-21.5}, weather.Daily.Temperature2mMax)
-	require.Equal(t, []int{3}, weather.Daily.WeatherCode)
+	temperature, code, ok := weather.Day()
+	require.True(t, ok)
+	require.Equal(t, -21.5, temperature)
+	require.Equal(t, 3, code)
 }
 
 func TestGetWeather_Failures(t *testing.T) {
@@ -124,4 +129,33 @@ func TestGetWeatherIcon(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestWeatherResponse_Day(t *testing.T) {
+	decode := func(t *testing.T, body string) *WeatherResponse {
+		var response WeatherResponse
+		require.NoError(t, json.Unmarshal([]byte(body), &response))
+		return &response
+	}
+
+	t.Run("values are returned", func(t *testing.T) {
+		temperature, code, ok := decode(t, `{"daily":{"temperature_2m_max":[0],"weathercode":[0]}}`).Day()
+		require.True(t, ok, "a real 0 degrees and clear sky is valid")
+		require.Zero(t, temperature)
+		require.Zero(t, code)
+	})
+
+	t.Run("null values are missing, not zero", func(t *testing.T) {
+		_, _, ok := decode(t, `{"daily":{"temperature_2m_max":[null],"weathercode":[null]}}`).Day()
+		require.False(t, ok)
+		_, _, ok = decode(t, `{"daily":{"temperature_2m_max":[4.5],"weathercode":[null]}}`).Day()
+		require.False(t, ok)
+	})
+
+	t.Run("empty and nil responses are missing", func(t *testing.T) {
+		_, _, ok := decode(t, `{"daily":{}}`).Day()
+		require.False(t, ok)
+		_, _, ok = (*WeatherResponse)(nil).Day()
+		require.False(t, ok)
+	})
 }

@@ -46,7 +46,7 @@ type Config struct {
 	DevMode     bool
 	// ProxyHeader and TrustedProxies make c.IP() resolve the real client behind a reverse proxy
 	// Weather looks up the weather of an activity, nil uses the public Open-Meteo API
-	Weather *services.WeatherService
+	Weather services.WeatherProvider
 	// Geocoder names the place of an activity, nil skips geocoding
 	Geocoder services.Geocoder
 	// AuthRateLimit is the number of auth requests a client IP may make per AuthRateWindow
