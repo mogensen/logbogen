@@ -951,3 +951,19 @@ func TestActivitiesListCategoryFilter(t *testing.T) {
 		fresh.AssertResponseContains(body, "Opret første logning")
 	})
 }
+
+func TestActivityPageColorsFollowTheTheme(t *testing.T) {
+	client := NewTestClient(t)
+	client.CreateUser("Other User", "password")
+	email := client.CreateUser("Theme User", "password")
+	client.Login(email, "password")
+	activity := randomActivity()
+	activity.Date = types.Date(time.Now().AddDate(0, 0, -3))
+	client.CreateActivity(activity)
+	body := client.GetResponseBody(client.Get("/activities/" + client.GetActivities()[0].ID.String()))
+
+	// A fixed dark border is invisible on the dark background, and the pale chip needs a dark variant
+	client.AssertResponseNotContains(body, "solid #333")
+	client.AssertResponseContains(body, `[data-bs-theme="dark"] .act-chip { --chip-bg: var(--bs-success-bg-subtle)`)
+	client.AssertResponseContains(body, ".act-btnO { border: 2px solid var(--bs-body-color)")
+}

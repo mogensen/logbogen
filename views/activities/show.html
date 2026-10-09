@@ -3,8 +3,10 @@
 .act-lbl { font-weight: 700; font-size: 11px; letter-spacing: .13em; text-transform: uppercase; color: var(--bs-secondary-color); margin-bottom: 3px; }
 .act-val { font-weight: 700; font-size: 17px; color: var(--bs-body-color); }
 .act-hd { font-family: 'Cabin Sketch', cursive; font-weight: 700; color: var(--bs-body-color); }
-.act-chip { display: inline-block; border: 2px solid #333; background: #e8f5ea; color: #1f7a33; font-weight: 700; font-size: 14px; padding: 2px 14px; border-radius: 18px 8px 18px 8px / 8px 18px 8px 18px; }
-.act-btnO { border: 2px solid #333; background: var(--bs-body-bg); color: var(--bs-body-color); font-weight: 700; font-size: 15px; padding: 6px 16px; border-radius: 16px 7px 16px 7px / 7px 16px 7px 16px; cursor: pointer; text-decoration: none; display: inline-block; }
+.act-chip { display: inline-block; border: 2px solid var(--bs-body-color); background: var(--chip-bg); color: var(--chip-color); font-weight: 700; font-size: 14px; padding: 2px 14px; border-radius: 18px 8px 18px 8px / 8px 18px 8px 18px; }
+.act-btnO { border: 2px solid var(--bs-body-color); background: var(--bs-body-bg); color: var(--bs-body-color); font-weight: 700; font-size: 15px; padding: 6px 16px; border-radius: 16px 7px 16px 7px / 7px 16px 7px 16px; cursor: pointer; text-decoration: none; display: inline-block; }
+.act-chip { --chip-bg: #e8f5ea; --chip-color: #1f7a33; }
+[data-bs-theme="dark"] .act-chip { --chip-bg: var(--bs-success-bg-subtle); --chip-color: var(--bs-success-text-emphasis); }
 .act-btnO:hover { color: var(--bs-body-color); background: var(--bs-tertiary-bg); }
 .act-btnD { border: 2px solid #dc3545; background: var(--bs-body-bg); color: #dc3545; font-weight: 700; font-size: 15px; padding: 6px 16px; border-radius: 7px 16px 7px 16px / 16px 7px 16px 7px; cursor: pointer; }
 .act-back { font-weight: 700; font-size: 16px; color: var(--bs-secondary-color); text-decoration: none; }
