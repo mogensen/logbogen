@@ -12,12 +12,12 @@
 </div>
 
 {{ if .CategoryFilters }}
-<nav class="d-flex flex-wrap gap-2 mb-3" aria-label="Filtrer efter kategori">
-  <a href="/activities/list" class="btn btn-sm {{ if not .SelectedFilter }}btn-primary{{ else }}btn-outline-secondary{{ end }}"
+<nav class="category-filter d-flex flex-wrap gap-2 mb-3" aria-label="Filtrer efter kategori">
+  <a href="/activities/list" class="btn btn-sm btn-outline-secondary{{ if not .SelectedFilter }} active{{ end }}"
     {{ if not .SelectedFilter }}aria-current="page"{{ end }}>Alle <span class="badge rounded-pill bg-body-secondary text-body">{{ .TotalCount }}</span></a>
   {{ range .CategoryFilters }}
-  <a href="/activities/list?category={{ .ID }}" class="btn btn-sm {{ if .Active }}btn-primary{{ else }}btn-outline-secondary{{ end }}"
-    {{ if .Active }}aria-current="page"{{ end }}>{{ .Name }} <span class="badge rounded-pill bg-body-secondary text-body">{{ .Count }}</span></a>
+  <a href="/activities/list?category={{ .ID }}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1{{ if .Active }} active{{ end }}"
+    {{ if .Active }}aria-current="page"{{ end }}><img src="/images/categories/{{ .ID }}.png" alt="" width="20" height="20">{{ .Name }} <span class="badge rounded-pill bg-body-secondary text-body">{{ .Count }}</span></a>
   {{ end }}
 </nav>
 {{ end }}

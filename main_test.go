@@ -888,10 +888,26 @@ func TestActivitiesListCategoryFilter(t *testing.T) {
 
 		require.ElementsMatch(t, climbingIDs, cardLinks(body))
 		require.Equal(t, 1, strings.Count(body, `aria-current="page"`))
-		client.AssertResponseContains(body, `btn btn-sm btn-primary"
-    aria-current="page">Klatring`)
+		client.AssertResponseContains(body, `btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 active"
+    aria-current="page"><img src="/images/categories/climbing.png"`)
 
 		require.ElementsMatch(t, sailingIDs, cardLinks(list("?category=sailing")))
+	})
+
+	t.Run("every filter button has its category icon", func(t *testing.T) {
+		body := list("")
+
+		for _, category := range []string{"climbing", "sailing"} {
+			icon := `<img src="/images/categories/` + category + `.png" alt="" width="20" height="20">`
+			client.AssertResponseContains(body, icon)
+			require.Equal(t, fiber.StatusOK, client.Get("/images/categories/"+category+".png").StatusCode)
+		}
+	})
+
+	t.Run("every configured category has an icon file", func(t *testing.T) {
+		for _, category := range config.AllActivityCategories {
+			require.FileExists(t, "assets/images/categories/"+category.ID+".png", category.ID)
+		}
 	})
 
 	t.Run("the json list is filtered too", func(t *testing.T) {
