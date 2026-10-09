@@ -256,6 +256,8 @@ func TestSecurityHeaders(t *testing.T) {
 		require.Contains(t, csp, "https://unpkg.com", path)
 		// The activity page loads its weather icons from here
 		require.Contains(t, csp, "https://openweathermap.org", path)
+		// Gravatar redirects the avatar fallback through this image CDN
+		require.Contains(t, csp, "https://*.wp.com", path)
 	}
 }
 
