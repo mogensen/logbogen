@@ -1,6 +1,6 @@
 # Logbogen
 
-A sailing logbook web application for tracking activities, certifications, and achievements. Built with [Go Fiber](https://gofiber.io/), SQLite, and server-rendered HTML templates.
+A logbook web application for tracking activities, certifications, and achievements. Built with [Go Fiber](https://gofiber.io/), SQLite, and server-rendered HTML templates.
 
 ## Build
 
@@ -58,8 +58,6 @@ Pushing a git tag publishes the image to `ghcr.io/<owner>/<repo>` with the tag n
 
 The SQLite database (including sessions) is stored in `./data/logbog.db`, or the path in `DB`.
 The directory is created on startup, and is the one to mount as a volume when running in a container.
-An existing `fiber.db` is not migrated automatically: stop the app and move it with
-`mkdir -p data && mv fiber.db data/logbog.db`.
 
 ## Authentication
 
