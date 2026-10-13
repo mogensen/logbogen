@@ -60,6 +60,9 @@ var (
 	FIREBASEAPIKEY = getEnv("FIREBASE_API_KEY", "")
 	// FIREBASEAUTHDOMAIN is the host of the Firebase auth handler, e.g. "my-project.firebaseapp.com".
 	FIREBASEAUTHDOMAIN = getEnv("FIREBASE_AUTH_DOMAIN", "")
+	// FIREBASEAUTHEMULATORHOST is the host:port of the Firebase Auth emulator, for local testing only.
+	// It trusts unsigned tokens, so it is only accepted on a loopback address.
+	FIREBASEAUTHEMULATORHOST = getEnv("FIREBASE_AUTH_EMULATOR_HOST", "")
 )
 
 func getEnv(name string, fallback string) string {

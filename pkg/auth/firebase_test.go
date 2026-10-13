@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -153,4 +154,54 @@ func TestNewVerifier_NeedsAProjectID(t *testing.T) {
 	_, err := NewVerifier(context.Background(), "")
 
 	require.ErrorContains(t, err, "FIREBASE_PROJECT_ID")
+}
+
+// unsignedToken builds a token like the Firebase Auth emulator issues, with no signature
+func unsignedToken(t *testing.T, change func(claims map[string]any)) string {
+	claims := map[string]any{
+		"iss":            "https://securetoken.google.com/" + testProject,
+		"aud":            testProject,
+		"sub":            "uid-1",
+		"exp":            testNow.Add(time.Hour).Unix(),
+		"auth_time":      testNow.Add(-time.Minute).Unix(),
+		"email":          "jane@example.com",
+		"email_verified": true,
+	}
+	if change != nil {
+		change(claims)
+	}
+	payload, err := json.Marshal(claims)
+	require.NoError(t, err)
+	enc := base64.RawURLEncoding
+	return enc.EncodeToString([]byte(`{"alg":"none","typ":"JWT"}`)) + "." + enc.EncodeToString(payload) + "."
+}
+
+func TestEmulatorVerifier(t *testing.T) {
+	v, err := newEmulatorVerifier(testProject, func() time.Time { return testNow })
+	require.NoError(t, err)
+
+	t.Run("accepts an unsigned token of the project", func(t *testing.T) {
+		identity, err := v.Verify(context.Background(), unsignedToken(t, nil))
+
+		require.NoError(t, err)
+		require.Equal(t, &Identity{UID: "uid-1", Email: "jane@example.com", EmailVerified: true}, identity)
+	})
+
+	tests := map[string]func(c map[string]any){
+		"another project": func(c map[string]any) { c["aud"] = "other"; c["iss"] = "https://securetoken.google.com/other" },
+		"expired":         func(c map[string]any) { c["exp"] = testNow.Add(-time.Hour).Unix() },
+		"stale login":     func(c map[string]any) { c["auth_time"] = testNow.Add(-time.Hour).Unix() },
+		"no subject":      func(c map[string]any) { delete(c, "sub") },
+	}
+	for name, change := range tests {
+		t.Run("rejects "+name, func(t *testing.T) {
+			_, err := v.Verify(context.Background(), unsignedToken(t, change))
+			require.Error(t, err)
+		})
+	}
+
+	t.Run("rejects garbage", func(t *testing.T) {
+		_, err := v.Verify(context.Background(), "not-a-token")
+		require.Error(t, err)
+	})
 }

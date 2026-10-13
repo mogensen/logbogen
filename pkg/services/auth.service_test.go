@@ -340,6 +340,7 @@ func TestAuthService_LoginPage(t *testing.T) {
 		require.Contains(t, page, `data-api-key="key-123"`)
 		require.Contains(t, page, `data-auth-domain="logbogen.firebaseapp.com"`)
 		require.Contains(t, page, `data-project-id="logbogen"`)
+		require.Contains(t, page, `data-emulator-host=""`)
 		require.Contains(t, page, `src="/js/firebase-login.js"`)
 		require.NotContains(t, page, "/auth/dev-login")
 	})

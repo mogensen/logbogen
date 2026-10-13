@@ -46,6 +46,8 @@ type Config struct {
 	CertFile    string
 	KeyFile     string
 	DevMode     bool
+	// Firebase holds the public settings of the Firebase web app, unused in dev mode
+	Firebase auth.Config
 	// ProxyHeader and TrustedProxies make c.IP() resolve the real client behind a reverse proxy
 	// Weather looks up the weather of an activity, nil uses the public Open-Meteo API
 	Weather services.WeatherProvider
@@ -66,6 +68,12 @@ func DefaultConfig() *Config {
 		ViewsPath:  "./views",
 		AssetsPath: "./assets",
 		DevMode:    config.DEVMODE,
+		Firebase: auth.Config{
+			ProjectID:    config.FIREBASEPROJECTID,
+			APIKey:       config.FIREBASEAPIKEY,
+			AuthDomain:   config.FIREBASEAUTHDOMAIN,
+			EmulatorHost: config.FIREBASEAUTHEMULATORHOST,
+		},
 
 		Geocoder:       services.NewNominatimGeocoder(),
 		AuthRateLimit:  config.AUTHRATELIMIT,
@@ -78,12 +86,7 @@ func DefaultConfig() *Config {
 
 // setupApp creates and configures the Fiber application
 func setupApp(cfg *Config) (*fiber.App, error) {
-	firebaseConfig := auth.Config{
-		ProjectID:  config.FIREBASEPROJECTID,
-		APIKey:     config.FIREBASEAPIKEY,
-		AuthDomain: config.FIREBASEAUTHDOMAIN,
-	}
-	if err := validateAuthConfig(cfg, firebaseConfig, config.ALLOWDEVMODE); err != nil {
+	if err := validateAuthConfig(cfg, config.ALLOWDEVMODE); err != nil {
 		cfg.Logger.Error("Invalid configuration", "error", err)
 		return nil, err
 	}
@@ -134,7 +137,7 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 
 	app.Static("/", cfg.AssetsPath)
 	// Registered after Static, which resets the response headers for "/"
-	app.Use(middleware.SecurityHeaders(cspAuthDomain(cfg.DevMode, firebaseConfig)))
+	app.Use(middleware.SecurityHeaders(cspFirebase(cfg)))
 
 	// CSRF tokens are checked on every unsafe request, from the header (fetch/ajax) or the _csrf form field
 	app.Use(csrf.New(csrf.Config{
@@ -155,7 +158,12 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	// Firebase token verifier (skipped in dev mode, which uses the dev-login bypass)
 	var verifier services.TokenVerifier
 	if !cfg.DevMode {
-		verifier, err = auth.NewVerifier(context.Background(), firebaseConfig.ProjectID)
+		if cfg.Firebase.EmulatorHost != "" {
+			cfg.Logger.Warn("Using the Firebase Auth emulator, which trusts unsigned tokens")
+			verifier, err = auth.NewEmulatorVerifier(cfg.Firebase.ProjectID)
+		} else {
+			verifier, err = auth.NewVerifier(context.Background(), cfg.Firebase.ProjectID)
+		}
 		if err != nil {
 			cfg.Logger.Error("Error initializing Firebase token verifier", "error", err)
 			return nil, err
@@ -169,7 +177,7 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	}
 	activitiesService := services.NewActivityService(userDal, activityDal, weatherService, cfg.Geocoder)
 	scoreboardService := services.NewScoreboardService(userDal)
-	authService := services.NewAuthService(userDal, verifier, firebaseConfig, cfg.DevMode)
+	authService := services.NewAuthService(userDal, verifier, cfg.Firebase, cfg.DevMode)
 	userService := services.NewUserService(userDal, certificationDal)
 	certificationsService := services.NewCertificationService(certificationDal, userDal)
 

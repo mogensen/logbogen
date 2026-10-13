@@ -56,8 +56,8 @@ func TestValidateAuthConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cfg := &Config{DevMode: tt.devMode, ListenAddr: tt.listenAddr, Logger: logger}
-			err := validateAuthConfig(cfg, tt.firebase(), tt.allowDevMode)
+			cfg := &Config{DevMode: tt.devMode, ListenAddr: tt.listenAddr, Firebase: tt.firebase(), Logger: logger}
+			err := validateAuthConfig(cfg, tt.allowDevMode)
 			if tt.wantErr == "" {
 				require.NoError(t, err)
 				return
@@ -67,7 +67,54 @@ func TestValidateAuthConfig(t *testing.T) {
 	}
 }
 
-func TestCSPAuthDomain(t *testing.T) {
-	require.Equal(t, "logbogen.firebaseapp.com", cspAuthDomain(false, validFirebase()))
-	require.Empty(t, cspAuthDomain(true, validFirebase()), "dev mode signs in locally")
+func TestValidateAuthConfig_Emulator(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+
+	tests := []struct {
+		name       string
+		listenAddr string
+		emulator   string
+		wantErr    string
+	}{
+		{name: "loopback emulator on a loopback address", listenAddr: "127.0.0.1:3000", emulator: "127.0.0.1:9099"},
+		{name: "localhost emulator", listenAddr: "localhost:3000", emulator: "localhost:9099"},
+		{name: "emulator on another machine", listenAddr: "127.0.0.1:3000", emulator: "10.0.0.5:9099", wantErr: "loopback"},
+		{name: "app on all interfaces", listenAddr: ":3000", emulator: "127.0.0.1:9099", wantErr: "loopback"},
+		{name: "emulator without a port", listenAddr: "127.0.0.1:3000", emulator: "127.0.0.1", wantErr: "FIREBASE_AUTH_EMULATOR_HOST"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			firebase := validFirebase()
+			firebase.EmulatorHost = tt.emulator
+			cfg := &Config{ListenAddr: tt.listenAddr, Firebase: firebase, Logger: logger}
+
+			err := validateAuthConfig(cfg, false)
+
+			if tt.wantErr == "" {
+				require.NoError(t, err)
+				return
+			}
+			require.ErrorContains(t, err, tt.wantErr)
+		})
+	}
+
+	t.Run("dev mode does not use the emulator", func(t *testing.T) {
+		cfg := &Config{DevMode: true, ListenAddr: "127.0.0.1:3000", Logger: logger,
+			Firebase: auth.Config{EmulatorHost: "10.0.0.5:9099"}}
+
+		require.NoError(t, validateAuthConfig(cfg, false))
+	})
+}
+
+func TestCSPFirebase(t *testing.T) {
+	firebase := validFirebase()
+	firebase.EmulatorHost = "127.0.0.1:9099"
+
+	domain, emulator := cspFirebase(&Config{Firebase: firebase})
+	require.Equal(t, "logbogen.firebaseapp.com", domain)
+	require.Equal(t, "127.0.0.1:9099", emulator)
+
+	domain, emulator = cspFirebase(&Config{DevMode: true, Firebase: firebase})
+	require.Empty(t, domain, "dev mode signs in locally")
+	require.Empty(t, emulator)
 }

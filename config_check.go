@@ -6,8 +6,6 @@ import (
 	"net"
 	"sort"
 	"strings"
-
-	"github.com/mogensen/logbook/pkg/auth"
 )
 
 // isLoopbackHost reports whether host only accepts connections from the local machine
@@ -21,7 +19,8 @@ func isLoopbackHost(host string) bool {
 
 // validateAuthConfig refuses to start with an unsafe authentication setup. Dev mode lets anyone log in
 // as any email, so it must stay on a loopback address unless allowDevMode is set explicitly.
-func validateAuthConfig(cfg *Config, firebase auth.Config, allowDevMode bool) error {
+func validateAuthConfig(cfg *Config, allowDevMode bool) error {
+	firebase := cfg.Firebase
 	if cfg.DevMode {
 		host, _, err := net.SplitHostPort(cfg.ListenAddr)
 		if err != nil {
@@ -33,6 +32,12 @@ func validateAuthConfig(cfg *Config, firebase auth.Config, allowDevMode bool) er
 		}
 		cfg.Logger.Warn("Dev login bypass is enabled, never use this in production")
 		return nil
+	}
+
+	if firebase.EmulatorHost != "" {
+		if err := validateEmulator(cfg); err != nil {
+			return err
+		}
 	}
 
 	var missing []string
@@ -56,10 +61,28 @@ func validateAuthConfig(cfg *Config, firebase auth.Config, allowDevMode bool) er
 	return nil
 }
 
-// cspAuthDomain is the Firebase auth domain the CSP must allow, none in dev mode which signs in locally.
-func cspAuthDomain(devMode bool, firebase auth.Config) string {
-	if devMode {
-		return ""
+// validateEmulator keeps the Firebase Auth emulator, which trusts unsigned tokens, on this machine.
+func validateEmulator(cfg *Config) error {
+	emulatorHost, _, err := net.SplitHostPort(cfg.Firebase.EmulatorHost)
+	if err != nil {
+		return fmt.Errorf("invalid FIREBASE_AUTH_EMULATOR_HOST %q: %w", cfg.Firebase.EmulatorHost, err)
 	}
-	return firebase.AuthDomain
+	listenHost, _, err := net.SplitHostPort(cfg.ListenAddr)
+	if err != nil {
+		return fmt.Errorf("invalid listen address %q: %w", cfg.ListenAddr, err)
+	}
+	if !isLoopbackHost(emulatorHost) || !isLoopbackHost(listenHost) {
+		return errors.New("FIREBASE_AUTH_EMULATOR_HOST trusts unsigned tokens and needs a loopback emulator " +
+			"and listen address")
+	}
+	cfg.Logger.Warn("Firebase Auth emulator is enabled, never use this in production")
+	return nil
+}
+
+// cspFirebase returns the Firebase auth domain and emulator host the CSP must allow, none in dev mode.
+func cspFirebase(cfg *Config) (authDomain, emulatorHost string) {
+	if cfg.DevMode {
+		return "", ""
+	}
+	return cfg.Firebase.AuthDomain, cfg.Firebase.EmulatorHost
 }

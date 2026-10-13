@@ -1,6 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import {
     getAuth,
+    connectAuthEmulator,
     GoogleAuthProvider,
     signInWithPopup,
     signInWithEmailAndPassword,
@@ -17,6 +18,10 @@ const auth = getAuth(initializeApp({
     authDomain: root.dataset.authDomain,
     projectId: root.dataset.projectId,
 }));
+
+if (root.dataset.emulatorHost) {
+    connectAuthEmulator(auth, 'http://' + root.dataset.emulatorHost, { disableWarnings: true });
+}
 
 const message = document.getElementById('login-message');
 const form = document.getElementById('email-form');

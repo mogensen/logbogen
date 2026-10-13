@@ -11,8 +11,8 @@ import (
 // Inline scripts and styles are used by the templates, so 'unsafe-inline' is still required.
 //
 // A non empty firebaseAuthDomain also allows the Firebase sign-in: its SDK, the Google identity endpoints
-// and the auth handler frame.
-func ContentSecurityPolicy(firebaseAuthDomain string) string {
+// and the auth handler frame. An emulatorHost allows the local Firebase Auth emulator instead of Google.
+func ContentSecurityPolicy(firebaseAuthDomain, emulatorHost string) string {
 	scriptSrc := []string{"script-src 'self' 'unsafe-inline' https://code.jquery.com https://unpkg.com https://cdn.jsdelivr.net"}
 	connectSrc := []string{"connect-src 'self' https://nominatim.openstreetmap.org"}
 	frameSrc := []string{"frame-src 'self'"}
@@ -21,6 +21,11 @@ func ContentSecurityPolicy(firebaseAuthDomain string) string {
 		connectSrc = append(connectSrc, "https://identitytoolkit.googleapis.com", "https://securetoken.googleapis.com",
 			"https://www.googleapis.com")
 		frameSrc = append(frameSrc, "https://"+firebaseAuthDomain, "https://accounts.google.com")
+	}
+
+	if emulatorHost != "" {
+		connectSrc = append(connectSrc, "http://"+emulatorHost)
+		frameSrc = append(frameSrc, "http://"+emulatorHost)
 	}
 
 	return strings.Join([]string{
@@ -39,13 +44,15 @@ func ContentSecurityPolicy(firebaseAuthDomain string) string {
 }
 
 // SecurityHeaders sets clickjacking, content type, referrer, CSP and HSTS headers on every response.
-func SecurityHeaders(firebaseAuthDomain string) fiber.Handler {
+func SecurityHeaders(firebaseAuthDomain, emulatorHost string) fiber.Handler {
 	return helmet.New(helmet.Config{
 		XFrameOptions:         "DENY",
-		ContentSecurityPolicy: ContentSecurityPolicy(firebaseAuthDomain),
+		ContentSecurityPolicy: ContentSecurityPolicy(firebaseAuthDomain, emulatorHost),
 		HSTSMaxAge:            31536000,
 		// OpenStreetMap tile servers require a referer, and the CDN assets are loaded cross-origin
 		ReferrerPolicy:            "strict-origin-when-cross-origin",
 		CrossOriginEmbedderPolicy: "unsafe-none",
+		// The default same-origin cuts the Google sign-in popup off from the page, so it cannot report back
+		CrossOriginOpenerPolicy: "same-origin-allow-popups",
 	})
 }

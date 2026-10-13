@@ -26,8 +26,8 @@ import (
 const e2eTimeout = 20 * time.Second
 
 // e2eServer starts the app on a local port
-func e2eServer(t *testing.T) string {
-	app := newTestApp(t)
+func e2eServer(t *testing.T, opts ...func(*Config)) string {
+	app := newTestApp(t, opts...)
 
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(t, err)

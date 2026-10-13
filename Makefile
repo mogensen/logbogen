@@ -13,7 +13,7 @@ build: ## Build the logbogen binary
 test: ## Run all tests
 	go test ./...
 
-test-e2e: ## Run the browser tests in Chrome, they need network access and Google Chrome
+test-e2e: ## Run the browser tests in Chrome, they need network access, Google Chrome and Node
 	go test -tags e2e -count=1 -run '^TestE2E' .
 
 run: ## Run the app
