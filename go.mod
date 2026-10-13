@@ -4,6 +4,7 @@ go 1.25.0
 
 require (
 	github.com/coreos/go-oidc/v3 v3.19.0
+	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/gofiber/storage/sqlite3 v1.3.8
 	github.com/gofiber/template/html/v2 v2.1.3
 	github.com/google/go-cmp v0.7.0
@@ -21,7 +22,6 @@ require (
 	github.com/deckarep/golang-set/v2 v2.8.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.13 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.4 // indirect
-	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-sql-driver/mysql v1.10.0 // indirect
