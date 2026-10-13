@@ -40,12 +40,12 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
   </head>
-  <body>
+  <body class="d-flex flex-column min-vh-100">
     <header>
       {{ template "layouts/navbar" . }}
     </header>
 
-    <main role="main" class="container">
+    <main role="main" class="container flex-grow-1">
       <div class="main-container">
       {{embed}}
       </div>
