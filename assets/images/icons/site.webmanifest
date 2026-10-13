@@ -1,0 +1,14 @@
+{
+    "name": "Logbogen",
+    "short_name": "Logbogen",
+    "icons": [
+        {
+            "src": "/images/icons/logbogen-mark-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "theme_color": "#ffffff",
+    "background_color": "#ffffff",
+    "display": "standalone"
+}

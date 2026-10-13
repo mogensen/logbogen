@@ -551,3 +551,7 @@ tr[data-href] {
 .act-edit-count--near {
   color: var(--bs-danger);
 }
+
+.brand-lockup { height: 36px; width: auto; }
+.brand-lockup-dark, [data-bs-theme="dark"] .brand-lockup-light { display: none; }
+[data-bs-theme="dark"] .brand-lockup-dark { display: inline-block; }
