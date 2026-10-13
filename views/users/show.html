@@ -3,7 +3,7 @@
 
   {{/* Desktop */}}
   <div class="d-none d-md-flex align-items-center gap-4">
-    <img src="{{ userImage .User }}" class="rounded-circle profile-header-avatar flex-shrink-0" alt="{{ .User.Name }}">
+    <span class="profile-header-avatar"><img src="{{ userImage .User }}" alt="{{ .User.Name }}"></span>
     <div class="flex-grow-1" style="min-width:0;">
       <div class="profile-header-eyebrow">{{ if .IsOwnProfile }}Min profil{{ else }}Profil{{ end }}</div>
       <h1 class="profile-header-name">{{ .User.Name }}</h1>
@@ -29,7 +29,7 @@
 
   {{/* Mobile */}}
   <div class="d-md-none text-center">
-    <img src="{{ userImage .User }}" class="rounded-circle profile-header-avatar-mobile" alt="{{ .User.Name }}">
+    <span class="profile-header-avatar-mobile"><img src="{{ userImage .User }}" alt="{{ .User.Name }}"></span>
     <h1 class="profile-header-name mt-3">{{ .User.Name }}</h1>
     {{ if .MemberSinceLabel }}<div class="profile-header-meta mt-1">{{ .MemberSinceLabel }}</div>{{ end }}
     <div class="d-flex justify-content-center align-items-center gap-3 mt-3">

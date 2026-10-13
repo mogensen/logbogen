@@ -17,7 +17,7 @@
                     <td>{{ $stat.Rank }}</td>
                     <td>
                         <div class="d-flex align-items-center">
-                            <img class="rounded-circle me-2" src="{{userImage $stat.User}}" alt="" width="48" height="48">
+                            <span class="avatar-ring me-2"><img src="{{userImage $stat.User}}" alt=""></span>
                             <a href="/users/{{ $stat.User.ID }}/"><span>{{$stat.User.Name}}</span></a>
                         </div>
                     </td>
