@@ -251,12 +251,11 @@ func TestFailuresAreLoggedWithTheIDShownToTheUser(t *testing.T) {
 func TestSecretsAreNotLogged(t *testing.T) {
 	client, logs := newLoggedClient(t, slog.LevelDebug)
 
-	client.Get("/auth/callback?error=access_denied&error_description=hidden-description&state=secret-state")
-	client.Get("/auth/callback?code=secret-code&state=secret-state")
+	client.Post("/auth/session", url.Values{"idToken": {"secret-token"}})
+	client.Post("/auth/dev-login", url.Values{"email": {"dev@example.com"}})
 
 	text := logs.text()
-	require.NotContains(t, text, "secret-state")
-	require.NotContains(t, text, "secret-code")
+	require.NotContains(t, text, "secret-token")
 	require.NotContains(t, text, "csrf_")
 	require.NotEmpty(t, logs.entries(t))
 }

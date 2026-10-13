@@ -78,14 +78,12 @@ func DefaultConfig() *Config {
 
 // setupApp creates and configures the Fiber application
 func setupApp(cfg *Config) (*fiber.App, error) {
-	auth0Config := auth.Config{
-		Domain:          config.AUTH0DOMAIN,
-		ClientID:        config.AUTH0CLIENTID,
-		ClientSecret:    config.AUTH0CLIENTSECRET,
-		CallbackURL:     config.AUTH0CALLBACKURL,
-		LogoutReturnURL: config.AUTH0LOGOUTRETURNURL,
+	firebaseConfig := auth.Config{
+		ProjectID:  config.FIREBASEPROJECTID,
+		APIKey:     config.FIREBASEAPIKEY,
+		AuthDomain: config.FIREBASEAUTHDOMAIN,
 	}
-	if err := validateAuthConfig(cfg, auth0Config, config.ALLOWDEVMODE); err != nil {
+	if err := validateAuthConfig(cfg, firebaseConfig, config.ALLOWDEVMODE); err != nil {
 		cfg.Logger.Error("Invalid configuration", "error", err)
 		return nil, err
 	}
@@ -136,7 +134,7 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 
 	app.Static("/", cfg.AssetsPath)
 	// Registered after Static, which resets the response headers for "/"
-	app.Use(middleware.SecurityHeaders(formActionOrigins(cfg.DevMode, auth0Config.Domain)...))
+	app.Use(middleware.SecurityHeaders(cspAuthDomain(cfg.DevMode, firebaseConfig)))
 
 	// CSRF tokens are checked on every unsafe request, from the header (fetch/ajax) or the _csrf form field
 	app.Use(csrf.New(csrf.Config{
@@ -154,12 +152,12 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	activityDal := dal.NewActivityService(database.DB)
 	certificationDal := dal.NewCertificationService(database.DB)
 
-	// Auth0 authenticator (skipped in dev mode, which uses the dev-login bypass)
-	var authenticator *auth.Authenticator
+	// Firebase token verifier (skipped in dev mode, which uses the dev-login bypass)
+	var verifier services.TokenVerifier
 	if !cfg.DevMode {
-		authenticator, err = auth.New(context.Background(), auth0Config)
+		verifier, err = auth.NewVerifier(context.Background(), firebaseConfig.ProjectID)
 		if err != nil {
-			cfg.Logger.Error("Error initializing Auth0 authenticator", "error", err)
+			cfg.Logger.Error("Error initializing Firebase token verifier", "error", err)
 			return nil, err
 		}
 	}
@@ -171,7 +169,7 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	}
 	activitiesService := services.NewActivityService(userDal, activityDal, weatherService, cfg.Geocoder)
 	scoreboardService := services.NewScoreboardService(userDal)
-	authService := services.NewAuthService(userDal, authenticator, cfg.DevMode)
+	authService := services.NewAuthService(userDal, verifier, firebaseConfig, cfg.DevMode)
 	userService := services.NewUserService(userDal, certificationDal)
 	certificationsService := services.NewCertificationService(certificationDal, userDal)
 

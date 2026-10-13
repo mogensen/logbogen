@@ -50,7 +50,7 @@ docker run -p 3000:3000 -v logbogen-data:/app/data --env-file .env logbogen
 
 The image listens on `0.0.0.0:3000` (`LISTEN_ADDR`), runs as a non-root user and keeps the
 database and sessions in `/app/data`, which is the directory to mount as a volume. It runs
-against real Auth0, so set the `AUTH0_*` variables, and put a TLS reverse proxy in front of it.
+against real Firebase Authentication, so set the `FIREBASE_*` variables, and put a TLS reverse proxy in front of it.
 
 Pushing a git tag publishes the image to `ghcr.io/<owner>/<repo>` with the tag name and `latest`.
 
@@ -61,32 +61,35 @@ The directory is created on startup, and is the one to mount as a volume when ru
 
 ## Authentication
 
-Logbogen authenticates users through **Auth0** (OIDC Authorization Code flow). The
-app no longer stores passwords — users are identified by their Auth0 subject (`sub`)
-and a user row is created on first login.
+Logbogen authenticates users with **Firebase Authentication**, with Google or email and
+password. The browser signs in with the Firebase JS SDK and posts the ID token to
+`/auth/session`, where the server verifies it against the project's public signing keys
+and starts its own session. Email addresses must be verified. The app does not store
+passwords — users are identified by their Firebase user ID and a user row is created on
+first login.
 
-### Local development (no Auth0 needed)
+### Local development (no Firebase needed)
 
 Set `AUTH_DEV_MODE=true` in `.env` (the default in `.env.example`). The login page
-then shows a small dev-login form: enter any name/email and you're signed in. No Auth0
-tenant or network access is required, and the test suite runs in this mode too.
+then shows a small dev-login form: enter any name/email and you're signed in. No Firebase
+project or network access is required, and the test suite runs in this mode too.
 
 Dev mode refuses to start on a non loopback address, since it lets anyone sign in as any
 user. Set `ALLOW_DEV_MODE=true` to override this on a trusted network.
 
-### Running against real Auth0
+### Running against real Firebase
 
-1. Create a **Regular Web Application** in the Auth0 dashboard.
-2. Register `http://localhost:3000/auth/callback` as an **Allowed Callback URL** and
-   `http://localhost:3000/` as an **Allowed Logout URL** (`localhost` is exempt from
-   Auth0's HTTPS requirement).
-3. In `.env`, set `AUTH_DEV_MODE=false` and fill in `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`,
-   `AUTH0_CLIENT_SECRET`, `AUTH0_CALLBACK_URL`, and `AUTH0_LOGOUT_RETURN_URL`.
+1. In the Firebase console, enable the **Google** and **Email/Password** sign-in
+   providers, and add your domains (`localhost` and the production host) under
+   **Authentication > Settings > Authorized domains**.
+2. Register a web app and copy its settings. They are public identifiers, not secrets.
+3. In `.env`, set `AUTH_DEV_MODE=false` and fill in `FIREBASE_PROJECT_ID`,
+   `FIREBASE_API_KEY` and `FIREBASE_AUTH_DOMAIN` (for example `my-project.firebaseapp.com`).
 
 > **Upgrading an existing database:** the old `users` table had a `NOT NULL password`
 > column. The app drops it automatically on startup, so existing databases keep working
-> (and keep their activities/certifications). Note that pre-Auth0 accounts are not linked
-> to Auth0 identities — a fresh user row is created on first Auth0 login. The `auth0_sub`
+> (and keep their activities/certifications). Accounts from before the move to Firebase are not linked
+> to Firebase identities — a fresh user row is created on first login. The old `auth0_sub`
 > column is renamed to `firebase_uid` on startup, keeping each user's stored identity.
 
 ## Live reload with Air

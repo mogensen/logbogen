@@ -47,25 +47,19 @@ var (
 	// LOGLEVEL is the lowest level that is logged: debug, info, warn or error.
 	LOGLEVEL = getEnvLogLevel("LOG_LEVEL", slog.LevelInfo)
 
-	// DEVMODE enables the local dev login bypass (no Auth0 tenant needed).
+	// DEVMODE enables the local dev login bypass (no Firebase project needed).
 	// Keep this false in production.
 	DEVMODE = getEnvBool("AUTH_DEV_MODE", false)
 
 	// ALLOWDEVMODE lets the dev login run on a non loopback address. Never set this in production.
 	ALLOWDEVMODE = getEnvBool("ALLOW_DEV_MODE", false)
 
-	// AUTH0DOMAIN is the Auth0 tenant domain, e.g. "my-tenant.eu.auth0.com".
-	AUTH0DOMAIN = getEnv("AUTH0_DOMAIN", "")
-	// AUTH0CLIENTID is the Auth0 application client ID.
-	AUTH0CLIENTID = getEnv("AUTH0_CLIENT_ID", "")
-	// AUTH0CLIENTSECRET is the Auth0 application client secret.
-	AUTH0CLIENTSECRET = getEnv("AUTH0_CLIENT_SECRET", "")
-	// AUTH0CALLBACKURL is the OIDC redirect URL registered in Auth0,
-	// e.g. "http://localhost:3000/auth/callback".
-	AUTH0CALLBACKURL = getEnv("AUTH0_CALLBACK_URL", "")
-	// AUTH0LOGOUTRETURNURL is where Auth0 returns the user after logout,
-	// e.g. "http://localhost:3000/".
-	AUTH0LOGOUTRETURNURL = getEnv("AUTH0_LOGOUT_RETURN_URL", "")
+	// FIREBASEPROJECTID is the Firebase project ID, which ID tokens are issued for.
+	FIREBASEPROJECTID = getEnv("FIREBASE_PROJECT_ID", "")
+	// FIREBASEAPIKEY is the public web API key of the Firebase web app.
+	FIREBASEAPIKEY = getEnv("FIREBASE_API_KEY", "")
+	// FIREBASEAUTHDOMAIN is the host of the Firebase auth handler, e.g. "my-project.firebaseapp.com".
+	FIREBASEAUTHDOMAIN = getEnv("FIREBASE_AUTH_DOMAIN", "")
 )
 
 func getEnv(name string, fallback string) string {
@@ -73,7 +67,7 @@ func getEnv(name string, fallback string) string {
 		return value
 	}
 
-	// An empty fallback is a legitimate default (e.g. unset Auth0 vars in dev mode).
+	// An empty fallback is a legitimate default (e.g. unset Firebase vars in dev mode).
 	return fallback
 }
 

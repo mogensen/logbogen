@@ -1,3 +1,5 @@
+// Package auth verifies the Firebase ID tokens that browsers send after signing in.
+// It is only initialized outside dev mode; in dev mode (AUTH_DEV_MODE) the app never constructs it.
 package auth
 
 import (
@@ -16,6 +18,13 @@ const (
 
 // ErrStaleLogin means the user signed in too long ago for the token to start a session.
 var ErrStaleLogin = errors.New("firebase: sign-in is too old")
+
+// Config holds the public Firebase web app settings. None of them are secrets.
+type Config struct {
+	ProjectID  string
+	APIKey     string
+	AuthDomain string
+}
 
 // Identity is the subset of Firebase ID-token claims the app consumes.
 type Identity struct {

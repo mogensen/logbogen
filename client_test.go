@@ -67,7 +67,7 @@ func NewTestClient(t *testing.T, opts ...func(*Config)) *TestClient {
 }
 
 // newTestApp creates the app on an in-memory database. DevMode enables the local dev-login bypass so
-// the suite never reaches Auth0, and the geocoder and weather services are fakes.
+// the suite never reaches Firebase, and the geocoder and weather services are fakes.
 func newTestApp(t *testing.T, opts ...func(*Config)) *fiber.App {
 	db := setupTestDB(t)
 
@@ -188,7 +188,7 @@ func (tc *TestClient) PostJSON(path string, data interface{}) *http.Response {
 }
 
 // devLogin drives the dev-login bypass: it upserts a user by email and
-// establishes the session, mirroring the Auth0 callback.
+// establishes the session, mirroring the Firebase session endpoint.
 func (tc *TestClient) devLogin(name, email string) {
 	form := url.Values{}
 	form.Add("name", name)
@@ -201,7 +201,7 @@ func (tc *TestClient) devLogin(name, email string) {
 
 // CreateUser creates (via first dev-login) a new user and returns the email
 // used. The password argument is retained for call-site compatibility and
-// ignored — Auth0 owns credentials, the dev bypass keys users by email.
+// ignored — Firebase owns credentials, the dev bypass keys users by email.
 func (tc *TestClient) CreateUser(name, password string) string {
 	email := fmt.Sprintf("test-%d@example.com", time.Now().UnixNano())
 	tc.devLogin(name, email)

@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"regexp"
 	"strconv"
@@ -17,7 +15,6 @@ import (
 	"time"
 
 	"github.com/mogensen/logbook/pkg/types"
-	"github.com/mogensen/logbook/pkg/utils/middleware"
 	"github.com/playwright-community/playwright-go"
 	"github.com/stretchr/testify/require"
 )
@@ -334,64 +331,6 @@ func mustText(t *testing.T, page *e2ePage) string {
 	text, err := page.Locator("body").InnerText()
 	require.NoError(t, err)
 	return text
-}
-
-// TestE2E_FormPostMayRedirectToTheAuthOrigin checks the content security policy the app sends against the
-// logout flow: a form post that redirects to Auth0 on another origin is blocked unless form-action allows it.
-func TestE2E_FormPostMayRedirectToTheAuthOrigin(t *testing.T) {
-	auth := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte("<html><title>auth0</title><body>Logged out of Auth0</body></html>"))
-	}))
-	t.Cleanup(auth.Close)
-
-	appWith := func(policy string) string {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.Method == http.MethodPost {
-				http.Redirect(w, r, auth.URL, http.StatusFound)
-				return
-			}
-			w.Header().Set("Content-Security-Policy", policy)
-			_, _ = w.Write([]byte(`<html><body><form method="POST" action="/auth/logout"><button id="logout">Logout</button></form></body></html>`))
-		}))
-		t.Cleanup(server.Close)
-		return server.URL
-	}
-	browser := e2eBrowser(t)
-
-	t.Run("allowed when the policy lists the Auth0 origin", func(t *testing.T) {
-		page := newE2EPage(t, browser)
-		_, err := page.Goto(appWith(middleware.ContentSecurityPolicy(auth.URL)))
-		require.NoError(t, err)
-
-		require.NoError(t, page.Locator("#logout").Click())
-
-		require.NoError(t, page.WaitForURL(auth.URL+"/"))
-	})
-
-	t.Run("blocked without it, which is how logout broke", func(t *testing.T) {
-		page := newE2EPage(t, browser)
-		app := appWith(middleware.ContentSecurityPolicy())
-		_, err := page.Goto(app)
-		require.NoError(t, err)
-
-		require.NoError(t, page.Locator("#logout").Click())
-
-		require.Error(t, page.WaitForURL(auth.URL+"/", playwright.PageWaitForURLOptions{Timeout: playwright.Float(3000)}))
-		require.True(t, strings.HasPrefix(page.URL(), app), "still on the app: %s", page.URL())
-	})
-}
-
-func TestE2E_CancelledLoginGoesToTheFrontPage(t *testing.T) {
-	base := e2eServer(t)
-	page := newE2EPage(t, e2eBrowser(t))
-
-	// What Auth0 sends the browser to when the user cancels the login
-	_, err := page.Goto(base + "/auth/callback?error=access_denied&error_description=User%20did%20not%20authorize%20the%20request&state=0b9470c9")
-
-	require.NoError(t, err)
-	require.NoError(t, page.WaitForURL(base+"/"))
-	require.NoError(t, page.Locator("a[href='/auth/login']").First().WaitFor(), "the front page offers to log in")
-	page.requireNoProblems("cancelled login")
 }
 
 // fillActivityForm picks a category and type in the create form

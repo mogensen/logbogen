@@ -1,10 +1,12 @@
 package services
 
 import (
-	"io"
+	"context"
+	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
@@ -19,7 +21,7 @@ import (
 )
 
 func TestAuthService_upsertUser(t *testing.T) {
-	t.Run("returns existing user when the Auth0 sub is known", func(t *testing.T) {
+	t.Run("returns existing user when the Firebase UID is known", func(t *testing.T) {
 		userDalMock := &mocks.UserDalMock{}
 		existing := &dal.User{
 			Model: gorm.Model{ID: 7},
@@ -28,7 +30,7 @@ func TestAuthService_upsertUser(t *testing.T) {
 		}
 		userDalMock.On("FindUserByFirebaseUID", "uid-123").Return(existing, nil)
 
-		service := NewAuthService(userDalMock, nil, true)
+		service := NewAuthService(userDalMock, nil, auth.Config{}, true)
 		user, err := service.upsertUser("uid-123", "Existing User", "existing@example.com")
 
 		assert.NoError(t, err)
@@ -38,12 +40,12 @@ func TestAuthService_upsertUser(t *testing.T) {
 		userDalMock.AssertExpectations(t)
 	})
 
-	t.Run("creates a new user when the Auth0 sub is unknown", func(t *testing.T) {
+	t.Run("creates a new user when the Firebase UID is unknown", func(t *testing.T) {
 		userDalMock := &mocks.UserDalMock{}
 		userDalMock.On("FindUserByFirebaseUID", "uid-new").Return(nil, gorm.ErrRecordNotFound)
 		userDalMock.On("CreateUser", mock.Anything).Return(&gorm.DB{Error: nil})
 
-		service := NewAuthService(userDalMock, nil, true)
+		service := NewAuthService(userDalMock, nil, auth.Config{}, true)
 		user, err := service.upsertUser("uid-new", "New User", "new@example.com")
 
 		assert.NoError(t, err)
@@ -102,7 +104,7 @@ func TestAuthService_GetUser(t *testing.T) {
 			userDalMock := &mocks.UserDalMock{}
 			tt.mockSetup(userDalMock)
 
-			service := NewAuthService(userDalMock, nil, true)
+			service := NewAuthService(userDalMock, nil, auth.Config{}, true)
 			resp, err := service.GetUser(tt.req)
 
 			if tt.expectedErr != nil {
@@ -123,7 +125,7 @@ func TestAuthService_GetUser(t *testing.T) {
 func TestGetUserByID(t *testing.T) {
 	// Setup
 	userDalMock := new(mocks.UserDalMock)
-	authService := NewAuthService(userDalMock, nil, true)
+	authService := NewAuthService(userDalMock, nil, auth.Config{}, true)
 
 	// Test cases
 	tests := []struct {
@@ -172,88 +174,136 @@ func TestGetUserByID(t *testing.T) {
 	}
 }
 
-func TestAuthService_CallbackStateIsSingleUse(t *testing.T) {
-	app := fiber.New()
-	service := NewAuthService(&mocks.UserDalMock{}, &auth.Authenticator{}, false)
-	app.Get("/auth/login", service.LoginPageHandler)
-	app.Get("/auth/callback", service.CallbackHandler)
-
-	loginResp, err := app.Test(httptest.NewRequest("GET", "/auth/login", nil), -1)
-	require.NoError(t, err)
-	require.Equal(t, fiber.StatusFound, loginResp.StatusCode)
-	redirect, err := url.Parse(loginResp.Header.Get("Location"))
-	require.NoError(t, err)
-	state := redirect.Query().Get("state")
-	require.NotEmpty(t, state)
-	require.NotEmpty(t, loginResp.Cookies())
-
-	callback := func() int {
-		req := httptest.NewRequest("GET", "/auth/callback?code=abc&state="+state, nil)
-		for _, c := range loginResp.Cookies() {
-			req.AddCookie(c)
-		}
-		resp, err := app.Test(req, -1)
-		require.NoError(t, err)
-		return resp.StatusCode
-	}
-
-	// The first attempt passes the state check and fails later at the token exchange
-	require.Equal(t, fiber.StatusUnauthorized, callback())
-	// Replaying the same state is rejected
-	require.Equal(t, fiber.StatusBadRequest, callback())
+// fakeVerifier answers Verify with a fixed identity or error
+type fakeVerifier struct {
+	identity *auth.Identity
+	err      error
 }
 
-func TestAuthService_CallbackWithAnErrorGoesToTheFrontPage(t *testing.T) {
+func (f fakeVerifier) Verify(context.Context, string) (*auth.Identity, error) {
+	return f.identity, f.err
+}
+
+// postSession posts an ID token to the session endpoint of a service built for production
+func postSession(t *testing.T, service *AuthService, body string, cookies []*http.Cookie) *http.Response {
 	app := fiber.New()
-	service := NewAuthService(&mocks.UserDalMock{}, &auth.Authenticator{}, false)
-	app.Get("/auth/login", service.LoginPageHandler)
-	app.Get("/auth/callback", service.CallbackHandler)
+	app.Post("/auth/session", service.SessionHandler)
 
-	// The state of a started login, as Auth0 sends it back
-	loginResp, err := app.Test(httptest.NewRequest("GET", "/auth/login", nil), -1)
-	require.NoError(t, err)
-	redirect, err := url.Parse(loginResp.Header.Get("Location"))
-	require.NoError(t, err)
-	state := redirect.Query().Get("state")
-	require.NotEmpty(t, state)
-
-	callback := func(query string) *http.Response {
-		req := httptest.NewRequest("GET", "/auth/callback?"+query, nil)
-		for _, c := range loginResp.Cookies() {
-			req.AddCookie(c)
-		}
-		resp, err := app.Test(req, -1)
-		require.NoError(t, err)
-		return resp
+	req := httptest.NewRequest("POST", "/auth/session", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	for _, c := range cookies {
+		req.AddCookie(c)
 	}
+	resp, err := app.Test(req, -1)
+	require.NoError(t, err)
+	return resp
+}
 
-	t.Run("a cancelled login goes to the front page", func(t *testing.T) {
-		resp := callback("error=access_denied&error_description=User%20did%20not%20authorize%20the%20request&state=" + state)
+func errorCode(t *testing.T, resp *http.Response) string {
+	var body struct {
+		Error string `json:"error"`
+	}
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
+	return body.Error
+}
 
-		require.Equal(t, fiber.StatusFound, resp.StatusCode)
-		require.Equal(t, "/", resp.Header.Get("Location"))
+func TestAuthService_SessionHandler(t *testing.T) {
+	verified := &auth.Identity{UID: "uid-1", Email: "jane@example.com", Name: "Jane Doe", EmailVerified: true}
+	token := `{"idToken":"signed-by-firebase"}`
+
+	t.Run("a verified login creates the user and the session", func(t *testing.T) {
+		userDalMock := &mocks.UserDalMock{}
+		userDalMock.On("FindUserByFirebaseUID", "uid-1").Return(nil, gorm.ErrRecordNotFound)
+		userDalMock.On("CreateUser", mock.MatchedBy(func(u *dal.User) bool {
+			return u.Name == "Jane Doe" && u.Email == "jane@example.com" && *u.FirebaseUID == "uid-1"
+		})).Return(&gorm.DB{})
+
+		resp := postSession(t, NewAuthService(userDalMock, fakeVerifier{identity: verified}, auth.Config{}, false), token, nil)
+
+		require.Equal(t, fiber.StatusOK, resp.StatusCode)
+		var body struct {
+			Redirect string `json:"redirect"`
+		}
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
+		require.Equal(t, "/", body.Redirect)
+		require.NotEmpty(t, resp.Cookies(), "the session cookie is set")
+		userDalMock.AssertExpectations(t)
 	})
 
-	t.Run("the state of the cancelled login cannot be used afterwards", func(t *testing.T) {
-		resp := callback("code=abc&state=" + state)
+	t.Run("an existing user is reused", func(t *testing.T) {
+		userDalMock := &mocks.UserDalMock{}
+		userDalMock.On("FindUserByFirebaseUID", "uid-1").Return(&dal.User{Model: gorm.Model{ID: 3}, Email: "jane@example.com"}, nil)
 
-		require.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
+		resp := postSession(t, NewAuthService(userDalMock, fakeVerifier{identity: verified}, auth.Config{}, false), token, nil)
+
+		require.Equal(t, fiber.StatusOK, resp.StatusCode)
+		userDalMock.AssertNotCalled(t, "CreateUser", mock.Anything)
 	})
 
-	t.Run("an error without a started login goes to the front page too", func(t *testing.T) {
-		resp, err := app.Test(httptest.NewRequest("GET", "/auth/callback?error=access_denied", nil), -1)
-		require.NoError(t, err)
+	t.Run("an unverified email is refused without creating a user", func(t *testing.T) {
+		userDalMock := &mocks.UserDalMock{}
+		unverified := &auth.Identity{UID: "uid-2", Email: "x@example.com"}
 
-		require.Equal(t, fiber.StatusFound, resp.StatusCode)
-		require.Equal(t, "/", resp.Header.Get("Location"))
+		resp := postSession(t, NewAuthService(userDalMock, fakeVerifier{identity: unverified}, auth.Config{}, false), token, nil)
+
+		require.Equal(t, fiber.StatusForbidden, resp.StatusCode)
+		require.Equal(t, "email_not_verified", errorCode(t, resp))
+		require.Empty(t, resp.Cookies())
+		userDalMock.AssertNotCalled(t, "FindUserByFirebaseUID", mock.Anything)
 	})
 
-	t.Run("the error is not shown to the user", func(t *testing.T) {
-		resp := callback("error=%3Cscript%3Ealert(1)%3C%2Fscript%3E&state=" + state)
+	t.Run("a token that does not verify is refused", func(t *testing.T) {
+		service := NewAuthService(&mocks.UserDalMock{}, fakeVerifier{err: errors.New("bad signature")}, auth.Config{}, false)
 
-		body, err := io.ReadAll(resp.Body)
-		require.NoError(t, err)
-		require.Empty(t, body)
-		require.Equal(t, "/", resp.Header.Get("Location"))
+		resp := postSession(t, service, token, nil)
+
+		require.Equal(t, fiber.StatusUnauthorized, resp.StatusCode)
+		require.Equal(t, "invalid_token", errorCode(t, resp))
+		require.Empty(t, resp.Cookies())
 	})
+
+	t.Run("a stale login asks the user to sign in again", func(t *testing.T) {
+		service := NewAuthService(&mocks.UserDalMock{}, fakeVerifier{err: auth.ErrStaleLogin}, auth.Config{}, false)
+
+		resp := postSession(t, service, token, nil)
+
+		require.Equal(t, fiber.StatusUnauthorized, resp.StatusCode)
+		require.Equal(t, "stale_login", errorCode(t, resp))
+	})
+
+	t.Run("a request without a token is refused", func(t *testing.T) {
+		service := NewAuthService(&mocks.UserDalMock{}, fakeVerifier{identity: verified}, auth.Config{}, false)
+
+		for _, body := range []string{`{}`, `{"idToken":""}`, `not json`} {
+			resp := postSession(t, service, body, nil)
+			require.Equal(t, fiber.StatusBadRequest, resp.StatusCode, body)
+			require.Equal(t, "invalid_request", errorCode(t, resp), body)
+		}
+	})
+
+	t.Run("dev mode has no session endpoint", func(t *testing.T) {
+		service := NewAuthService(&mocks.UserDalMock{}, nil, auth.Config{}, true)
+
+		resp := postSession(t, service, token, nil)
+
+		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
+	})
+}
+
+func TestDisplayName(t *testing.T) {
+	require.Equal(t, "Jane Doe", displayName(&auth.Identity{Name: " Jane Doe ", Email: "jane@example.com"}))
+	require.Equal(t, "jane", displayName(&auth.Identity{Email: "jane@example.com"}))
+	require.Equal(t, "not-an-email", displayName(&auth.Identity{Email: "not-an-email"}))
+}
+
+func TestAuthService_LogoutGoesToTheFrontPage(t *testing.T) {
+	app := fiber.New()
+	service := NewAuthService(&mocks.UserDalMock{}, fakeVerifier{}, auth.Config{}, false)
+	app.Post("/auth/logout", service.LogoutHandler)
+
+	resp, err := app.Test(httptest.NewRequest("POST", "/auth/logout", nil), -1)
+	require.NoError(t, err)
+
+	require.Equal(t, fiber.StatusFound, resp.StatusCode)
+	require.Equal(t, "/", resp.Header.Get("Location"))
 }

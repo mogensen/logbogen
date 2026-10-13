@@ -4,7 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"net/url"
+	"sort"
+	"strings"
 
 	"github.com/mogensen/logbook/pkg/auth"
 )
@@ -20,7 +21,7 @@ func isLoopbackHost(host string) bool {
 
 // validateAuthConfig refuses to start with an unsafe authentication setup. Dev mode lets anyone log in
 // as any email, so it must stay on a loopback address unless allowDevMode is set explicitly.
-func validateAuthConfig(cfg *Config, auth0 auth.Config, allowDevMode bool) error {
+func validateAuthConfig(cfg *Config, firebase auth.Config, allowDevMode bool) error {
 	if cfg.DevMode {
 		host, _, err := net.SplitHostPort(cfg.ListenAddr)
 		if err != nil {
@@ -36,40 +37,29 @@ func validateAuthConfig(cfg *Config, auth0 auth.Config, allowDevMode bool) error
 
 	var missing []string
 	for name, value := range map[string]string{
-		"AUTH0_DOMAIN":            auth0.Domain,
-		"AUTH0_CLIENT_ID":         auth0.ClientID,
-		"AUTH0_CLIENT_SECRET":     auth0.ClientSecret,
-		"AUTH0_CALLBACK_URL":      auth0.CallbackURL,
-		"AUTH0_LOGOUT_RETURN_URL": auth0.LogoutReturnURL,
+		"FIREBASE_PROJECT_ID":  firebase.ProjectID,
+		"FIREBASE_API_KEY":     firebase.APIKey,
+		"FIREBASE_AUTH_DOMAIN": firebase.AuthDomain,
 	} {
 		if value == "" {
 			missing = append(missing, name)
 		}
 	}
 	if len(missing) > 0 {
+		sort.Strings(missing)
 		return fmt.Errorf("missing required settings: %v", missing)
 	}
 
-	for name, value := range map[string]string{
-		"AUTH0_CALLBACK_URL":      auth0.CallbackURL,
-		"AUTH0_LOGOUT_RETURN_URL": auth0.LogoutReturnURL,
-	} {
-		u, err := url.Parse(value)
-		if err != nil || u.Host == "" {
-			return fmt.Errorf("%s is not a valid URL", name)
-		}
-		if u.Scheme != "https" && !isLoopbackHost(u.Hostname()) {
-			return errors.New(name + " must use https unless it points to localhost")
-		}
+	if strings.ContainsAny(firebase.AuthDomain, "/:? ") {
+		return errors.New("FIREBASE_AUTH_DOMAIN must be a host name like my-project.firebaseapp.com")
 	}
 	return nil
 }
 
-// formActionOrigins lists the origins a form post may redirect to. Logout posts a form and then redirects
-// to Auth0 to end the Auth0 session too, which the form-action policy would otherwise block.
-func formActionOrigins(devMode bool, auth0Domain string) []string {
-	if devMode || auth0Domain == "" {
-		return nil
+// cspAuthDomain is the Firebase auth domain the CSP must allow, none in dev mode which signs in locally.
+func cspAuthDomain(devMode bool, firebase auth.Config) string {
+	if devMode {
+		return ""
 	}
-	return []string{"https://" + auth0Domain}
+	return firebase.AuthDomain
 }

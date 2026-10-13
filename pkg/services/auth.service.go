@@ -1,10 +1,11 @@
 package services
 
 import (
-	"crypto/rand"
-	"encoding/hex"
+	"context"
 	"errors"
 	"fmt"
+	"net/mail"
+	"strings"
 
 	"github.com/mogensen/logbook/pkg/auth"
 	"github.com/mogensen/logbook/pkg/dal"
@@ -18,26 +19,33 @@ import (
 
 var ErrNotLoggedIn = fmt.Errorf("user is not logged in")
 
-// AuthService handles authentication related operations
-type AuthService struct {
-	userDal       dal.UserDal
-	authenticator *auth.Authenticator // nil in dev mode
-	devMode       bool
+// TokenVerifier validates a Firebase ID token and returns the identity it carries.
+type TokenVerifier interface {
+	Verify(ctx context.Context, rawToken string) (*auth.Identity, error)
 }
 
-// NewAuthService creates a new instance of AuthService. authenticator may be
-// nil when devMode is true (the local dev-login bypass is used instead).
-func NewAuthService(userDal dal.UserDal, authenticator *auth.Authenticator, devMode bool) *AuthService {
+// AuthService handles authentication related operations
+type AuthService struct {
+	userDal  dal.UserDal
+	verifier TokenVerifier // nil in dev mode
+	firebase auth.Config
+	devMode  bool
+}
+
+// NewAuthService creates a new instance of AuthService. verifier may be nil when devMode is true
+// (the local dev-login bypass is used instead).
+func NewAuthService(userDal dal.UserDal, verifier TokenVerifier, firebase auth.Config, devMode bool) *AuthService {
 	return &AuthService{
-		userDal:       userDal,
-		authenticator: authenticator,
-		devMode:       devMode,
+		userDal:  userDal,
+		verifier: verifier,
+		firebase: firebase,
+		devMode:  devMode,
 	}
 }
 
 // upsertUser finds an existing user by Firebase UID or creates a new one.
-// This is the single identity entry point shared by the Auth0 callback and the
-// dev-login bypass.
+// This is the single identity entry point shared by the Firebase session
+// endpoint and the dev-login bypass.
 func (s *AuthService) upsertUser(sub, name, email string) (*dal.User, error) {
 	user, err := s.userDal.FindUserByFirebaseUID(sub)
 	if err == nil {
@@ -124,87 +132,47 @@ func (s *AuthService) GetUserByID(userID uint64) (*types.User, error) {
 
 // HTTP Handlers
 
-// LoginPageHandler starts a login. In dev mode it renders the local dev-login
-// form; otherwise it redirects to Auth0 Universal Login.
+// LoginPageHandler renders the login page. In dev mode it shows the local dev-login form; otherwise it
+// hands the public Firebase settings to the page, which signs in with the Firebase JS SDK.
 func (s *AuthService) LoginPageHandler(ctx *fiber.Ctx) error {
-	if s.devMode {
-		return ctx.Render("auth/login", fiber.Map{
-			"Title":   "Login",
-			"DevMode": true,
-		})
-	}
-
-	state, err := randomToken()
-	if err != nil {
-		utils.Log(ctx).Error("Failed to generate state", "error", err)
-		return ctx.SendStatus(fiber.StatusInternalServerError)
-	}
-	nonce, err := randomToken()
-	if err != nil {
-		utils.Log(ctx).Error("Failed to generate nonce", "error", err)
-		return ctx.SendStatus(fiber.StatusInternalServerError)
-	}
-
-	session, err := database.SessionStore.Get(ctx)
-	if err != nil {
-		utils.Log(ctx).Error("Failed to get session store", "error", err)
-		return ctx.SendStatus(fiber.StatusInternalServerError)
-	}
-	session.Set("oauth_state", state)
-	session.Set("oauth_nonce", nonce)
-	if err := session.Save(); err != nil {
-		utils.Log(ctx).Error("Failed to save session", "error", err)
-		return ctx.SendStatus(fiber.StatusInternalServerError)
-	}
-
-	return ctx.Redirect(s.authenticator.AuthCodeURL(state, nonce))
+	return ctx.Render("auth/login", fiber.Map{
+		"Title":    "Login",
+		"DevMode":  s.devMode,
+		"Firebase": s.firebase,
+	})
 }
 
-// CallbackHandler completes the Auth0 Authorization Code flow: it verifies the
-// state, exchanges the code, verifies the ID token, upserts the user and
-// establishes the local session.
-func (s *AuthService) CallbackHandler(ctx *fiber.Ctx) error {
-	session, err := database.SessionStore.Get(ctx)
+// sessionRequest is the body the login page posts after signing in with Firebase.
+type sessionRequest struct {
+	IDToken string `json:"idToken"`
+}
+
+// SessionHandler turns a verified Firebase ID token into a local session: it verifies the token, requires
+// a verified email, upserts the user and establishes the session.
+func (s *AuthService) SessionHandler(ctx *fiber.Ctx) error {
+	if s.devMode || s.verifier == nil {
+		return ctx.SendStatus(fiber.StatusNotFound)
+	}
+
+	var req sessionRequest
+	if err := ctx.BodyParser(&req); err != nil || req.IDToken == "" {
+		return sessionError(ctx, fiber.StatusBadRequest, "invalid_request")
+	}
+
+	identity, err := s.verifier.Verify(ctx.Context(), req.IDToken)
+	if errors.Is(err, auth.ErrStaleLogin) {
+		return sessionError(ctx, fiber.StatusUnauthorized, "stale_login")
+	}
 	if err != nil {
-		utils.Log(ctx).Error("Failed to get session store", "error", err)
-		return ctx.SendStatus(fiber.StatusInternalServerError)
+		utils.Log(ctx).Warn("Failed to verify Firebase ID token", "error", err)
+		return sessionError(ctx, fiber.StatusUnauthorized, "invalid_token")
 	}
 
-	expectedState, _ := session.Get("oauth_state").(string)
-	expectedNonce, _ := session.Get("oauth_nonce").(string)
-
-	// State and nonce are single use, whatever the outcome of the callback
-	session.Delete("oauth_state")
-	session.Delete("oauth_nonce")
-	if err := session.Save(); err != nil {
-		utils.Log(ctx).Error("Failed to save session", "error", err)
-		return ctx.SendStatus(fiber.StatusInternalServerError)
+	if !identity.EmailVerified {
+		return sessionError(ctx, fiber.StatusForbidden, "email_not_verified")
 	}
 
-	// Auth0 sends the user back with an error when the login was cancelled or denied, which is no failure
-	if oauthError := ctx.Query("error"); oauthError != "" {
-		utils.Log(ctx).Info("Login was not completed", "error", oauthError, "description", ctx.Query("error_description"))
-		return ctx.Redirect("/")
-	}
-
-	if expectedState == "" || ctx.Query("state") != expectedState {
-		utils.Log(ctx).Warn("Invalid OAuth state on callback")
-		return ctx.Status(fiber.StatusBadRequest).SendString("Invalid state")
-	}
-
-	token, err := s.authenticator.Exchange(ctx.Context(), ctx.Query("code"))
-	if err != nil {
-		utils.Log(ctx).Error("Failed to exchange auth code", "error", err)
-		return ctx.Status(fiber.StatusUnauthorized).SendString("Authentication failed")
-	}
-
-	claims, err := s.authenticator.VerifyIDToken(ctx.Context(), token, expectedNonce)
-	if err != nil {
-		utils.Log(ctx).Error("Failed to verify ID token", "error", err)
-		return ctx.Status(fiber.StatusUnauthorized).SendString("Authentication failed")
-	}
-
-	user, err := s.upsertUser(claims.Sub, claims.Name, claims.Email)
+	user, err := s.upsertUser(identity.UID, displayName(identity), identity.Email)
 	if err != nil {
 		utils.Log(ctx).Error("Failed to upsert user", "error", err)
 		return ctx.SendStatus(fiber.StatusInternalServerError)
@@ -214,13 +182,29 @@ func (s *AuthService) CallbackHandler(ctx *fiber.Ctx) error {
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	utils.LogEvent(ctx, "user_logged_in", map[string]any{"user_id": user.ID, "login_method": "auth0"})
-	return ctx.Redirect("/")
+	utils.LogEvent(ctx, "user_logged_in", map[string]any{"user_id": user.ID, "login_method": "firebase"})
+	return ctx.JSON(fiber.Map{"redirect": "/"})
+}
+
+// sessionError answers the login page with a code it maps to a message for the user.
+func sessionError(ctx *fiber.Ctx, status int, code string) error {
+	return ctx.Status(status).JSON(fiber.Map{"error": code})
+}
+
+// displayName falls back to the part of the email before the @ for accounts without a name.
+func displayName(identity *auth.Identity) string {
+	if name := strings.TrimSpace(identity.Name); name != "" {
+		return name
+	}
+	if addr, err := mail.ParseAddress(identity.Email); err == nil {
+		return strings.SplitN(addr.Address, "@", 2)[0]
+	}
+	return identity.Email
 }
 
 // DevLoginHandler is the local dev-login bypass (only registered when devMode
 // is enabled). It upserts a user keyed by a synthetic "dev|<email>" subject and
-// establishes the session, mirroring the Auth0 callback.
+// establishes the session, mirroring the Firebase session endpoint.
 func (s *AuthService) DevLoginHandler(ctx *fiber.Ctx) error {
 	if !s.devMode {
 		return ctx.SendStatus(fiber.StatusNotFound)
@@ -250,8 +234,7 @@ func (s *AuthService) DevLoginHandler(ctx *fiber.Ctx) error {
 	return ctx.Redirect("/")
 }
 
-// LogoutHandler destroys the local session. With Auth0 it also redirects to the
-// RP-initiated logout endpoint so the Auth0 session is cleared too.
+// LogoutHandler destroys the local session and returns the user to the front page.
 func (s *AuthService) LogoutHandler(ctx *fiber.Ctx) error {
 	session, err := database.SessionStore.Get(ctx)
 	if err != nil {
@@ -266,9 +249,6 @@ func (s *AuthService) LogoutHandler(ctx *fiber.Ctx) error {
 
 	utils.LogEvent(ctx, "user_logged_out", map[string]any{})
 
-	if !s.devMode && s.authenticator != nil {
-		return ctx.Redirect(s.authenticator.LogoutURL())
-	}
 	return ctx.Redirect("/")
 }
 
@@ -294,13 +274,4 @@ func (s *AuthService) establishSession(ctx *fiber.Ctx, user *dal.User) error {
 		return err
 	}
 	return nil
-}
-
-// randomToken returns a URL-safe random token for OAuth state/nonce values.
-func randomToken() (string, error) {
-	b := make([]byte, 32)
-	if _, err := rand.Read(b); err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(b), nil
 }

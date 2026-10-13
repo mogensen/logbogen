@@ -22,7 +22,7 @@ func AuthRoutes(app fiber.Router, authService *services.AuthService, devMode boo
 	}))
 
 	r.Get("/login", authService.LoginPageHandler)
-	r.Get("/callback", authService.CallbackHandler)
+	r.Post("/session", authService.SessionHandler)
 	r.Post("/logout", authService.LogoutHandler)
 
 	if devMode {
