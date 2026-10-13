@@ -20,11 +20,46 @@
                 <input type="email" class="form-control" id="email" name="email" required>
             </div>
             <button type="submit" class="btn btn-primary login-btn btn-block mt-4">Log ind (dev)</button>
-            <p class="text-muted mt-2"><small>Dev login bypass — Auth0 is disabled in this environment.</small></p>
+            <p class="text-muted mt-2"><small>Dev login bypass — Firebase is disabled in this environment.</small></p>
         </form>
         {{ else }}
-        <p class="text-center mt-4">Log ind med din Auth0-konto.</p>
-        <a href="/auth/login" class="btn btn-primary login-btn btn-block">Log ind med Auth0</a>
+        <div id="firebase-login"
+             data-api-key="{{ .Firebase.APIKey }}"
+             data-auth-domain="{{ .Firebase.AuthDomain }}"
+             data-project-id="{{ .Firebase.ProjectID }}">
+            <div id="login-message" class="alert d-none mt-3" role="alert" aria-live="polite"></div>
+
+            <button type="button" id="google-login" class="btn btn-outline-primary login-btn btn-block mt-4">
+                <i class="fab fa-google me-2"></i>Log ind med Google
+            </button>
+
+            <p class="text-center text-muted my-3">eller</p>
+
+            <form id="email-form" novalidate>
+                <div id="name-group" class="d-none">
+                    <label for="login-name" class="form-label">Navn:</label>
+                    <input type="text" class="form-control" id="login-name" autocomplete="name" maxlength="100">
+                </div>
+                <div>
+                    <label for="login-email" class="form-label mt-3">E-mail:</label>
+                    <input type="email" class="form-control" id="login-email" autocomplete="email" required>
+                </div>
+                <div>
+                    <label for="login-password" class="form-label mt-3">Adgangskode:</label>
+                    <input type="password" class="form-control" id="login-password" autocomplete="current-password" required>
+                </div>
+                <button type="submit" id="email-submit" class="btn btn-primary login-btn btn-block mt-4">Log ind</button>
+            </form>
+
+            <div class="d-flex justify-content-between mt-3">
+                <a href="#" id="toggle-signup">Opret konto</a>
+                <a href="#" id="forgot-password">Glemt adgangskode?</a>
+            </div>
+            <div id="resend-group" class="d-none mt-3">
+                <button type="button" id="resend-verification" class="btn btn-link p-0">Send bekræftelsesmailen igen</button>
+            </div>
+        </div>
+        <script type="module" src="/js/firebase-login.js"></script>
         {{ end }}
     </div>
 </div>

@@ -4,12 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/template/html/v2"
 	"github.com/mogensen/logbook/pkg/auth"
 	"github.com/mogensen/logbook/pkg/dal"
 	"github.com/mogensen/logbook/pkg/mocks"
@@ -306,4 +310,44 @@ func TestAuthService_LogoutGoesToTheFrontPage(t *testing.T) {
 
 	require.Equal(t, fiber.StatusFound, resp.StatusCode)
 	require.Equal(t, "/", resp.Header.Get("Location"))
+}
+
+// loginPage renders the real login view for a service
+func loginPage(t *testing.T, service *AuthService) string {
+	dir := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, "auth"), 0o755))
+	view, err := os.ReadFile("../../views/auth/login.html")
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "auth", "login.html"), view, 0o644))
+
+	app := fiber.New(fiber.Config{Views: html.New(dir, ".html")})
+	app.Get("/auth/login", service.LoginPageHandler)
+
+	resp, err := app.Test(httptest.NewRequest("GET", "/auth/login", nil), -1)
+	require.NoError(t, err)
+	require.Equal(t, fiber.StatusOK, resp.StatusCode)
+	body, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	return string(body)
+}
+
+func TestAuthService_LoginPage(t *testing.T) {
+	firebase := auth.Config{ProjectID: "logbogen", APIKey: "key-123", AuthDomain: "logbogen.firebaseapp.com"}
+
+	t.Run("hands the public Firebase settings to the sign-in script", func(t *testing.T) {
+		page := loginPage(t, NewAuthService(&mocks.UserDalMock{}, fakeVerifier{}, firebase, false))
+
+		require.Contains(t, page, `data-api-key="key-123"`)
+		require.Contains(t, page, `data-auth-domain="logbogen.firebaseapp.com"`)
+		require.Contains(t, page, `data-project-id="logbogen"`)
+		require.Contains(t, page, `src="/js/firebase-login.js"`)
+		require.NotContains(t, page, "/auth/dev-login")
+	})
+
+	t.Run("dev mode shows the dev login and no Firebase", func(t *testing.T) {
+		page := loginPage(t, NewAuthService(&mocks.UserDalMock{}, nil, auth.Config{}, true))
+
+		require.Contains(t, page, "/auth/dev-login")
+		require.NotContains(t, page, "firebase-login")
+	})
 }
