@@ -9,12 +9,11 @@ type User struct {
 	gorm.Model
 	Name      string `gorm:"not null"`
 	ThemePref string `gorm:"default:'auto'"`
-	// Auth0Sub is the Auth0 subject (sub) claim, the stable external identity.
-	// It is a pointer with a unique index so that NULLs (e.g. legacy rows) do
-	// not collide on the unique constraint.
-	Auth0Sub   *string    `gorm:"uniqueIndex"`
-	Email      string     `gorm:"uniqueIndex;not null"`
-	Activities []Activity `gorm:"foreignKey:User"`
+	// FirebaseUID is the Firebase user ID, the stable external identity. It is a pointer
+	// with a unique index so that NULLs do not collide on the unique constraint.
+	FirebaseUID *string    `gorm:"uniqueIndex"`
+	Email       string     `gorm:"uniqueIndex;not null"`
+	Activities  []Activity `gorm:"foreignKey:User"`
 }
 
 // UserDal defines the interface for user data access operations
@@ -23,7 +22,7 @@ type UserDal interface {
 	UpdateUser(user *User) error
 	FindUserById(id uint64) (*User, error)
 	FindUserByEmail(email string) (*User, error)
-	FindUserByAuth0Sub(sub string) (*User, error)
+	FindUserByFirebaseUID(uid string) (*User, error)
 	FindUsers() ([]User, error)
 	FindUsersByIDs(ids []uint64) ([]User, error)
 }
@@ -63,10 +62,10 @@ func (d *userDalImpl) FindUserByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
-// FindUserByAuth0Sub searches the user's table with the Auth0 subject given
-func (d *userDalImpl) FindUserByAuth0Sub(sub string) (*User, error) {
+// FindUserByFirebaseUID searches the user's table with the Firebase user ID given
+func (d *userDalImpl) FindUserByFirebaseUID(uid string) (*User, error) {
 	var user User
-	err := d.db.Model(&User{}).Preload("Activities").Take(&user, "auth0_sub = ?", sub).Error
+	err := d.db.Model(&User{}).Preload("Activities").Take(&user, "firebase_uid = ?", uid).Error
 	if err != nil {
 		return nil, err
 	}

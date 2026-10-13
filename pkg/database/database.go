@@ -78,5 +78,17 @@ func Connect() error {
 
 // Migrate migrates all the database tables
 func Migrate(tables ...interface{}) error {
+	if err := renameLegacyColumns(DB); err != nil {
+		return err
+	}
 	return DB.AutoMigrate(tables...)
+}
+
+// renameLegacyColumns keeps the identity of existing users when auth0_sub became firebase_uid.
+func renameLegacyColumns(db *gorm.DB) error {
+	m := db.Migrator()
+	if m.HasTable("users") && m.HasColumn("users", "auth0_sub") && !m.HasColumn("users", "firebase_uid") {
+		return m.RenameColumn("users", "auth0_sub", "firebase_uid")
+	}
+	return nil
 }

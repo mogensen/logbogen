@@ -35,11 +35,11 @@ func NewAuthService(userDal dal.UserDal, authenticator *auth.Authenticator, devM
 	}
 }
 
-// upsertUser finds an existing user by Auth0 subject or creates a new one.
+// upsertUser finds an existing user by Firebase UID or creates a new one.
 // This is the single identity entry point shared by the Auth0 callback and the
 // dev-login bypass.
 func (s *AuthService) upsertUser(sub, name, email string) (*dal.User, error) {
-	user, err := s.userDal.FindUserByAuth0Sub(sub)
+	user, err := s.userDal.FindUserByFirebaseUID(sub)
 	if err == nil {
 		return user, nil
 	}
@@ -49,9 +49,9 @@ func (s *AuthService) upsertUser(sub, name, email string) (*dal.User, error) {
 
 	subCopy := sub
 	newUser := &dal.User{
-		Name:     name,
-		Email:    email,
-		Auth0Sub: &subCopy,
+		Name:        name,
+		Email:       email,
+		FirebaseUID: &subCopy,
 	}
 	if res := s.userDal.CreateUser(newUser); res.Error != nil {
 		return nil, res.Error

@@ -26,10 +26,10 @@ func TestAuthService_upsertUser(t *testing.T) {
 			Name:  "Existing User",
 			Email: "existing@example.com",
 		}
-		userDalMock.On("FindUserByAuth0Sub", "auth0|123").Return(existing, nil)
+		userDalMock.On("FindUserByFirebaseUID", "uid-123").Return(existing, nil)
 
 		service := NewAuthService(userDalMock, nil, true)
-		user, err := service.upsertUser("auth0|123", "Existing User", "existing@example.com")
+		user, err := service.upsertUser("uid-123", "Existing User", "existing@example.com")
 
 		assert.NoError(t, err)
 		assert.Equal(t, existing, user)
@@ -40,17 +40,17 @@ func TestAuthService_upsertUser(t *testing.T) {
 
 	t.Run("creates a new user when the Auth0 sub is unknown", func(t *testing.T) {
 		userDalMock := &mocks.UserDalMock{}
-		userDalMock.On("FindUserByAuth0Sub", "auth0|new").Return(nil, gorm.ErrRecordNotFound)
+		userDalMock.On("FindUserByFirebaseUID", "uid-new").Return(nil, gorm.ErrRecordNotFound)
 		userDalMock.On("CreateUser", mock.Anything).Return(&gorm.DB{Error: nil})
 
 		service := NewAuthService(userDalMock, nil, true)
-		user, err := service.upsertUser("auth0|new", "New User", "new@example.com")
+		user, err := service.upsertUser("uid-new", "New User", "new@example.com")
 
 		assert.NoError(t, err)
 		assert.Equal(t, "New User", user.Name)
 		assert.Equal(t, "new@example.com", user.Email)
-		assert.NotNil(t, user.Auth0Sub)
-		assert.Equal(t, "auth0|new", *user.Auth0Sub)
+		assert.NotNil(t, user.FirebaseUID)
+		assert.Equal(t, "uid-new", *user.FirebaseUID)
 		userDalMock.AssertExpectations(t)
 	})
 }

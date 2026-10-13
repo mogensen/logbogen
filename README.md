@@ -86,7 +86,8 @@ user. Set `ALLOW_DEV_MODE=true` to override this on a trusted network.
 > **Upgrading an existing database:** the old `users` table had a `NOT NULL password`
 > column. The app drops it automatically on startup, so existing databases keep working
 > (and keep their activities/certifications). Note that pre-Auth0 accounts are not linked
-> to Auth0 identities — a fresh user row is created on first Auth0 login.
+> to Auth0 identities — a fresh user row is created on first Auth0 login. The `auth0_sub`
+> column is renamed to `firebase_uid` on startup, keeping each user's stored identity.
 
 ## Live reload with Air
 

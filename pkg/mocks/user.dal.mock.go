@@ -35,8 +35,8 @@ func (m *UserDalMock) FindUserByEmail(email string) (*dal.User, error) {
 	return args.Get(0).(*dal.User), args.Error(1)
 }
 
-// FindUserByAuth0Sub mocks the FindUserByAuth0Sub method
-func (m *UserDalMock) FindUserByAuth0Sub(sub string) (*dal.User, error) {
+// FindUserByFirebaseUID mocks the FindUserByFirebaseUID method
+func (m *UserDalMock) FindUserByFirebaseUID(sub string) (*dal.User, error) {
 	args := m.Called(sub)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)

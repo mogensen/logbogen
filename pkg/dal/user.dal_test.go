@@ -17,7 +17,7 @@ func TestUserDal_CreateUser(t *testing.T) {
 	db.Migrator().AutoMigrate(&User{}, &Activity{})
 
 	userDal := NewUserDal(db)
-	user := &User{Name: "Test User", Email: "test@example.com", Auth0Sub: strPtr("auth0|1")}
+	user := &User{Name: "Test User", Email: "test@example.com", FirebaseUID: strPtr("uid-1")}
 
 	result := userDal.CreateUser(user)
 	require.NotNil(t, result)
@@ -31,7 +31,7 @@ func TestUserDal_FindUserById(t *testing.T) {
 	db.Migrator().AutoMigrate(&User{}, &Activity{})
 
 	userDal := NewUserDal(db)
-	user := &User{Name: "Test User", Email: "test@example.com", Auth0Sub: strPtr("auth0|1")}
+	user := &User{Name: "Test User", Email: "test@example.com", FirebaseUID: strPtr("uid-1")}
 	userResult := userDal.CreateUser(user)
 	require.NotNil(t, userResult)
 	require.NoError(t, userResult.Error)
@@ -51,7 +51,7 @@ func TestUserDal_FindUserByEmail(t *testing.T) {
 	db.Migrator().AutoMigrate(&User{}, &Activity{})
 
 	userDal := NewUserDal(db)
-	user := &User{Name: "Test User", Email: "test@example.com", Auth0Sub: strPtr("auth0|1")}
+	user := &User{Name: "Test User", Email: "test@example.com", FirebaseUID: strPtr("uid-1")}
 	userResult := userDal.CreateUser(user)
 	require.NotNil(t, userResult)
 	require.NoError(t, userResult.Error)
@@ -64,26 +64,26 @@ func TestUserDal_FindUserByEmail(t *testing.T) {
 	require.Equal(t, "test@example.com", dbUser.Email)
 }
 
-func TestUserDal_FindUserByAuth0Sub(t *testing.T) {
+func TestUserDal_FindUserByFirebaseUID(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open("file::memory:"), &gorm.Config{})
 	require.NoError(t, err)
 
 	db.Migrator().AutoMigrate(&User{}, &Activity{})
 
 	userDal := NewUserDal(db)
-	user := &User{Name: "Test User", Email: "test@example.com", Auth0Sub: strPtr("auth0|abc")}
+	user := &User{Name: "Test User", Email: "test@example.com", FirebaseUID: strPtr("uid-abc")}
 	userResult := userDal.CreateUser(user)
 	require.NotNil(t, userResult)
 	require.NoError(t, userResult.Error)
 
-	dbUser, err := userDal.FindUserByAuth0Sub("auth0|abc")
+	dbUser, err := userDal.FindUserByFirebaseUID("uid-abc")
 	require.NoError(t, err)
 	require.NotNil(t, dbUser)
 	require.Equal(t, "Test User", dbUser.Name)
-	require.NotNil(t, dbUser.Auth0Sub)
-	require.Equal(t, "auth0|abc", *dbUser.Auth0Sub)
+	require.NotNil(t, dbUser.FirebaseUID)
+	require.Equal(t, "uid-abc", *dbUser.FirebaseUID)
 
-	_, err = userDal.FindUserByAuth0Sub("auth0|missing")
+	_, err = userDal.FindUserByFirebaseUID("uid-missing")
 	require.ErrorIs(t, err, gorm.ErrRecordNotFound)
 }
 
@@ -94,11 +94,11 @@ func TestUserDal_FindUsers(t *testing.T) {
 	db.Migrator().AutoMigrate(&User{}, &Activity{})
 
 	userDal := NewUserDal(db)
-	user := &User{Name: "Test User", Email: "test@example.com", Auth0Sub: strPtr("auth0|1")}
+	user := &User{Name: "Test User", Email: "test@example.com", FirebaseUID: strPtr("uid-1")}
 	userResult := userDal.CreateUser(user)
 	require.NotNil(t, userResult)
 	require.NoError(t, userResult.Error)
-	user = &User{Name: "Test User 2", Email: "test2@example.com", Auth0Sub: strPtr("auth0|2")}
+	user = &User{Name: "Test User 2", Email: "test2@example.com", FirebaseUID: strPtr("uid-2")}
 	userResult = userDal.CreateUser(user)
 	require.NotNil(t, userResult)
 	require.NoError(t, userResult.Error)
@@ -116,7 +116,7 @@ func TestUserDal_FindUsersByIDs(t *testing.T) {
 	db := setupTestDB(t)
 	userDal := NewUserDal(db)
 	for i, email := range []string{"a@example.com", "b@example.com", "c@example.com"} {
-		require.NoError(t, userDal.CreateUser(&User{Name: email, Email: email, Auth0Sub: strPtr(email)}).Error, i)
+		require.NoError(t, userDal.CreateUser(&User{Name: email, Email: email, FirebaseUID: strPtr(email)}).Error, i)
 	}
 
 	users, err := userDal.FindUsersByIDs([]uint64{1, 3, 42})
