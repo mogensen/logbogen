@@ -31,6 +31,7 @@ const emailInput = document.getElementById('login-email');
 const passwordInput = document.getElementById('login-password');
 const submitButton = document.getElementById('email-submit');
 const toggleSignup = document.getElementById('toggle-signup');
+const togglePrompt = document.getElementById('toggle-prompt');
 const resendGroup = document.getElementById('resend-group');
 
 let signingUp = false;
@@ -193,7 +194,8 @@ function setSigningUp(value) {
     signingUp = value;
     nameGroup.classList.toggle('d-none', !value);
     submitButton.textContent = value ? 'Opret konto' : 'Log ind';
-    toggleSignup.textContent = value ? 'Har du allerede en konto? Log ind' : 'Opret konto';
+    togglePrompt.textContent = value ? 'Har du allerede en logbog?' : 'Har du ikke en logbog endnu?';
+    toggleSignup.textContent = value ? 'Log ind' : 'Opret en!';
     passwordInput.autocomplete = value ? 'new-password' : 'current-password';
 }
 
