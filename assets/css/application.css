@@ -767,3 +767,8 @@ tr[data-href] {
 }
 
 .error-details dd.error-id { color: var(--bs-pink, #e83e8c); }
+
+/* Footer text uses the link colour, which is gray in dark mode */
+.footer, .footer .text-muted {
+  color: var(--bs-link-color) !important;
+}
