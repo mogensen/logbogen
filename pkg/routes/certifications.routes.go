@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"errors"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -63,6 +64,14 @@ func CertificationRoutes(app *fiber.App, certService *services.CertificationServ
 		cert.ID = uuid.New()
 
 		if _, err := certService.CreateCertification(cert); err != nil {
+			var fe *fiber.Error
+			if errors.As(err, &fe) && fe.Code < fiber.StatusInternalServerError {
+				return c.Status(fe.Code).Render("certifications/create", fiber.Map{
+					"Cert":               cert,
+					"CertificationTypes": config.AllCertificationTypes,
+					"error":              fe.Message,
+				})
+			}
 			utils.Log(c).Error("Failed to create certification", "error", err)
 			return c.Render("certifications/create", fiber.Map{
 				"Cert":  cert,
@@ -88,6 +97,10 @@ func CertificationRoutes(app *fiber.App, certService *services.CertificationServ
 		cert.ID = certId
 
 		if _, err := certService.UpdateCertification(userId, cert); err != nil {
+			var fe *fiber.Error
+			if errors.As(err, &fe) && fe.Code < fiber.StatusInternalServerError {
+				return fe
+			}
 			utils.Log(c).Error("Failed to update certification", "error", err, "certification_id", certId)
 			return fiber.NewError(fiber.StatusInternalServerError, "Error updating certification")
 		}

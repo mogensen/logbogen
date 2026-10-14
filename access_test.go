@@ -132,3 +132,42 @@ func TestUsersCannotReadOrChangeEachOthersData(t *testing.T) {
 		require.Contains(t, bob.GetResponseBody(bob.Get("/certifications/list")), "bob-cert")
 	})
 }
+
+func TestCertificationParticipantsMustBeRealUsers(t *testing.T) {
+	alice := NewTestClient(t)
+	alice.devLogin("Alice", "alice@example.com")
+	bobClient := secondClient(t, alice)
+	bobClient.devLogin("Bob", "bob@example.com")
+	bobID := userID(t, "bob@example.com")
+	form := func(participants ...uint64) url.Values {
+		values := url.Values{"category": {"other"}, "otherType": {"team-cert"}, "provider": {"p"},
+			"start_date": {"2026-01-01"}, "end_date": {"2028-01-01"}}
+		for _, id := range participants {
+			values.Add("participants", fmt.Sprint(id))
+		}
+		return values
+	}
+
+	t.Run("an unknown participant is refused and nothing is stored", func(t *testing.T) {
+		resp := alice.Post("/certifications/create", form(bobID, 9999))
+		require.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
+		require.Contains(t, alice.GetResponseBody(resp), "unknown participant")
+		require.NotContains(t, alice.GetResponseBody(alice.Get("/certifications/list")), "team-cert")
+	})
+
+	t.Run("a real participant is accepted and shown by name", func(t *testing.T) {
+		resp := alice.Post("/certifications/create", form(bobID))
+		require.Equal(t, fiber.StatusFound, resp.StatusCode)
+		require.Contains(t, alice.GetResponseBody(alice.Get(resp.Header.Get("Location"))), "Bob")
+	})
+
+	t.Run("an edit with an unknown participant is refused and changes nothing", func(t *testing.T) {
+		resp := alice.Post("/certifications/create", form(bobID))
+		path := resp.Header.Get("Location")
+
+		edit := alice.Post(path+"/edit", form(9999))
+
+		require.Equal(t, fiber.StatusBadRequest, edit.StatusCode)
+		require.Contains(t, alice.GetResponseBody(alice.Get(path)), "Bob")
+	})
+}
