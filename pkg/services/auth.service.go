@@ -175,11 +175,11 @@ func (s *AuthService) SessionHandler(ctx *fiber.Ctx) error {
 	user, err := s.upsertUser(identity.UID, displayName(identity), identity.Email)
 	if err != nil {
 		utils.Log(ctx).Error("Failed to upsert user", "error", err)
-		return ctx.SendStatus(fiber.StatusInternalServerError)
+		return fiber.NewError(fiber.StatusInternalServerError, "Der opstod en fejl.")
 	}
 
 	if err := s.establishSession(ctx, user); err != nil {
-		return ctx.SendStatus(fiber.StatusInternalServerError)
+		return fiber.NewError(fiber.StatusInternalServerError, "Der opstod en fejl.")
 	}
 
 	utils.LogEvent(ctx, "user_logged_in", map[string]any{"user_id": user.ID, "login_method": "firebase"})
@@ -220,14 +220,18 @@ func (s *AuthService) DevLoginHandler(ctx *fiber.Ctx) error {
 		})
 	}
 
-	user, err := s.upsertUser("dev|"+email, name, email)
+	// An account that already exists for the email is used as is, since emails are unique
+	user, err := s.userDal.FindUserByEmail(email)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		user, err = s.upsertUser("dev|"+email, name, email)
+	}
 	if err != nil {
 		utils.Log(ctx).Error("Failed to upsert dev user", "error", err)
-		return ctx.SendStatus(fiber.StatusInternalServerError)
+		return fiber.NewError(fiber.StatusInternalServerError, "Der opstod en fejl.")
 	}
 
 	if err := s.establishSession(ctx, user); err != nil {
-		return ctx.SendStatus(fiber.StatusInternalServerError)
+		return fiber.NewError(fiber.StatusInternalServerError, "Der opstod en fejl.")
 	}
 
 	utils.LogEvent(ctx, "user_logged_in", map[string]any{"user_id": user.ID, "login_method": "dev"})
@@ -239,12 +243,12 @@ func (s *AuthService) LogoutHandler(ctx *fiber.Ctx) error {
 	session, err := database.SessionStore.Get(ctx)
 	if err != nil {
 		utils.Log(ctx).Error("Failed to get session store", "error", err)
-		return ctx.SendStatus(fiber.StatusInternalServerError)
+		return fiber.NewError(fiber.StatusInternalServerError, "Der opstod en fejl.")
 	}
 
 	if err := session.Destroy(); err != nil {
 		utils.Log(ctx).Error("Failed to destroy session", "error", err)
-		return ctx.SendStatus(fiber.StatusInternalServerError)
+		return fiber.NewError(fiber.StatusInternalServerError, "Der opstod en fejl.")
 	}
 
 	utils.LogEvent(ctx, "user_logged_out", map[string]any{})

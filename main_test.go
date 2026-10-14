@@ -16,6 +16,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/mogensen/logbook/pkg/config"
+	"github.com/mogensen/logbook/pkg/dal"
+	"github.com/mogensen/logbook/pkg/database"
 	"github.com/mogensen/logbook/pkg/types"
 	"github.com/stretchr/testify/require"
 )
@@ -982,4 +984,19 @@ func TestActivityPageColorsFollowTheTheme(t *testing.T) {
 	client.AssertResponseNotContains(body, "solid #333")
 	client.AssertResponseContains(body, `[data-bs-theme="dark"] .act-chip { --chip-bg: var(--bs-success-bg-subtle)`)
 	client.AssertResponseContains(body, ".act-btnO { border: 2px solid var(--bs-body-color)")
+}
+
+func TestDevLoginSignsInAsAnExistingAccountWithTheEmail(t *testing.T) {
+	client := NewTestClient(t)
+	uid := "firebase-uid"
+	existing := &dal.User{Name: "Real User", Email: "real@example.com", FirebaseUID: &uid}
+	require.NoError(t, database.DB.Create(existing).Error)
+
+	client.Login("real@example.com", "")
+
+	var count int64
+	require.NoError(t, database.DB.Model(&dal.User{}).Where("email = ?", "real@example.com").Count(&count).Error)
+	require.Equal(t, int64(1), count)
+	resp := client.Get(fmt.Sprintf("/users/%d", existing.ID))
+	client.AssertResponseContains(client.GetResponseBody(resp), "Real User")
 }
