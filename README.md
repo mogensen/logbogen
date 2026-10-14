@@ -54,6 +54,10 @@ The image listens on `0.0.0.0:3000` (`LISTEN_ADDR`), runs as a non-root user and
 database and sessions in `/app/data`, which is the directory to mount as a volume. It runs
 against real Firebase Authentication, so set the `FIREBASE_*` variables, and put a TLS reverse proxy in front of it.
 
+On a host with a very old Docker the container can abort at start with `runtime/cgo: pthread_create failed:
+Operation not permitted`, since its seccomp profile blocks the `clone3` syscall. Upgrading Docker fixes it, and
+`--security-opt seccomp=unconfined` (`security_opt: [seccomp=unconfined]` in compose) works around it.
+
 Pushing a git tag publishes the image to `ghcr.io/<owner>/<repo>` with the tag name and `latest`.
 
 ## Data
