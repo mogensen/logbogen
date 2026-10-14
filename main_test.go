@@ -697,13 +697,13 @@ func TestFooterCreditsTheImagesAndData(t *testing.T) {
 	body := client.GetResponseBody(client.Get("/"))
 
 	for _, credit := range []string{
-		`<a href="https://www.flaticon.com/">Icons from Flaticon</a>`,
-		"Photo by Laura Chouette",
+		`<a href="https://www.flaticon.com/">Ikoner fra Flaticon</a>`,
+		"Foto af Laura Chouette",
 		`href="https://unsplash.com/photos/black-and-silver-point-and-shoot-camera-FC8Dx3Six-k`,
-		"Weather data by Open-Meteo.com",
-		`Reverse geocoding by <a href="https://nominatim.org/">Nominatim</a>`,
-		`href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors`,
-		"Contact",
+		"Vejrdata fra Open-Meteo.com",
+		`<a href="https://nominatim.org/">Nominatim</a>`,
+		`href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragydere`,
+		"Kontakt",
 		`href="https://github.com/mogensen/logbogen/issues"`,
 	} {
 		client.AssertResponseContains(body, credit)
