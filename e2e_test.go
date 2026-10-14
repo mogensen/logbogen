@@ -39,7 +39,8 @@ func e2eServer(t *testing.T, opts ...func(*Config)) string {
 
 // e2eBrowser starts Chrome, installing the Playwright driver on first use
 func e2eBrowser(t *testing.T) playwright.Browser {
-	// The default driver download hosts no longer serve the driver, this one does
+	// The default driver download hosts no longer serve the driver, this one does, but only for the driver of
+	// the pinned playwright-go (v0.5001.0). Newer drivers answer 400, so do not upgrade it without checking.
 	if os.Getenv("PLAYWRIGHT_DOWNLOAD_HOST") == "" {
 		t.Setenv("PLAYWRIGHT_DOWNLOAD_HOST", "https://cdn.playwright.dev/dbazure/download/playwright")
 	}

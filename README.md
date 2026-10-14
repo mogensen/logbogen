@@ -4,7 +4,7 @@ A logbook web application for tracking activities, certifications, and achieveme
 
 ## Build
 
-Requires Go 1.24+.
+Requires Go 1.26+.
 
 ```bash
 go build -o logbogen .

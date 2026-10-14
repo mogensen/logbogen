@@ -2,7 +2,7 @@
 ARG BASE_REGISTRY=docker.io/library
 
 # mattn/go-sqlite3 needs CGO, so build on a glibc image that ships gcc
-FROM ${BASE_REGISTRY}/golang:1.25-bookworm AS builder
+FROM ${BASE_REGISTRY}/golang:1.26-bookworm AS builder
 WORKDIR /src
 
 COPY go.mod go.sum ./
