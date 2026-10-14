@@ -35,34 +35,6 @@ func NewActivityService(userDal dal.UserDal, activityDal dal.ActivityDal, weathe
 	}
 }
 
-// maxParticipants bounds the participants list of a single activity
-const maxParticipants = 50
-
-// cleanParticipants de-duplicates the ids, drops the owner and rejects unknown users
-func (s *ActivityService) cleanParticipants(ownerID uint64, ids []uint64) ([]uint64, error) {
-	seen := make(map[uint64]struct{}, len(ids))
-	unique := make([]uint64, 0, len(ids))
-	for _, id := range ids {
-		if _, ok := seen[id]; ok || id == ownerID {
-			continue
-		}
-		seen[id] = struct{}{}
-		unique = append(unique, id)
-	}
-	if len(unique) > maxParticipants {
-		return nil, fiber.NewError(fiber.StatusBadRequest, "too many participants")
-	}
-
-	users, err := s.userDal.FindUsersByIDs(unique)
-	if err != nil {
-		return nil, err
-	}
-	if len(users) != len(unique) {
-		return nil, fiber.NewError(fiber.StatusBadRequest, "unknown participant")
-	}
-	return unique, nil
-}
-
 // resolveLocation names the place at the coordinates. When the geocoder fails or finds nothing,
 // it falls back to the submitted location, or to the plain coordinates.
 func (s *ActivityService) resolveLocation(lat, lng float64, submitted string) string {
@@ -140,7 +112,7 @@ func (s *ActivityService) CreateActivity(c *fiber.Ctx) error {
 		return s.renderActivityForm(c, "activities/create", b, "", err)
 	}
 
-	participants, err := s.cleanParticipants(utils.GetUser(c).ID, b.Activity.ParticipantsIDs)
+	participants, err := cleanParticipants(s.userDal, utils.GetUser(c).ID, b.Activity.ParticipantsIDs)
 	if err != nil {
 		return s.renderActivityForm(c, "activities/create", b, "", err)
 	}
@@ -417,7 +389,7 @@ func (s *ActivityService) UpdateActivity(c *fiber.Ctx) error {
 		return s.renderActivityForm(c, "activities/edit", b, activityID, err)
 	}
 
-	participants, err := s.cleanParticipants(utils.GetUser(c).ID, b.Activity.ParticipantsIDs)
+	participants, err := cleanParticipants(s.userDal, utils.GetUser(c).ID, b.Activity.ParticipantsIDs)
 	if err != nil {
 		return s.renderActivityForm(c, "activities/edit", b, activityID, err)
 	}
