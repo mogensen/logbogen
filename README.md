@@ -27,7 +27,7 @@ local use, and `LOG_LEVEL` sets the lowest level). Every request gets an id, sen
 header and shown on error pages as the Fejl-id, and it is on every line logged for that request:
 
 * `request`: one line per request with `method`, `path`, `route`, `status`, `latency_ms`, `bytes`, `ip` and
-  `user_id`. The query string is left out, since it can hold OAuth codes.
+  `user_id`. The query string is left out, since it can hold tokens.
 * Events for what users do, such as `user_logged_in`, `user_logged_out`, `activity_created`, `activity_updated`,
   `activity_deleted`, `activity_cloned`, `certification_created`, `theme_changed`, with the ids involved.
 * `request failed` and `panic recovered` for server errors, with the cause and the stack, which the page never shows.
@@ -87,12 +87,6 @@ user. Set `ALLOW_DEV_MODE=true` to override this on a trusted network.
 2. Register a web app and copy its settings. They are public identifiers, not secrets.
 3. In `.env`, set `AUTH_DEV_MODE=false` and fill in `FIREBASE_PROJECT_ID`,
    `FIREBASE_API_KEY` and `FIREBASE_AUTH_DOMAIN` (for example `my-project.firebaseapp.com`).
-
-> **Upgrading an existing database:** the old `users` table had a `NOT NULL password`
-> column. The app drops it automatically on startup, so existing databases keep working
-> (and keep their activities/certifications). Accounts from before the move to Firebase are not linked
-> to Firebase identities — a fresh user row is created on first login. The old `auth0_sub`
-> column is renamed to `firebase_uid` on startup, keeping each user's stored identity.
 
 ## Live reload with Air
 

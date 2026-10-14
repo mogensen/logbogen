@@ -53,7 +53,7 @@ func logApp(buf *bytes.Buffer, level slog.Level) *fiber.App {
 	app.Get("/missing", func(c *fiber.Ctx) error { return fiber.NewError(fiber.StatusNotFound, "no such thing") })
 	app.Get("/broken", func(c *fiber.Ctx) error { return errors.New("table users has no column secret") })
 	app.Get("/panic", func(c *fiber.Ctx) error { panic("something exploded") })
-	app.Get("/auth/callback", func(c *fiber.Ctx) error { return c.SendStatus(fiber.StatusFound) })
+	app.Get("/session-check", func(c *fiber.Ctx) error { return c.SendStatus(fiber.StatusFound) })
 	app.Get("/css/app.css", func(c *fiber.Ctx) error { return c.SendString("body{}") })
 	return app
 }
@@ -113,11 +113,11 @@ func TestAccessLog(t *testing.T) {
 		var buf bytes.Buffer
 		app := logApp(&buf, slog.LevelInfo)
 
-		get(t, app, "/auth/callback?code=secret-code&state=secret-state&error=access_denied")
+		get(t, app, "/session-check?token=secret-token&state=secret-state&error=access_denied")
 
 		require.NotContains(t, buf.String(), "secret")
 		require.NotContains(t, buf.String(), "access_denied")
-		require.Equal(t, "/auth/callback", lines(t, &buf)[0]["path"])
+		require.Equal(t, "/session-check", lines(t, &buf)[0]["path"])
 	})
 
 	t.Run("an error is logged with the status the client gets", func(t *testing.T) {

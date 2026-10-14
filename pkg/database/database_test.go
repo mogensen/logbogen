@@ -6,8 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 func TestSessionCookieFlags(t *testing.T) {
@@ -30,19 +28,4 @@ func TestEnsureDir(t *testing.T) {
 
 	// Running it again on an existing directory is fine
 	require.NoError(t, ensureDir(dbPath))
-}
-
-func TestRenameLegacyColumns_KeepsTheIdentityOfExistingUsers(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	require.NoError(t, err)
-	require.NoError(t, db.Exec("CREATE TABLE users (id integer primary key, auth0_sub text)").Error)
-	require.NoError(t, db.Exec("INSERT INTO users (id, auth0_sub) VALUES (1, 'dev|a@example.com')").Error)
-
-	require.NoError(t, renameLegacyColumns(db))
-	require.NoError(t, renameLegacyColumns(db), "running it again is a no-op")
-
-	var uid string
-	require.NoError(t, db.Raw("SELECT firebase_uid FROM users WHERE id = 1").Scan(&uid).Error)
-	require.Equal(t, "dev|a@example.com", uid)
-	require.False(t, db.Migrator().HasColumn("users", "auth0_sub"))
 }

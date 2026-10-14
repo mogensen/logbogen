@@ -8,8 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/datatypes"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 func TestActivityService_CreateActivity(t *testing.T) {
@@ -286,26 +284,4 @@ func TestActivityService_UpdateWeather(t *testing.T) {
 		require.Nil(t, stored.WeatherCode)
 		require.Nil(t, stored.WeatherFetchedAt)
 	})
-}
-
-func TestActivity_MigrationAddsWeatherColumnsToAnExistingTable(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	require.NoError(t, err)
-
-	// The table as it was before the weather columns existed
-	require.NoError(t, db.Exec(`CREATE TABLE activities (
-		id text NOT NULL, user integer NOT NULL, date datetime NOT NULL, lat real NOT NULL, lng real NOT NULL,
-		location text NOT NULL, type text NOT NULL, category text NOT NULL, role text NOT NULL, comment text NOT NULL,
-		participants json, created_at datetime NOT NULL, updated_at datetime NOT NULL, deleted_at datetime)`).Error)
-	require.NoError(t, db.Exec(`INSERT INTO activities (id, user, date, lat, lng, location, type, category, role, comment, created_at, updated_at)
-		VALUES ('a', 1, '2024-01-01', 1, 2, 'Home', 't', 'c', 'r', 'c', '2024-01-01', '2024-01-01')`).Error)
-
-	require.NoError(t, db.AutoMigrate(&Activity{}))
-
-	for _, column := range []string{"weather_temperature", "weather_code", "weather_fetched_at"} {
-		require.True(t, db.Migrator().HasColumn(&Activity{}, column), column)
-	}
-	var count int64
-	require.NoError(t, db.Model(&Activity{}).Where("weather_temperature IS NULL").Count(&count).Error)
-	require.Equal(t, int64(1), count, "existing rows keep working with empty weather")
 }

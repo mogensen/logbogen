@@ -36,7 +36,7 @@ var (
 	// TRUSTEDPROXIES is a comma separated list of proxy IPs allowed to set PROXYHEADER.
 	TRUSTEDPROXIES = splitList(getEnv("TRUSTED_PROXIES", ""))
 
-	// AUTHRATELIMIT is the number of login, callback and logout requests allowed per client IP per window.
+	// AUTHRATELIMIT is the number of login, session and logout requests allowed per client IP per window.
 	// An unset or invalid value keeps the strict default.
 	AUTHRATELIMIT = getEnvPositiveInt("AUTH_RATE_LIMIT", DefaultAuthRateLimit)
 	// AUTHRATEWINDOW is the period the limit applies to. An unset or invalid value keeps the strict default.

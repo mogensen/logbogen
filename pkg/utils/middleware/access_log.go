@@ -9,7 +9,7 @@ import (
 	"github.com/mogensen/logbook/pkg/utils"
 )
 
-// AccessLog logs one structured line per request, without the query string since it can hold OAuth codes.
+// AccessLog logs one structured line per request, without the query string since it can hold tokens.
 // Static files are logged at debug level, and a handler error goes through the error handler here, once.
 func AccessLog(logger *slog.Logger) fiber.Handler {
 	return func(c *fiber.Ctx) error {
