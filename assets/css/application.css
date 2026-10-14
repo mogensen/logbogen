@@ -665,3 +665,105 @@ tr[data-href] {
 .brand-lockup { height: 36px; width: auto; }
 .brand-lockup-dark, [data-bs-theme="dark"] .brand-lockup-light { display: none; }
 [data-bs-theme="dark"] .brand-lockup-dark { display: inline-block; }
+
+.error-page {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3rem;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+.error-mark {
+  position: relative;
+  flex: 0 0 220px;
+  width: 200px;
+  height: 200px;
+  margin-top: 1rem;
+}
+
+.error-mark img {
+  width: 200px;
+  height: 200px;
+  transform: rotate(-8deg);
+  opacity: 0.9;
+}
+
+.error-mark-dark, [data-bs-theme="dark"] .error-mark-light { display: none; }
+[data-bs-theme="dark"] .error-mark-dark { display: inline-block; }
+
+.error-stamp {
+  position: absolute;
+  right: -18px;
+  bottom: 6px;
+  transform: rotate(6deg);
+  background: var(--bs-body-bg);
+  border: 2px solid var(--bs-danger);
+  border-radius: 999px;
+  color: var(--bs-danger);
+  font-family: 'Cabin Sketch', cursive;
+  font-size: 2.6rem;
+  line-height: 1;
+  padding: 0.2rem 0.7rem;
+}
+
+.error-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  flex: 1 1 360px;
+  min-width: 0;
+  max-width: 560px;
+}
+
+.error-code {
+  margin: 0 0 0.4rem;
+  font-family: ui-monospace, Menlo, monospace;
+  color: var(--bs-secondary-color);
+}
+
+.error-body h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+.error-body .alert {
+  margin: 0;
+  border-width: 2px;
+}
+
+.error-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-top: 0.5rem;
+  padding: 1.25rem 1.5rem;
+  border: 2px solid var(--bs-body-color);
+  border-radius: 8px;
+}
+
+.error-details h2 { margin: 0; font-size: 1.5rem; }
+.error-details hr { margin: 0; opacity: 1; border-top: 2px solid var(--bs-body-color); }
+.error-details p { margin: 0; }
+.error-details dl { display: flex; flex-direction: column; gap: 0.4rem; margin: 0; }
+
+.error-details dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 1rem;
+  background: var(--bs-tertiary-bg);
+  border-radius: 6px;
+}
+
+.error-details dd {
+  margin: 0;
+  font-family: ui-monospace, Menlo, monospace;
+  overflow-wrap: anywhere;
+}
+
+.error-details dd.error-id { color: var(--bs-pink, #e83e8c); }

@@ -213,7 +213,7 @@ func TestFailuresAreLoggedWithTheIDShownToTheUser(t *testing.T) {
 		body := client.GetResponseBody(resp)
 
 		require.Equal(t, fiber.StatusInternalServerError, resp.StatusCode)
-		client.AssertResponseContains(body, "<code>"+id+"</code>")
+		client.AssertResponseContains(body, `<dd class="error-id">`+id+"</dd>")
 		client.AssertResponseNotContains(body, "users_secret")
 
 		failed := logs.find(t, "request failed")

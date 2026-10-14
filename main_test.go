@@ -320,11 +320,11 @@ func TestErrorPagesHideInternals(t *testing.T) {
 
 	t.Run("the 500 page shows the error id, time and path", func(t *testing.T) {
 		body := client.GetResponseBody(client.Get("/boom"))
-		client.AssertResponseContains(body, "Systemet svarer ikke")
+		client.AssertResponseContains(body, "Der gik noget galt")
 		client.AssertResponseContains(body, "Fejl-id")
 		client.AssertResponseContains(body, "Tidspunkt")
-		client.AssertResponseContains(body, "<dd class=\"col-8 font-monospace\">/boom</dd>")
-		client.AssertResponseContains(body, "Prøv igen")
+		client.AssertResponseContains(body, "<dd>/boom</dd>")
+		client.AssertResponseContains(body, "Kopiér fejlinfo")
 	})
 
 	t.Run("4xx pages show the request id too", func(t *testing.T) {

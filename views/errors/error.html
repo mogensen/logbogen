@@ -1,38 +1,41 @@
-<div class="container py-5">
-	<p class="font-monospace text-muted mb-2">Fejl {{ .Code }}</p>
-	<h1 class="mb-3">{{ if eq .Code 404 }}Siden findes ikke{{ else if ge .Code 500 }}Systemet svarer ikke{{ else }}Der opstod en fejl{{ end }}</h1>
-	<div class="alert {{ if ge .Code 500 }}alert-danger{{ else }}alert-warning{{ end }}" role="alert">{{ .Error }}</div>
-	{{ if .Info }}
-	<div class="alert alert-success" role="alert">{{ .Info }}</div>
-	{{ end }}
+<div class="error-page">
+	<div class="error-mark">
+		<img src="/images/icons/logbogen-mark.svg" alt="" class="error-mark-light">
+		<img src="/images/icons/logbogen-mark-dark.svg" alt="" class="error-mark-dark">
+		<span class="error-stamp">{{ .Code }}</span>
+	</div>
 
-	<div class="mb-4">
+	<div class="error-body">
+		<div>
+			<p class="error-code">Fejl {{ .Code }}</p>
+			<h1>{{ if eq .Code 404 }}Siden findes ikke{{ else if eq .Code 500 }}Der gik noget galt{{ else if eq .Code 503 }}Logbogen er nede lige nu{{ else if ge .Code 500 }}Systemet svarer ikke{{ else }}Der opstod en fejl{{ end }}</h1>
+		</div>
+
+		<div class="alert alert-danger" role="alert">{{ .Error }}</div>
+		{{ if .Info }}
+		<div class="alert alert-success" role="alert">{{ .Info }}</div>
+		{{ end }}
+
+		<div>
+			<a href="/" class="btn btn-primary btn-lg">Til forsiden</a>
+		</div>
+
 		{{ if ge .Code 500 }}
-		<a href="" class="btn btn-primary">Prøv igen</a>
-		<a href="/" class="btn btn-outline-secondary">Til forsiden</a>
-		{{ else }}
-		<a href="/" class="btn btn-primary">Til forsiden</a>
-		<a href="#" onclick="history.back(); return false" class="btn btn-outline-secondary">Gå tilbage</a>
+		<section class="error-details">
+			<h2>Bliver fejlen ved?</h2>
+			<hr>
+			<p>Oplys fejl-id og klokkeslæt til den, der driver Logbogen, så kan fejlen findes i loggen.</p>
+			<dl>
+				<div><dt>Fejl-id (request_id)</dt><dd class="error-id">{{ .ErrorID }}</dd></div>
+				<div><dt>Tidspunkt</dt><dd>{{ .Time }}</dd></div>
+				<div><dt>Sti</dt><dd>{{ .Path }}</dd></div>
+			</dl>
+			<div>
+				<button type="button" class="btn btn-primary" id="copy-error-info" data-label="Kopiér fejlinfo">Kopiér fejlinfo</button>
+			</div>
+		</section>
+		{{ else if .ErrorID }}
+		<p class="text-muted small">Fejl-id (request_id): <code>{{ .ErrorID }}</code></p>
 		{{ end }}
 	</div>
-
-	{{ if ge .Code 500 }}
-	<div class="card mb-4" style="max-width: 620px">
-		<div class="card-body">
-			<h6 class="card-title">Bliver fejlen ved?</h6>
-			<p class="card-text mb-0">Oplys fejl-id og klokkeslæt til den, der driver Logbogen, så kan fejlen findes i loggen.</p>
-		</div>
-	</div>
-
-	<dl class="row border-top pt-3" style="max-width: 520px">
-		<dt class="col-4">Fejl-id (request_id)</dt>
-		<dd class="col-8 font-monospace"><code>{{ .ErrorID }}</code></dd>
-		<dt class="col-4">Tidspunkt</dt>
-		<dd class="col-8 font-monospace">{{ .Time }}</dd>
-		<dt class="col-4">Sti</dt>
-		<dd class="col-8 font-monospace">{{ .Path }}</dd>
-	</dl>
-	{{ else if .ErrorID }}
-	<p class="text-muted small">Fejl-id (request_id): <code>{{ .ErrorID }}</code></p>
-	{{ end }}
 </div>
