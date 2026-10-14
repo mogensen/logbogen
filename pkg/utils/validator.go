@@ -70,12 +70,3 @@ func validationMessage(fieldErr validator.FieldError) string {
 	}
 	return "Ugyldige oplysninger."
 }
-
-// CUSTOM VALIDATION RULES =============================================
-
-// Password validation rule: required,min=6,max=100
-var _ = validate.RegisterValidation("password", func(fl validator.FieldLevel) bool {
-	l := len(fl.Field().String())
-
-	return l >= 6 && l < 100
-})
