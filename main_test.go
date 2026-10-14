@@ -701,6 +701,8 @@ func TestFooterCreditsTheImagesAndData(t *testing.T) {
 		"Photo by Laura Chouette",
 		`href="https://unsplash.com/photos/black-and-silver-point-and-shoot-camera-FC8Dx3Six-k`,
 		"Weather data by Open-Meteo.com",
+		`Reverse geocoding by <a href="https://nominatim.org/">Nominatim</a>`,
+		`href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors`,
 	} {
 		client.AssertResponseContains(body, credit)
 	}
