@@ -703,6 +703,8 @@ func TestFooterCreditsTheImagesAndData(t *testing.T) {
 		"Weather data by Open-Meteo.com",
 		`Reverse geocoding by <a href="https://nominatim.org/">Nominatim</a>`,
 		`href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors`,
+		"Contact",
+		`href="https://github.com/mogensen/logbogen/issues"`,
 	} {
 		client.AssertResponseContains(body, credit)
 	}
