@@ -58,9 +58,9 @@ func (s *CertificationService) GetCertificationsByUser(userID uint64) ([]Certifi
 	return certs, result.Error
 }
 
-// UpdateCertification updates an existing certification
+// UpdateCertification updates an existing certification. The owner is never changed.
 func (s *CertificationService) UpdateCertification(userID uint64, cert Certification) (Certification, error) {
-	result := s.db.Model(&Certification{}).Where("id = ? AND user_id = ?", cert.ID, userID).Updates(&cert)
+	result := s.db.Model(&Certification{}).Where("id = ? AND user_id = ?", cert.ID, userID).Omit("user_id").Updates(&cert)
 	if result.Error != nil {
 		return cert, result.Error
 	}

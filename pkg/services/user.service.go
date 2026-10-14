@@ -43,9 +43,8 @@ func (s *UserService) GetUsers(currentUserID uint64) (*GetUsersResponse, error) 
 		}
 
 		res = append(res, &types.UserForLogin{
-			ID:    uint64(user.ID),
-			Name:  user.Name,
-			Email: user.Email,
+			ID:   uint64(user.ID),
+			Name: user.Name,
 		})
 	}
 
