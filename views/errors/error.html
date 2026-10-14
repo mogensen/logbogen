@@ -1,17 +1,36 @@
-<h1>Der er sket en fejl</h1>
-{{ if .Error }}
-<div class="alert alert-danger" role="alert">
-	{{ .Error }}
+<div class="container py-5">
+	<p class="font-monospace text-muted mb-2">Fejl {{ .Code }}</p>
+	<h1 class="mb-3">{{ if eq .Code 404 }}Siden findes ikke{{ else if ge .Code 500 }}Systemet svarer ikke{{ else }}Der opstod en fejl{{ end }}</h1>
+	<div class="alert {{ if ge .Code 500 }}alert-danger{{ else }}alert-warning{{ end }}" role="alert">{{ .Error }}</div>
+	{{ if .Info }}
+	<div class="alert alert-success" role="alert">{{ .Info }}</div>
+	{{ end }}
+
+	<div class="mb-4">
+		{{ if ge .Code 500 }}
+		<a href="" class="btn btn-primary">Prøv igen</a>
+		<a href="/" class="btn btn-outline-secondary">Til forsiden</a>
+		{{ else }}
+		<a href="/" class="btn btn-primary">Til forsiden</a>
+		<a href="#" onclick="history.back(); return false" class="btn btn-outline-secondary">Gå tilbage</a>
+		{{ end }}
+	</div>
+
+	{{ if ge .Code 500 }}
+	<div class="card mb-4" style="max-width: 620px">
+		<div class="card-body">
+			<h6 class="card-title">Bliver fejlen ved?</h6>
+			<p class="card-text mb-0">Oplys fejl-id og klokkeslæt til den, der driver Logbogen, så kan fejlen findes i loggen.</p>
+		</div>
+	</div>
+
+	<dl class="row border-top pt-3" style="max-width: 520px">
+		<dt class="col-4">Fejl-id</dt>
+		<dd class="col-8 font-monospace"><code>{{ .ErrorID }}</code></dd>
+		<dt class="col-4">Tidspunkt</dt>
+		<dd class="col-8 font-monospace">{{ .Time }}</dd>
+		<dt class="col-4">Sti</dt>
+		<dd class="col-8 font-monospace">{{ .Path }}</dd>
+	</dl>
+	{{ end }}
 </div>
-{{ end }}
-{{ if .Info }}
-<div class="alert alert-success" role="alert">
-	{{ .Info }}
-</div>
-{{ end }}
-{{ if .Code }}
-<p>Fejlkode: {{ .Code }}</p>
-{{ end }}
-{{ if .ErrorID }}
-<p>Fejl-id: <code>{{ .ErrorID }}</code></p>
-{{ end }}

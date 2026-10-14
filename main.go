@@ -196,6 +196,9 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	routes.ActivitiesRoutes(app, activitiesService, authMiddleware)
 	routes.ScoreboardRoutes(app, scoreboardService, authMiddleware)
 	routes.CertificationRoutes(app, certificationsService, authMiddleware)
+	if cfg.DevMode {
+		routes.DevRoutes(app)
+	}
 
 	return app, nil
 }

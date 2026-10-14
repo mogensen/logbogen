@@ -316,6 +316,22 @@ func TestErrorPagesHideInternals(t *testing.T) {
 		client.AssertResponseContains(body, "Der opstod en fejl.")
 	})
 
+	t.Run("the 500 page shows the error id, time and path", func(t *testing.T) {
+		body := client.GetResponseBody(client.Get("/boom"))
+		client.AssertResponseContains(body, "Systemet svarer ikke")
+		client.AssertResponseContains(body, "Fejl-id")
+		client.AssertResponseContains(body, "Tidspunkt")
+		client.AssertResponseContains(body, "<dd class=\"col-8 font-monospace\">/boom</dd>")
+		client.AssertResponseContains(body, "Prøv igen")
+	})
+
+	t.Run("the dev preview renders any error status", func(t *testing.T) {
+		resp := client.Get("/errors/503")
+		require.Equal(t, fiber.StatusServiceUnavailable, resp.StatusCode)
+		require.Equal(t, fiber.StatusBadRequest, client.Get("/errors/200").StatusCode)
+		require.Equal(t, fiber.StatusBadRequest, client.Get("/errors/abc").StatusCode)
+	})
+
 	t.Run("5xx fiber errors are hidden", func(t *testing.T) {
 		resp := client.Get("/wrapped")
 		require.Equal(t, fiber.StatusInternalServerError, resp.StatusCode)
