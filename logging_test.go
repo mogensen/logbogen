@@ -224,13 +224,13 @@ func TestFailuresAreLoggedWithTheIDShownToTheUser(t *testing.T) {
 		require.EqualValues(t, 500, failed[0]["status"])
 	})
 
-	t.Run("a client error has no error line and no id on the page", func(t *testing.T) {
+	t.Run("a client error has no error line but the page shows the request id", func(t *testing.T) {
 		before := len(logs.find(t, "request failed"))
 
 		resp := client.Get("/no-such-page")
 
 		require.Equal(t, fiber.StatusNotFound, resp.StatusCode)
-		client.AssertResponseNotContains(client.GetResponseBody(resp), "Fejl-id")
+		client.AssertResponseContains(client.GetResponseBody(resp), resp.Header.Get("X-Request-Id"))
 		require.Equal(t, before, len(logs.find(t, "request failed")))
 	})
 

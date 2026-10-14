@@ -27,12 +27,12 @@ func ErrorHandler(c *fiber.Ctx, err error) error {
 	}
 
 	data := fiber.Map{
-		"Error": msg,
-		"Code":  code,
+		"Error":   msg,
+		"Code":    code,
+		"ErrorID": RequestID(c),
 	}
 	if code >= fiber.StatusInternalServerError {
-		// The id on the page matches the logged line, so a user can report it and the error is easy to find
-		data["ErrorID"] = RequestID(c)
+		// The id on the page matches the logged request_id, so a user can report it and the error is easy to find
 		data["Time"] = time.Now().Format("2006-01-02 15:04:05")
 		data["Path"] = c.Path()
 		Log(c).Error("request failed", "method", c.Method(), "path", c.Path(), "status", code, "error", err)

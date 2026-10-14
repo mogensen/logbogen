@@ -327,6 +327,12 @@ func TestErrorPagesHideInternals(t *testing.T) {
 		client.AssertResponseContains(body, "Prøv igen")
 	})
 
+	t.Run("4xx pages show the request id too", func(t *testing.T) {
+		resp := client.Get("/conflict")
+		require.NotEmpty(t, resp.Header.Get("X-Request-Id"))
+		client.AssertResponseContains(client.GetResponseBody(resp), resp.Header.Get("X-Request-Id"))
+	})
+
 	t.Run("the dev preview renders any error status", func(t *testing.T) {
 		resp := client.Get("/errors/503")
 		require.Equal(t, fiber.StatusServiceUnavailable, resp.StatusCode)
