@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/mogensen/logbook/pkg/config"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,6 +17,14 @@ func TestSessionCookieFlags(t *testing.T) {
 	SetCookieSecure(false)
 	t.Cleanup(func() { SetCookieSecure(true) })
 	require.False(t, SessionStore.CookieSecure)
+}
+
+func TestImportingThePackageCreatesNoDatabaseFile(t *testing.T) {
+	if config.DB != config.DefaultDB {
+		t.Skip("DB is set, so the default path says nothing")
+	}
+	require.NoFileExists(t, config.DB)
+	require.NoDirExists(t, filepath.Dir(config.DB))
 }
 
 func TestEnsureDir(t *testing.T) {

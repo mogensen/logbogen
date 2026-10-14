@@ -23,31 +23,15 @@ func ensureDir(dbPath string) error {
 }
 
 func init() {
-	if err := ensureDir(config.DB); err != nil {
-		slog.Error("Failed to create the database directory", "path", config.DB, "error", err)
-	}
-
-	// Init sessions store
-	storage := sqlite3.New(sqlite3.Config{
-		Database:        config.DB,
-		Table:           "sessions",
-		Reset:           false,
-		GCInterval:      10 * time.Second,
-		MaxOpenConns:    100,
-		MaxIdleConns:    100,
-		ConnMaxLifetime: 1 * time.Second,
-	})
-
-	// Initialize a session store
-	sessConfig := session.Config{
-		Storage:        storage,
+	// Sessions stay in memory until Connect gives them the database file, so importing this package, as every
+	// test binary does, never creates files
+	SessionStore = session.New(session.Config{
 		Expiration:     30 * time.Minute, // Expire sessions after 30 minutes of inactivity
 		KeyLookup:      "cookie:session", // Removed __Host- prefix
 		CookieSecure:   true,
 		CookieHTTPOnly: true,
 		CookieSameSite: "Lax",
-	}
-	SessionStore = session.New(sessConfig)
+	})
 }
 
 // SetCookieSecure toggles the Secure flag on the session cookie. Only dev mode over plain HTTP should turn it off.
@@ -71,6 +55,17 @@ func Connect() error {
 
 	// Setting the database connection to use in routes
 	DB = db
+
+	// The sessions live in the same file as the data
+	SessionStore.Storage = sqlite3.New(sqlite3.Config{
+		Database:        config.DB,
+		Table:           "sessions",
+		Reset:           false,
+		GCInterval:      10 * time.Second,
+		MaxOpenConns:    100,
+		MaxIdleConns:    100,
+		ConnMaxLifetime: 1 * time.Second,
+	})
 
 	slog.Info("Database connection established")
 	return nil
