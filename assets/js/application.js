@@ -201,7 +201,9 @@ $(() => {
         var lat = $('#activity-form-map').data("lat");
         var lng = $('#activity-form-map').data("lng");
 
-        if (lat !== "" && lng !== "") {
+        // A new activity has the position 0,0, which means that nothing is chosen yet
+        const hasPosition = lat !== "" && lng !== "" && (Number(lat) !== 0 || Number(lng) !== 0);
+        if (hasPosition) {
             updateMarker(lat, lng);
             map.setView(new L.LatLng(lat, lng), zoomLevel);
         }
