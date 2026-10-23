@@ -137,6 +137,8 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	app.Use(middleware.AccessLog(cfg.Logger))
 	app.Use(recover.New(recover.Config{EnableStackTrace: true, StackTraceHandler: logPanic}))
 
+	// Nothing starting with a dot (.DS_Store, .env) may be served from the assets tree
+	app.Use(middleware.BlockDotfiles)
 	app.Static("/", cfg.AssetsPath)
 	// Registered after Static, which resets the response headers for "/"
 	app.Use(middleware.SecurityHeaders(cspFirebase(cfg)))

@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
@@ -1059,4 +1061,15 @@ func TestDevLoginSignsInAsAnExistingAccountWithTheEmail(t *testing.T) {
 	require.Equal(t, int64(1), count)
 	resp := client.Get(fmt.Sprintf("/users/%d", existing.ID))
 	client.AssertResponseContains(client.GetResponseBody(resp), "Real User")
+}
+
+func TestStaticDoesNotServeDotfiles(t *testing.T) {
+	assets := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(assets, "visible.txt"), []byte("public"), 0o600))
+	require.NoError(t, os.WriteFile(filepath.Join(assets, ".hidden"), []byte("secret"), 0o600))
+	client := NewTestClient(t, func(cfg *Config) { cfg.AssetsPath = assets })
+
+	require.Equal(t, fiber.StatusOK, client.Get("/visible.txt").StatusCode)
+	require.Equal(t, fiber.StatusNotFound, client.Get("/.hidden").StatusCode)
+	require.Equal(t, fiber.StatusNotFound, client.Get("/%2ehidden").StatusCode)
 }
