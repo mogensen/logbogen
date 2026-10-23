@@ -17,6 +17,15 @@ func isLoopbackHost(host string) bool {
 	return ip != nil && ip.IsLoopback()
 }
 
+// validateProxyConfig refuses a proxy header without trusted proxies, since any client could then set its own IP.
+func validateProxyConfig(cfg *Config) error {
+	if cfg.ProxyHeader != "" && len(cfg.TrustedProxies) == 0 {
+		return errors.New("PROXY_HEADER is set without TRUSTED_PROXIES, so clients could spoof their IP; " +
+			"list the proxies in TRUSTED_PROXIES")
+	}
+	return nil
+}
+
 // validateAuthConfig refuses to start with an unsafe authentication setup. Dev mode lets anyone log in
 // as any email, so it must stay on a loopback address unless allowDevMode is set explicitly.
 func validateAuthConfig(cfg *Config, allowDevMode bool) error {

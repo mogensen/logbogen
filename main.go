@@ -86,6 +86,10 @@ func DefaultConfig() *Config {
 
 // setupApp creates and configures the Fiber application
 func setupApp(cfg *Config) (*fiber.App, error) {
+	if err := validateProxyConfig(cfg); err != nil {
+		cfg.Logger.Error("Invalid configuration", "error", err)
+		return nil, err
+	}
 	if err := validateAuthConfig(cfg, config.ALLOWDEVMODE); err != nil {
 		cfg.Logger.Error("Invalid configuration", "error", err)
 		return nil, err
