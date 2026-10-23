@@ -181,7 +181,4 @@
   </div>
 </form>
 
-<script type="module">
-  import { enableEscToNavigate } from '/js/keyboard.js';
-  enableEscToNavigate('/activities/{{.Activity.ID}}');
-</script>
+<div data-esc-navigate="/activities/{{.Activity.ID}}" hidden></div>

@@ -72,28 +72,3 @@
 
     <button class="btn btn-success" role="submit" id="submit-button">Save</button>
 </formset>
-
-<script>
-document.getElementById('activity-form').addEventListener('submit', function(e) {
-    const typeInput = document.getElementById('activity-type-input');
-    if (!typeInput.value) {
-        e.preventDefault();
-        document.getElementById('type-error').style.display = 'block';
-        return false;
-    }
-    return true;
-});
-
-// Add this to your existing JavaScript that handles the type selection
-document.addEventListener('DOMContentLoaded', function() {
-    const typeGroup = document.getElementById('activity-type-group');
-    if (typeGroup) {
-        typeGroup.addEventListener('click', function(e) {
-            if (e.target.tagName === 'INPUT') {
-                document.getElementById('activity-type-input').value = e.target.value;
-                document.getElementById('type-error').style.display = 'none';
-            }
-        });
-    }
-});
-</script>

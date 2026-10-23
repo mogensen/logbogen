@@ -8,12 +8,12 @@ import (
 )
 
 // ContentSecurityPolicy allows the CDNs, map tiles and avatar hosts (Gravatar redirects through *.wp.com) in use.
-// Inline scripts and styles are used by the templates, so 'unsafe-inline' is still required.
+// Scripts are all external files, only inline styles are still used by the templates.
 //
 // A non empty firebaseAuthDomain also allows the Firebase sign-in: its SDK, the Google identity endpoints
 // and the auth handler frame. An emulatorHost allows the local Firebase Auth emulator instead of Google.
 func ContentSecurityPolicy(firebaseAuthDomain, emulatorHost string) string {
-	scriptSrc := []string{"script-src 'self' 'unsafe-inline' https://code.jquery.com https://unpkg.com https://cdn.jsdelivr.net"}
+	scriptSrc := []string{"script-src 'self' https://code.jquery.com https://unpkg.com https://cdn.jsdelivr.net"}
 	connectSrc := []string{"connect-src 'self' https://nominatim.openstreetmap.org"}
 	frameSrc := []string{"frame-src 'self'"}
 	if firebaseAuthDomain != "" {

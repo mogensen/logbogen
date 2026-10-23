@@ -6,7 +6,7 @@
   </div>
   <div class="d-print-none">
     {{ if .Activities }}{{ if gt (len .Activities) 0 }}
-    <button type="button" class="btn btn-outline-secondary me-2" onclick="window.print()">
+    <button type="button" class="btn btn-outline-secondary me-2" data-print>
       <i class="fas fa-print"></i>&nbsp; Udskriv
     </button>
     {{ end }}{{ end }}

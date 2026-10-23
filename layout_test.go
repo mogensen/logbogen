@@ -1,7 +1,9 @@
 package main
 
 import (
+	"io/fs"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
@@ -39,4 +41,26 @@ func TestLayoutExternalAssetsArePinned(t *testing.T) {
 	for _, m := range urls {
 		require.Regexp(t, `@\d+\.\d+\.\d+`, m[1], "asset version is not pinned: %s", m[1])
 	}
+}
+
+// The CSP has no unsafe-inline for scripts, so templates must not carry inline scripts or event handlers
+func TestTemplatesHaveNoInlineScripts(t *testing.T) {
+	script := regexp.MustCompile(`(?s)<script([^>]*)>(.*?)</script>`)
+	handler := regexp.MustCompile(`\son[a-z]+\s*=\s*["']|href\s*=\s*["']javascript:`)
+
+	err := filepath.WalkDir("views", func(path string, entry fs.DirEntry, err error) error {
+		if err != nil || entry.IsDir() || filepath.Ext(path) != ".html" {
+			return err
+		}
+		content, err := os.ReadFile(path)
+		require.NoError(t, err)
+
+		for _, match := range script.FindAllStringSubmatch(string(content), -1) {
+			require.Contains(t, match[1], "src=", "inline script in %s", path)
+			require.Empty(t, strings.TrimSpace(match[2]), "script with src has a body in %s", path)
+		}
+		require.False(t, handler.MatchString(string(content)), "inline event handler in %s", path)
+		return nil
+	})
+	require.NoError(t, err)
 }

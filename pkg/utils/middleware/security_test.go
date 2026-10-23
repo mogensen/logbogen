@@ -43,6 +43,15 @@ func TestContentSecurityPolicy_Firebase(t *testing.T) {
 	})
 }
 
+func TestContentSecurityPolicy_NoInlineScripts(t *testing.T) {
+	for _, domain := range []string{"", "logbogen.firebaseapp.com"} {
+		scripts := directive(t, ContentSecurityPolicy(domain, ""), "script-src")
+
+		require.NotContains(t, scripts, "'unsafe-inline'")
+		require.NotContains(t, scripts, "'unsafe-eval'")
+	}
+}
+
 func TestContentSecurityPolicy_Emulator(t *testing.T) {
 	policy := ContentSecurityPolicy("logbogen.firebaseapp.com", "127.0.0.1:9099")
 

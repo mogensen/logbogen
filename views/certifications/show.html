@@ -37,13 +37,10 @@
   <a href="/certifications/{{ .Cert.ID }}/edit" class="btn btn-sm btn-secondary">Rediger</a>
   <form action="/certifications/{{ .Cert.ID }}/delete" method="POST" style="display:inline;">
     <input type="hidden" name="_csrf" value="{{ .csrf }}">
-    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Er du sikker?')">Slet</button>
+    <button type="submit" class="btn btn-sm btn-danger" data-confirm="Er du sikker?">Slet</button>
   </form>
 
   <a href="/certifications/list" class="btn btn-link">Tilbage til oversigt</a>
 </div>
 
-<script type="module">
-  import { enableEscToNavigate } from '/js/keyboard.js';
-  enableEscToNavigate('/certifications/list');
-</script>
+<div data-esc-navigate="/certifications/list" hidden></div>
