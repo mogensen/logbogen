@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/mogensen/logbook/pkg/types"
 	"github.com/stretchr/testify/require"
@@ -73,4 +74,9 @@ func TestValidate_MessagesNameTheFieldAndTheLimitButNotTheValue(t *testing.T) {
 	require.NotContains(t, err.Message, "constraint")
 
 	require.Nil(t, Validate(&types.Activity{CategoryID: "climbing", TypeID: "boulder"}))
+}
+
+func TestFormatDateLong(t *testing.T) {
+	day := types.Date(time.Date(2026, time.October, 3, 0, 0, 0, 0, time.UTC))
+	require.Equal(t, "3. oktober 2026", FormatDateLong(day))
 }

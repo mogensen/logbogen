@@ -55,30 +55,67 @@
 </div>
 
 <section class="print-activities d-none d-print-block">
-  <h2>Logninger{{ if .SelectedFilter }} &ndash; {{ range .CategoryFilters }}{{ if .Active }}{{ .Name }}{{ end }}{{ end }}{{ end }}</h2>
-  {{ range .Activities }}
-  <article class="print-activity">
-    <h3>{{ .Type.Name }} nær {{ .Location }}</h3>
-    <dl>
-      <dt>Kategori</dt><dd>{{ .Category.Name }}</dd>
-      <dt>Dato</dt><dd>{{ fmtDateHuman .Date }}</dd>
-      <dt>Position</dt><dd>{{ .Lat }}, {{ .Lng }}</dd>
-      {{ if .Role }}<dt>Rolle</dt><dd>{{ .Role }}</dd>{{ end }}
-      {{ if .Weather }}<dt>Vejr</dt><dd>{{ .Weather.Temperature }}°C</dd>{{ end }}
-      {{ if .Participants }}<dt>Med på turen</dt><dd>{{ range $i, $p := .Participants }}{{ if $i }}, {{ end }}{{ $p.Name }}{{ end }}</dd>{{ end }}
-    </dl>
-    {{ if .Comment }}<p class="print-comment">{{ .Comment }}</p>{{ end }}
-  </article>
-  {{ end }}
+  <header class="print-head">
+    <img src="/images/icons/logbogen-mark.svg" alt="" width="42" height="42">
+    <span class="print-brand">Logbogen</span>
+    <span class="print-who">{{ .USER.Name }}<br>Udskrevet {{ fmtDateLong .PrintDate }}</span>
+  </header>
+  <div class="print-title">
+    <h1>Aktiviteter{{ range .CategoryFilters }}{{ if .Active }} &ndash; {{ .Name }}{{ end }}{{ end }}</h1>
+    <span>{{ len .Activities }} logninger{{ if gt (len .Activities) 0 }} &middot; {{ fmtDateLong .FirstDate }} &ndash; {{ fmtDateLong .LastDate }}{{ end }}</span>
+  </div>
+  <table class="print-table">
+    <thead>
+      <tr><th>Dato og vejr</th><th>Aktivitet</th><th>Sted og deltagere</th><th>Kommentar</th></tr>
+    </thead>
+    <tbody>
+      {{ range .Activities }}
+      <tr>
+        <td>
+          {{ fmtDateLong .Date }}
+          {{ if .Weather }}<small>{{ .Weather.Temperature }} °C {{ .Weather.Description }}</small>{{ end }}
+        </td>
+        <td class="print-activity">
+          <img src="/images/activities/{{ .Type.ID }}.png" alt="" width="34" height="34">
+          <span>{{ .Category.Name }} &ndash; {{ .Type.Name }}{{ if .Role }}<small>{{ .Role }}</small>{{ end }}</span>
+        </td>
+        <td>
+          {{ .Location }}
+          {{ if .Participants }}<small>{{ range $i, $p := .Participants }}{{ if $i }}, {{ end }}{{ $p.Name }}{{ end }}</small>{{ end }}
+        </td>
+        <td class="print-comment">{{ .Comment }}</td>
+      </tr>
+      {{ end }}
+    </tbody>
+  </table>
+  <footer class="print-foot">
+    <span>Udskrevet fra Logbogen &middot; {{ fmtDateLong .PrintDate }}</span>
+    <span>{{ .USER.Name }} &middot; Aktiviteter</span>
+  </footer>
 </section>
 
 <style>
+@page { size: A4; margin: 14mm; }
 @media print {
-  header, footer { display: none !important; }
-  .print-activity { break-inside: avoid; border-bottom: 1px solid #999; padding: 8px 0; }
-  .print-activity dl { display: grid; grid-template-columns: 9em 1fr; margin: 0; }
-  .print-activity dt { font-weight: 700; }
-  .print-activity dd { margin: 0; }
-  .print-comment { white-space: pre-wrap; margin: 6px 0 0; }
+  header:not(.print-head), footer:not(.print-foot) { display: none !important; }
+  .print-activities { font-family: 'Patrick Hand', sans-serif; font-weight: 700; color: #333; font-size: 10.5pt; line-height: 1.3; }
+  .print-head { display: flex; align-items: center; gap: 4mm; padding-bottom: 3mm; border-bottom: 2px solid #333; }
+  .print-brand { flex: 1 1 auto; font-family: 'Chewy', cursive; font-weight: 400; font-size: 18pt; }
+  .print-who { text-align: right; font-size: 10pt; color: #6b6b6b; }
+  .print-title { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2mm 6mm; margin: 6mm 0 4mm; }
+  .print-title h1 { margin: 0; font-family: 'Cabin Sketch', cursive; font-size: 24pt; line-height: 1; }
+  .print-title span { font-size: 11pt; color: #555; }
+  .print-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .print-table th { text-align: left; color: #6b6b6b; font-size: 9.5pt; padding: 1.5mm; border-bottom: 2px solid #333; }
+  .print-table th:nth-child(1) { width: 28mm; }
+  .print-table th:nth-child(2) { width: 46mm; }
+  .print-table th:nth-child(3) { width: 48mm; }
+  .print-table tr { break-inside: avoid; }
+  .print-table td { vertical-align: top; padding: 2mm 1.5mm; border-bottom: 1px dashed #b5b5b5; }
+  .print-table small { display: block; font-size: 9pt; color: #6b6b6b; }
+  .print-activity { display: flex; align-items: center; gap: 2mm; }
+  .print-activity img { flex: none; width: 9mm; height: 9mm; }
+  .print-comment { font-size: 10pt; line-height: 1.4; white-space: pre-wrap; }
+  .print-foot { display: flex; justify-content: space-between; gap: 1rem; margin-top: 6mm; font-size: 9pt; color: #6b6b6b; border-top: 1px solid #333; padding-top: 2mm; }
 }
 </style>

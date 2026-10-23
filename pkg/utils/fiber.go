@@ -99,6 +99,11 @@ func FormatDateHuman(date types.Date) string {
 	return res
 }
 
+// FormatDateLong formats a date as "23. oktober 2026"
+func FormatDateLong(date types.Date) string {
+	return monday.Format(time.Time(date), "2. January 2006", monday.LocaleDaDK)
+}
+
 func IsSameUser(a, b *uint64) bool {
 	if a == nil || b == nil {
 		return false

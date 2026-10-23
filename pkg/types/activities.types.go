@@ -33,6 +33,27 @@ type Weather struct {
 	Code        int     `json:"code"`
 }
 
+// Description names the weather in Danish from its WMO code
+func (w Weather) Description() string {
+	switch {
+	case w.Code == 0:
+		return "Klart"
+	case w.Code >= 1 && w.Code <= 3:
+		return "Halvskyet"
+	case w.Code >= 45 && w.Code <= 48:
+		return "Tåge"
+	case w.Code >= 51 && w.Code <= 57:
+		return "Støvregn"
+	case w.Code >= 61 && w.Code <= 67, w.Code >= 80 && w.Code <= 82:
+		return "Regn"
+	case w.Code >= 71 && w.Code <= 77, w.Code >= 85 && w.Code <= 86:
+		return "Sne"
+	case w.Code >= 95:
+		return "Torden"
+	}
+	return ""
+}
+
 // Activity struct contains all activity fields
 type Activity struct {
 	ID       uuid.UUID `json:"id" form:"id"`

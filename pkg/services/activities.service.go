@@ -225,7 +225,22 @@ func (s *ActivityService) GetActivities(c *fiber.Ctx) error {
 		"TotalCount":      len(res),
 		"CategoryFilters": categoryFilters(res, selected),
 		"SelectedFilter":  selected,
+		"PrintDate":       types.Date(time.Now()),
+		"FirstDate":       dateBound(filtered, false),
+		"LastDate":        dateBound(filtered, true),
 	})
+}
+
+// dateBound returns the latest (or earliest) date of the activities
+func dateBound(activities []*types.Activity, latest bool) types.Date {
+	var bound time.Time
+	for i, activity := range activities {
+		day := time.Time(activity.Date)
+		if i == 0 || (latest && day.After(bound)) || (!latest && day.Before(bound)) {
+			bound = day
+		}
+	}
+	return types.Date(bound)
 }
 
 func (s *ActivityService) GetActivitiesForUser(userId uint64) ([]*types.Activity, error) {

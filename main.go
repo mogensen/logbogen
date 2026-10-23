@@ -107,6 +107,7 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	engine.AddFunc("is_current_user", utils.IsCurrentUser)
 	engine.AddFunc("fmtDate", utils.FormatDate)
 	engine.AddFunc("fmtDateHuman", utils.FormatDateHuman)
+	engine.AddFunc("fmtDateLong", utils.FormatDateLong)
 	engine.AddFunc("is_same_user", utils.IsSameUser)
 	engine.AddFunc("firstSix", utils.FirstSix)
 	engine.AddFunc("userImage", utils.UserImage)
