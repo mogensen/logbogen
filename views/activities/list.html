@@ -98,6 +98,7 @@
 @page { size: A4; margin: 14mm; }
 @media print {
   header:not(.print-head), footer:not(.print-foot) { display: none !important; }
+  body, main.container, .main-container { margin: 0 !important; padding: 0 !important; max-width: none !important; }
   .print-activities { font-family: 'Patrick Hand', sans-serif; font-weight: 700; color: #333; font-size: 10.5pt; line-height: 1.3; }
   .print-head { display: flex; align-items: center; gap: 4mm; padding-bottom: 3mm; border-bottom: 2px solid #333; }
   .print-brand { flex: 1 1 auto; font-family: 'Chewy', cursive; font-weight: 400; font-size: 18pt; }
