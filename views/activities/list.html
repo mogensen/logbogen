@@ -75,9 +75,11 @@
           {{ fmtDateLong .Date }}
           {{ if .Weather }}<small>{{ .Weather.Temperature }} °C {{ .Weather.Description }}</small>{{ end }}
         </td>
-        <td class="print-activity">
-          <img src="/images/activities/{{ .Type.ID }}.png" alt="" width="34" height="34">
-          <span>{{ .Category.Name }} &ndash; {{ .Type.Name }}{{ if .Role }}<small>{{ .Role }}</small>{{ end }}</span>
+        <td>
+          <div class="print-activity">
+            <img src="/images/activities/{{ .Type.ID }}.png" alt="" width="34" height="34">
+            <span>{{ .Category.Name }} &ndash; {{ .Type.Name }}{{ if .Role }}<small>{{ .Role }}</small>{{ end }}</span>
+          </div>
         </td>
         <td>
           {{ .Location }}
