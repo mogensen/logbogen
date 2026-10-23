@@ -4,7 +4,12 @@
   <div>
     <h1 class="d-inline-block">Logninger</h1>
   </div>
-  <div>
+  <div class="d-print-none">
+    {{ if .Activities }}{{ if gt (len .Activities) 0 }}
+    <button type="button" class="btn btn-outline-secondary me-2" onclick="window.print()">
+      <i class="fas fa-print"></i>&nbsp; Udskriv
+    </button>
+    {{ end }}{{ end }}
     <a href="/activities/create" class="btn btn-primary">
       <i class="fas fa-clipboard-check"></i>&nbsp; Log ny aktivitet
     </a>
@@ -12,7 +17,7 @@
 </div>
 
 {{ if .CategoryFilters }}
-<nav class="category-filter d-flex flex-wrap gap-2 mb-3" aria-label="Filtrer efter kategori">
+<nav class="category-filter d-print-none d-flex flex-wrap gap-2 mb-3" aria-label="Filtrer efter kategori">
   <a href="/activities/list" class="btn btn-sm btn-outline-secondary{{ if not .SelectedFilter }} active{{ end }}"
     {{ if not .SelectedFilter }}aria-current="page"{{ end }}>Alle <span class="badge rounded-pill bg-body-secondary text-body">{{ .TotalCount }}</span></a>
   {{ range .CategoryFilters }}
@@ -41,10 +46,39 @@
 <p>Du har ingen logninger i denne kategori.</p>
 {{end}}
 
-<div class="card-body contacts_body">
+<div class="card-body contacts_body d-print-none">
   <ul class="contacts">
     {{ range .Activities }}
        {{ template "activities/card" (ctxActivity $userID .) }}
     {{end}}
   </ul>
 </div>
+
+<section class="print-activities d-none d-print-block">
+  <h2>Logninger{{ if .SelectedFilter }} &ndash; {{ range .CategoryFilters }}{{ if .Active }}{{ .Name }}{{ end }}{{ end }}{{ end }}</h2>
+  {{ range .Activities }}
+  <article class="print-activity">
+    <h3>{{ .Type.Name }} nær {{ .Location }}</h3>
+    <dl>
+      <dt>Kategori</dt><dd>{{ .Category.Name }}</dd>
+      <dt>Dato</dt><dd>{{ fmtDateHuman .Date }}</dd>
+      <dt>Position</dt><dd>{{ .Lat }}, {{ .Lng }}</dd>
+      {{ if .Role }}<dt>Rolle</dt><dd>{{ .Role }}</dd>{{ end }}
+      {{ if .Weather }}<dt>Vejr</dt><dd>{{ .Weather.Temperature }}°C</dd>{{ end }}
+      {{ if .Participants }}<dt>Med på turen</dt><dd>{{ range $i, $p := .Participants }}{{ if $i }}, {{ end }}{{ $p.Name }}{{ end }}</dd>{{ end }}
+    </dl>
+    {{ if .Comment }}<p class="print-comment">{{ .Comment }}</p>{{ end }}
+  </article>
+  {{ end }}
+</section>
+
+<style>
+@media print {
+  header, footer { display: none !important; }
+  .print-activity { break-inside: avoid; border-bottom: 1px solid #999; padding: 8px 0; }
+  .print-activity dl { display: grid; grid-template-columns: 9em 1fr; margin: 0; }
+  .print-activity dt { font-weight: 700; }
+  .print-activity dd { margin: 0; }
+  .print-comment { white-space: pre-wrap; margin: 6px 0 0; }
+}
+</style>
