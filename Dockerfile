@@ -16,7 +16,7 @@ RUN CGO_ENABLED=1 GOOS=linux go build -trimpath -tags netgo,osusergo \
 RUN mkdir -p /out/data
 
 # The static image ships CA certificates and tzdata but no libc, shell or package manager
-FROM gcr.io/distroless/static-debian12
+FROM gcr.io/distroless/static-debian13
 WORKDIR /app
 
 COPY --from=builder /out/logbogen ./logbogen
