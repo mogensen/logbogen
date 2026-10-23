@@ -1,6 +1,6 @@
 
 $(() => {
-    if ($('#certification-form').length == 0) {
+    if ($('#certification-form').length === 0) {
         return;
     }
 
@@ -49,7 +49,7 @@ $(() => {
         const typeGroup = $("#type");
         const currentType = typeGroup.data('current') || typeGroup.val();
 
-        if (category == undefined) {
+        if (category == null) {
             console.log("undefined category")
             return;
         }

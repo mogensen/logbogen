@@ -6,7 +6,7 @@
 
 $(() => {
 
-    if ($('#user-show-map').length == 0) {
+    if ($('#user-show-map').length === 0) {
         return;
     }
 
@@ -52,10 +52,10 @@ $(() => {
 
             map.addLayer(markerCluster);
 
-            if (markerCluster.getLayers().length === 1) {
-                var onlyMarker = markerCluster.getLayers()[0];
-                map.setView(onlyMarker.getLatLng(), 10);
-            } else if (markerCluster.getLayers().length > 1) {
+            const layers = markerCluster.getLayers();
+            if (layers.length === 1) {
+                map.setView(layers[0].getLatLng(), 10);
+            } else if (layers.length > 1) {
                 map.fitBounds(markerCluster.getBounds().pad(0.1));
             }
         })
@@ -64,7 +64,7 @@ $(() => {
             console.error(error); // Example: Logging the error to the console
         });
 
-    function onClick(e) {
+    function onClick() {
         window.location = this.options.win_url;
     }
 
@@ -73,17 +73,6 @@ $(() => {
         var month = dt.toLocaleString(lang, { month: 'long' });
         var year = dt.toLocaleString(lang, { year: 'numeric' });
         return row.type.Name + " " + month + " " + year;
-    }
-
-    function getCookie(name) {
-        var nameEQ = name + "=";
-        var ca = document.cookie.split(';');
-        for (var i = 0; i < ca.length; i++) {
-            var c = ca[i];
-            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
-        }
-        return null;
     }
 
 });

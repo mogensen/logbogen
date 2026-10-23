@@ -1,0 +1,34 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
+	"files": {
+		"includes": [
+			"assets/js/*.js",
+			"assets/css/*.css",
+			"!assets/css/application.css",
+			"!assets/css/sketchy.css"
+		]
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"preset": "recommended",
+			"complexity": {
+				"useArrowFunction": "off"
+			},
+			"style": {
+				"useTemplate": "off"
+			},
+			"suspicious": {
+				"noRedundantUseStrict": "off"
+			}
+		}
+	},
+	"javascript": {
+		"globals": [
+			"$",
+			"L",
+			"jQuery",
+			"bootstrap"
+		]
+	}
+}

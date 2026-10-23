@@ -3,9 +3,25 @@ STATICCHECK_VERSION ?= v0.8.2
 STATICCHECK_BIN := .bin/staticcheck
 GOVULNCHECK_VERSION ?= v1.9.0
 GOVULNCHECK_BIN := .bin/govulncheck
+BIOME_VERSION ?= 2.5.14
 HTMLHINT_VERSION ?= 1.1.4
 # The templates are fragments with Go template conditionals, so only the rules that hold for them are used
 HTMLHINT_RULES := attr-no-duplication,src-not-empty,attr-value-double-quotes
+
+# The binary carries its platform in the name, so .bin/ can be shared between a host and a container
+UNAME_S := $(shell uname -s)
+UNAME_M := $(shell uname -m)
+ifeq ($(UNAME_S),Darwin)
+	BIOME_OS := darwin
+else
+	BIOME_OS := linux
+endif
+ifneq (,$(filter arm64 aarch64,$(UNAME_M)))
+	BIOME_ARCH := arm64
+else
+	BIOME_ARCH := x64
+endif
+BIOME_BIN := .bin/biome-$(BIOME_OS)-$(BIOME_ARCH)
 
 .PHONY: help build test test-e2e run lint lint-go lint-fmt lint-vet lint-staticcheck lint-govuln lint-html lint-js
 
@@ -52,5 +68,11 @@ $(GOVULNCHECK_BIN):
 lint-html: ## Check the HTML templates with htmlhint, needs Node
 	npx --yes htmlhint@$(HTMLHINT_VERSION) --rules $(HTMLHINT_RULES) "views/**/*.html"
 
-lint-js: ## Check the syntax of the JavaScript files, needs Node
-	@for file in assets/js/*.js; do node --check "$$file" || exit 1; done
+lint-js: $(BIOME_BIN) ## Lint the JavaScript and CSS files with Biome (config: biome.json)
+	$(BIOME_BIN) lint .
+
+$(BIOME_BIN):
+	@mkdir -p .bin
+	curl -sfL -o $(BIOME_BIN) \
+		"https://github.com/biomejs/biome/releases/download/%40biomejs/biome%40$(BIOME_VERSION)/biome-$(BIOME_OS)-$(BIOME_ARCH)"
+	chmod +x $(BIOME_BIN)

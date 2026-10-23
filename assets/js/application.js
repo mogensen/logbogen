@@ -72,7 +72,7 @@ $(() => {
 
 
     $(() => {
-        if ($('#participants').length == 0) {
+        if ($('#participants').length === 0) {
             return;
         }
 
@@ -94,7 +94,7 @@ $(() => {
     })
 
     $(() => {
-        if ($('#activity-show-map').length == 0) {
+        if ($('#activity-show-map').length === 0) {
             return;
         }
 
@@ -111,7 +111,7 @@ $(() => {
     })
 
     function addMapPicker() {
-        if ($('#activity-form-map').length == 0) {
+        if ($('#activity-form-map').length === 0) {
             return;
         }
 
@@ -201,7 +201,7 @@ $(() => {
         var lat = $('#activity-form-map').data("lat");
         var lng = $('#activity-form-map').data("lng");
 
-        if (lat != "" && lng != "") {
+        if (lat !== "" && lng !== "") {
             updateMarker(lat, lng);
             map.setView(new L.LatLng(lat, lng), zoomLevel);
         }
@@ -213,7 +213,7 @@ $(() => {
 });
 
 $(() => {
-    if ($('#activity-form').length == 0) {
+    if ($('#activity-form').length === 0) {
         return;
     }
 
@@ -271,7 +271,7 @@ $(() => {
         const currentType = typeGroup.data('current') || $("input[name='type']:checked").val();
         const pillMode = typeGroup.hasClass('act-edit-pillrow');
 
-        if (category == undefined) {
+        if (category == null) {
             return;
         }
 

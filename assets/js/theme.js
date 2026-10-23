@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Listen for system theme changes (for auto mode)
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
         const currentTheme = html.getAttribute('data-bs-theme');
         if (currentTheme === 'auto') {
             updateIcon(currentTheme);
