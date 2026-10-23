@@ -32,12 +32,12 @@ type Activity struct {
 
 type ActivityDal interface {
 	CreateActivity(activity *Activity) (Activity, error)
-	FindActivity(conds ...interface{}) (Activity, error)
+	FindActivity(conds ...any) (Activity, error)
 	FindActivityToClone(ActivityIden string, userIden uint64) (Activity, error)
 	FindActivityByUser(ActivityIden string, userIden uint64) (Activity, error)
 	FindActivitiesByUser(userIden uint64) ([]Activity, error)
 	DeleteActivity(ActivityIden string, userIden uint64) error
-	UpdateActivity(ActivityIden string, userIden uint64, data interface{}) (Activity, error)
+	UpdateActivity(ActivityIden string, userIden uint64, data any) (Activity, error)
 	FindPendingActivitiesByUser(userIden uint64) ([]Activity, error)
 	UpdateWeather(ActivityIden string, userIden uint64, temperature *float64, code *int) error
 }
@@ -59,7 +59,7 @@ func (s *ActivityService) CreateActivity(activity *Activity) (Activity, error) {
 }
 
 // FindActivity finds an Activity with given condition
-func (s *ActivityService) FindActivity(conds ...interface{}) (Activity, error) {
+func (s *ActivityService) FindActivity(conds ...any) (Activity, error) {
 	var activity Activity
 	result := s.db.Model(&Activity{}).Take(&activity, conds...)
 	return activity, result.Error
@@ -93,7 +93,7 @@ func (s *ActivityService) DeleteActivity(ActivityIden string, userIden uint64) e
 }
 
 // UpdateActivity allows to update the Activity with the given ActivityID and userID
-func (s *ActivityService) UpdateActivity(ActivityIden string, userIden uint64, data interface{}) (Activity, error) {
+func (s *ActivityService) UpdateActivity(ActivityIden string, userIden uint64, data any) (Activity, error) {
 	result := s.db.Model(&Activity{}).Where("id = ? AND user = ?", ActivityIden, userIden).Updates(data)
 	if result.Error != nil {
 		return Activity{}, result.Error
@@ -121,7 +121,7 @@ func (s *ActivityService) UpdateWeather(ActivityIden string, userIden uint64, te
 	}
 
 	return s.db.Model(&Activity{}).Where("id = ? AND user = ?", ActivityIden, userIden).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"weather_temperature": temperature,
 			"weather_code":        code,
 			"weather_fetched_at":  fetchedAt,

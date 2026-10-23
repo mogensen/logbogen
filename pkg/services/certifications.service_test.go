@@ -32,7 +32,7 @@ func TestCertificationService_CRUD(t *testing.T) {
 	cat := config.AllCertificationCategories[0]
 	typeObj := config.AllCertificationTypes[0]
 	userDalMock.On("FindUsersByIDs", []uint64{2}).
-		Return([]dal.User{{Model: gorm.Model{ID: 2}, Name: "Test User", Email: "test@example.com"}}, nil)
+		Return([]dal.User{{ID: 2, Name: "Test User", Email: "test@example.com"}}, nil)
 	svc := NewCertificationService(dalSvc, userDalMock)
 	cert := types.Certification{
 		ID:              uuid.New(),
@@ -105,7 +105,7 @@ func TestCertificationService_ParticipantsAreValidated(t *testing.T) {
 
 	t.Run("an unknown participant is rejected and nothing is stored", func(t *testing.T) {
 		userDal := &mocks.UserDalMock{}
-		userDal.On("FindUsersByIDs", []uint64{2, 99}).Return([]dal.User{{Model: gorm.Model{ID: 2}}}, nil)
+		userDal.On("FindUsersByIDs", []uint64{2, 99}).Return([]dal.User{{ID: 2}}, nil)
 		svc := NewCertificationService(setupTestDAL(t), userDal)
 
 		_, err := svc.CreateCertification(newCert(2, 99))
@@ -117,7 +117,7 @@ func TestCertificationService_ParticipantsAreValidated(t *testing.T) {
 
 	t.Run("an update with an unknown participant is rejected and keeps the stored ones", func(t *testing.T) {
 		userDal := &mocks.UserDalMock{}
-		userDal.On("FindUsersByIDs", []uint64{2}).Return([]dal.User{{Model: gorm.Model{ID: 2}, Name: "Two"}}, nil)
+		userDal.On("FindUsersByIDs", []uint64{2}).Return([]dal.User{{ID: 2, Name: "Two"}}, nil)
 		userDal.On("FindUsersByIDs", []uint64{99}).Return([]dal.User{}, nil)
 		svc := NewCertificationService(setupTestDAL(t), userDal)
 		created, err := svc.CreateCertification(newCert(2))

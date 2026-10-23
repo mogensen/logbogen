@@ -133,7 +133,7 @@ func TestTooLongInputShowsTheFormAgainInsteadOfAnErrorPage(t *testing.T) {
 
 	t.Run("too many participants", func(t *testing.T) {
 		form := activityForm(nil)
-		for i := 0; i < 51; i++ {
+		for i := range 51 {
 			form.Add("participants", fmt.Sprint(i+10))
 		}
 

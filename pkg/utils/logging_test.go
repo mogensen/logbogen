@@ -16,7 +16,7 @@ import (
 // logLines parses the JSON lines a logger wrote
 func logLines(t *testing.T, buf *bytes.Buffer) []map[string]any {
 	var lines []map[string]any
-	for _, line := range strings.Split(strings.TrimSpace(buf.String()), "\n") {
+	for line := range strings.SplitSeq(strings.TrimSpace(buf.String()), "\n") {
 		if line == "" {
 			continue
 		}

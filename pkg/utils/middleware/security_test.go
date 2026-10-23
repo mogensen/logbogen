@@ -11,9 +11,9 @@ import (
 
 // directive returns the value of one directive of a policy
 func directive(t *testing.T, policy, name string) string {
-	for _, part := range strings.Split(policy, "; ") {
-		if strings.HasPrefix(part, name+" ") {
-			return strings.TrimPrefix(part, name+" ")
+	for part := range strings.SplitSeq(policy, "; ") {
+		if after, ok := strings.CutPrefix(part, name+" "); ok {
+			return after
 		}
 	}
 	require.Failf(t, "directive missing", "%s is not in %q", name, policy)

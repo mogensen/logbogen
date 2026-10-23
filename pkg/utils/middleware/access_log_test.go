@@ -18,7 +18,7 @@ import (
 
 func lines(t *testing.T, buf *bytes.Buffer) []map[string]any {
 	var entries []map[string]any
-	for _, line := range strings.Split(strings.TrimSpace(buf.String()), "\n") {
+	for line := range strings.SplitSeq(strings.TrimSpace(buf.String()), "\n") {
 		if line == "" {
 			continue
 		}
@@ -34,8 +34,7 @@ func logApp(buf *bytes.Buffer, level slog.Level) *fiber.App {
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			code := fiber.StatusInternalServerError
-			var fe *fiber.Error
-			if errors.As(err, &fe) {
+			if fe, ok := errors.AsType[*fiber.Error](err); ok {
 				code = fe.Code
 			}
 			return c.Status(code).SendString("error page")

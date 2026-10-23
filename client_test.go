@@ -130,7 +130,7 @@ func (tc *TestClient) Get(path string) *http.Response {
 // csrfToken returns the CSRF token cookie, visiting the home page first when none has been issued yet
 func (tc *TestClient) csrfToken() string {
 	u, _ := url.Parse("http://localhost")
-	for attempt := 0; attempt < 2; attempt++ {
+	for range 2 {
 		for _, cookie := range tc.jar.Cookies(u) {
 			if cookie.Name == "csrf_" {
 				return cookie.Value
@@ -164,7 +164,7 @@ func (tc *TestClient) Post(path string, formData url.Values) *http.Response {
 }
 
 // PostJSON makes a POST request to the specified path with JSON data
-func (tc *TestClient) PostJSON(path string, data interface{}) *http.Response {
+func (tc *TestClient) PostJSON(path string, data any) *http.Response {
 	jsonData, err := json.Marshal(data)
 	require.NoError(tc.t, err)
 

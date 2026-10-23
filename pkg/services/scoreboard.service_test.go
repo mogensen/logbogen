@@ -35,22 +35,22 @@ func TestScoreboardService_calculateUserStats(t *testing.T) {
 
 	users := []dal.User{
 		{
-			Model: gorm.Model{ID: 1},
+			ID:    1,
 			Name:  "User1",
 			Email: "user1@test.com",
 			Activities: []dal.Activity{
-				{Model: gorm.Model{ID: 1}, ID: uuid.New(), User: uint64Ptr(1), Type: "rock", Category: types.Climbing},
-				{Model: gorm.Model{ID: 2}, ID: uuid.New(), User: uint64Ptr(1), Type: "rock", Category: types.Climbing},
+				{Model: gorm.Model{ID: 1}, ID: uuid.New(), User: new(uint64(1)), Type: "rock", Category: types.Climbing},
+				{Model: gorm.Model{ID: 2}, ID: uuid.New(), User: new(uint64(1)), Type: "rock", Category: types.Climbing},
 			},
 		},
 		{
-			Model: gorm.Model{ID: 2},
+			ID:    2,
 			Name:  "User2",
 			Email: "user2@test.com",
 			Activities: []dal.Activity{
-				{Model: gorm.Model{ID: 3}, ID: uuid.New(), User: uint64Ptr(2), Type: "rock", Category: types.Climbing},
-				{Model: gorm.Model{ID: 4}, ID: uuid.New(), User: uint64Ptr(2), Type: "kayak", Category: types.Sailing},
-				{Model: gorm.Model{ID: 5}, ID: uuid.New(), User: uint64Ptr(2), Type: "kayak", Category: types.Sailing},
+				{Model: gorm.Model{ID: 3}, ID: uuid.New(), User: new(uint64(2)), Type: "rock", Category: types.Climbing},
+				{Model: gorm.Model{ID: 4}, ID: uuid.New(), User: new(uint64(2)), Type: "kayak", Category: types.Sailing},
+				{Model: gorm.Model{ID: 5}, ID: uuid.New(), User: new(uint64(2)), Type: "kayak", Category: types.Sailing},
 			},
 		},
 	}
@@ -66,18 +66,13 @@ func TestScoreboardService_calculateUserStats(t *testing.T) {
 	assert.Equal(t, 1, len(stast[1].AchievementsSummary))
 }
 
-// Helper function to create a pointer to uint64
-func uint64Ptr(n uint64) *uint64 {
-	return &n
-}
-
 func TestScoreboardService_calculateUserStats_Ranks(t *testing.T) {
 	service := NewScoreboardService(new(mocks.UserDalMock))
 	userWith := func(id uint, name string, activities int) dal.User {
-		user := dal.User{Model: gorm.Model{ID: id}, Name: name, Email: name + "@test.com"}
-		for i := 0; i < activities; i++ {
+		user := dal.User{ID: id, Name: name, Email: name + "@test.com"}
+		for range activities {
 			user.Activities = append(user.Activities,
-				dal.Activity{ID: uuid.New(), User: uint64Ptr(uint64(id)), Type: "rock", Category: types.Climbing})
+				dal.Activity{ID: uuid.New(), User: new(uint64(id)), Type: "rock", Category: types.Climbing})
 		}
 		return user
 	}
@@ -106,14 +101,14 @@ func TestScoreboardService_calculateUserStats_Ranks(t *testing.T) {
 func TestScoreboardService_calculateUserStats_HidesUsersWithoutPoints(t *testing.T) {
 	service := NewScoreboardService(new(mocks.UserDalMock))
 	users := []dal.User{
-		{Model: gorm.Model{ID: 1}, Name: "Nobody", Email: "nobody@test.com"},
+		{ID: 1, Name: "Nobody", Email: "nobody@test.com"},
 		{
-			Model: gorm.Model{ID: 2}, Name: "Active", Email: "active@test.com",
+			ID: 2, Name: "Active", Email: "active@test.com",
 			Activities: []dal.Activity{
-				{ID: uuid.New(), User: uint64Ptr(2), Type: "rock", Category: types.Climbing},
+				{ID: uuid.New(), User: new(uint64(2)), Type: "rock", Category: types.Climbing},
 			},
 		},
-		{Model: gorm.Model{ID: 3}, Name: "Also nobody", Email: "also@test.com"},
+		{ID: 3, Name: "Also nobody", Email: "also@test.com"},
 	}
 
 	stats, err := service.calculateUserStats(&users)

@@ -26,15 +26,15 @@ func NewGormLogger() gormlogger.Interface {
 
 func (l *gormLogger) LogMode(gormlogger.LogLevel) gormlogger.Interface { return l }
 
-func (l *gormLogger) Info(ctx context.Context, msg string, args ...interface{}) {
+func (l *gormLogger) Info(ctx context.Context, msg string, args ...any) {
 	slog.InfoContext(ctx, "database", "message", msg, "args", args)
 }
 
-func (l *gormLogger) Warn(ctx context.Context, msg string, args ...interface{}) {
+func (l *gormLogger) Warn(ctx context.Context, msg string, args ...any) {
 	slog.WarnContext(ctx, "database", "message", msg, "args", args)
 }
 
-func (l *gormLogger) Error(ctx context.Context, msg string, args ...interface{}) {
+func (l *gormLogger) Error(ctx context.Context, msg string, args ...any) {
 	slog.ErrorContext(ctx, "database", "message", msg, "args", args)
 }
 

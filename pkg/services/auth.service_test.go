@@ -28,7 +28,7 @@ func TestAuthService_upsertUser(t *testing.T) {
 	t.Run("returns existing user when the Firebase UID is known", func(t *testing.T) {
 		userDalMock := &mocks.UserDalMock{}
 		existing := &dal.User{
-			Model: gorm.Model{ID: 7},
+			ID:    7,
 			Name:  "Existing User",
 			Email: "existing@example.com",
 		}
@@ -76,7 +76,7 @@ func TestAuthService_GetUser(t *testing.T) {
 			},
 			mockSetup: func(m *mocks.UserDalMock) {
 				m.On("FindUserById", uint64(1)).Return(&dal.User{
-					Model: gorm.Model{ID: 1},
+					ID:    1,
 					Name:  "Test User",
 					Email: "test@example.com",
 				}, nil)
@@ -145,7 +145,7 @@ func TestGetUserByID(t *testing.T) {
 			mock: func() {
 				userDalMock.On("FindUserById", uint64(1)).
 					Return(&dal.User{
-						Model: gorm.Model{ID: 1},
+						ID:    1,
 						Name:  "Test User",
 						Email: "test@example.com",
 					}, nil)
@@ -236,7 +236,7 @@ func TestAuthService_SessionHandler(t *testing.T) {
 
 	t.Run("an existing user is reused", func(t *testing.T) {
 		userDalMock := &mocks.UserDalMock{}
-		userDalMock.On("FindUserByFirebaseUID", "uid-1").Return(&dal.User{Model: gorm.Model{ID: 3}, Email: "jane@example.com"}, nil)
+		userDalMock.On("FindUserByFirebaseUID", "uid-1").Return(&dal.User{ID: 3, Email: "jane@example.com"}, nil)
 
 		resp := postSession(t, NewAuthService(userDalMock, fakeVerifier{identity: verified}, auth.Config{}, false), token, nil)
 

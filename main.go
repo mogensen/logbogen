@@ -205,7 +205,7 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 }
 
 // logPanic logs a recovered panic with its stack, in the same structured form as the other errors
-func logPanic(c *fiber.Ctx, recovered interface{}) {
+func logPanic(c *fiber.Ctx, recovered any) {
 	utils.Log(c).Error("panic recovered", "panic", fmt.Sprint(recovered), "stack", string(debug.Stack()))
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -89,7 +90,7 @@ func getEnvBool(name string, fallback bool) bool {
 
 func splitList(value string) []string {
 	var items []string
-	for _, item := range strings.Split(value, ",") {
+	for item := range strings.SplitSeq(value, ",") {
 		if item = strings.TrimSpace(item); item != "" {
 			items = append(items, item)
 		}
@@ -135,10 +136,8 @@ func getEnvChoice(name, fallback string, allowed ...string) string {
 	}
 
 	value = strings.ToLower(strings.TrimSpace(value))
-	for _, option := range allowed {
-		if value == option {
-			return value
-		}
+	if slices.Contains(allowed, value) {
+		return value
 	}
 	slog.Warn("Ignoring invalid setting, using the default", "name", name, "value", value, "allowed", allowed)
 	return fallback

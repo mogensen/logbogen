@@ -15,7 +15,7 @@ func MaxLength(model any, field string) (int, error) {
 		return 0, fmt.Errorf("%T has no field %s", model, field)
 	}
 
-	for _, rule := range strings.Split(structField.Tag.Get("validate"), ",") {
+	for rule := range strings.SplitSeq(structField.Tag.Get("validate"), ",") {
 		if value, found := strings.CutPrefix(rule, "max="); found {
 			return strconv.Atoi(value)
 		}

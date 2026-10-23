@@ -26,7 +26,7 @@ var fieldLabels = map[string]string{
 
 // Validate validates the input struct. The message names the field and the limit but never the submitted
 // value, and the technical details go to the log.
-func Validate(payload interface{}) *fiber.Error {
+func Validate(payload any) *fiber.Error {
 	err := validate.Struct(payload)
 	if err == nil {
 		return nil

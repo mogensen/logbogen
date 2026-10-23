@@ -39,7 +39,7 @@ func (l *logCapture) text() string {
 // entries parses every logged line, failing on a line that is not JSON
 func (l *logCapture) entries(t *testing.T) []map[string]any {
 	var entries []map[string]any
-	for _, line := range strings.Split(strings.TrimSpace(l.text()), "\n") {
+	for line := range strings.SplitSeq(strings.TrimSpace(l.text()), "\n") {
 		if line == "" {
 			continue
 		}

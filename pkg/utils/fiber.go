@@ -19,7 +19,7 @@ var _emptyDate = types.Date{}
 // ParseBody is helper function for parsing the body.
 // Is any error occurs it will panic.
 // Its just a helper function to avoid writing if condition again n again.
-func ParseBody(ctx *fiber.Ctx, body interface{}) *fiber.Error {
+func ParseBody(ctx *fiber.Ctx, body any) *fiber.Error {
 	if err := ctx.BodyParser(body); err != nil {
 		Log(ctx).Warn("Error parsing body", "error", err)
 		return fiber.ErrBadRequest
@@ -53,7 +53,7 @@ func normalizeNewlines(v reflect.Value) {
 // ParseBodyAndValidate is helper function for parsing the body.
 // Is any error occurs it will panic.
 // Its just a helper function to avoid writing if condition again n again.
-func ParseBodyAndValidate(ctx *fiber.Ctx, body interface{}) *fiber.Error {
+func ParseBodyAndValidate(ctx *fiber.Ctx, body any) *fiber.Error {
 	if err := ParseBody(ctx, body); err != nil {
 		return err
 	}

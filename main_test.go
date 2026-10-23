@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -162,7 +163,7 @@ func TestInputBounds(t *testing.T) {
 
 	t.Run("too many participants are rejected", func(t *testing.T) {
 		activity := randomActivity()
-		for i := uint64(0); i < 51; i++ {
+		for i := range uint64(51) {
 			activity.ParticipantsIDs = append(activity.ParticipantsIDs, i+10)
 		}
 		client.CreateActivity(activity)
@@ -195,9 +196,7 @@ func TestCSRF(t *testing.T) {
 	rawPost := func(path string, header http.Header, form url.Values) *http.Response {
 		req := httptest.NewRequest("POST", path, strings.NewReader(form.Encode()))
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		for key, values := range header {
-			req.Header[key] = values
-		}
+		maps.Copy(req.Header, header)
 		u, _ := url.Parse("http://localhost")
 		for _, cookie := range client.jar.Cookies(u) {
 			req.AddCookie(cookie)
@@ -379,7 +378,7 @@ func TestErrorPagesHideInternals(t *testing.T) {
 func TestAuthRateLimit(t *testing.T) {
 	client := NewTestClient(t, func(cfg *Config) { cfg.AuthRateLimit = 3 })
 
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		require.Equal(t, fiber.StatusOK, client.Get("/auth/login").StatusCode)
 	}
 

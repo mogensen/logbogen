@@ -130,7 +130,7 @@ func TestActivityService_UpdateActivity(t *testing.T) {
 	_, err := service.CreateActivity(activity)
 	assert.NoError(t, err)
 
-	updateData := map[string]interface{}{
+	updateData := map[string]any{
 		"comment": "Updated comment",
 	}
 	updated, err := service.UpdateActivity(activity.ID.String(), userID, updateData)
