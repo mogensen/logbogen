@@ -86,10 +86,6 @@ func DefaultConfig() *Config {
 
 // setupApp creates and configures the Fiber application
 func setupApp(cfg *Config) (*fiber.App, error) {
-	if err := validateProxyConfig(cfg); err != nil {
-		cfg.Logger.Error("Invalid configuration", "error", err)
-		return nil, err
-	}
 	if err := validateAuthConfig(cfg, config.ALLOWDEVMODE); err != nil {
 		cfg.Logger.Error("Invalid configuration", "error", err)
 		return nil, err
@@ -130,7 +126,8 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 		WriteTimeout:          30 * time.Second,
 		IdleTimeout:           60 * time.Second,
 
-		ProxyHeader:             cfg.ProxyHeader,
+		// Fiber trusts ProxyHeader from anyone when the proxy check is off, so the header is dropped without proxies
+		ProxyHeader:             proxyHeader(cfg),
 		EnableTrustedProxyCheck: len(cfg.TrustedProxies) > 0,
 		TrustedProxies:          cfg.TrustedProxies,
 	})
@@ -206,6 +203,17 @@ func setupApp(cfg *Config) (*fiber.App, error) {
 	}
 
 	return app, nil
+}
+
+// proxyHeader is the configured header, or empty without trusted proxies (warning if one was set)
+func proxyHeader(cfg *Config) string {
+	if len(cfg.TrustedProxies) > 0 {
+		return cfg.ProxyHeader
+	}
+	if cfg.ProxyHeader != "" {
+		cfg.Logger.Warn("PROXY_HEADER is ignored without TRUSTED_PROXIES", "header", cfg.ProxyHeader)
+	}
+	return ""
 }
 
 // logPanic logs a recovered panic with its stack, in the same structured form as the other errors

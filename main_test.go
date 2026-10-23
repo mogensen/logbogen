@@ -280,6 +280,11 @@ func TestProxyConfig(t *testing.T) {
 		require.NotEqual(t, "203.0.113.7", clientIP(t))
 	})
 
+	t.Run("forwarded header is ignored without trusted proxies", func(t *testing.T) {
+		got := clientIP(t, func(cfg *Config) { cfg.ProxyHeader = "X-Forwarded-For" })
+		require.NotEqual(t, "203.0.113.7", got)
+	})
+
 	t.Run("forwarded header is used for a trusted proxy", func(t *testing.T) {
 		got := clientIP(t, func(cfg *Config) {
 			cfg.ProxyHeader = "X-Forwarded-For"
@@ -410,6 +415,30 @@ func TestAuthRateLimitIsPerClientIP(t *testing.T) {
 	require.Equal(t, fiber.StatusTooManyRequests, getAs("203.0.113.1"))
 	// A second client behind the same proxy is not locked out
 	require.Equal(t, fiber.StatusOK, getAs("203.0.113.2"))
+}
+
+// A spoofed header must not give a client a fresh rate limit, with or without trusted proxies
+func TestAuthRateLimitIgnoresSpoofedHeader(t *testing.T) {
+	for name, proxies := range map[string][]string{"no trusted proxies": nil, "an untrusted peer": {"10.0.0.1"}} {
+		t.Run(name, func(t *testing.T) {
+			client := NewTestClient(t, func(cfg *Config) {
+				cfg.AuthRateLimit = 1
+				cfg.ProxyHeader = "X-Forwarded-For"
+				cfg.TrustedProxies = proxies
+			})
+
+			getAs := func(ip string) int {
+				req := httptest.NewRequest("GET", "/auth/login", nil)
+				req.Header.Set("X-Forwarded-For", ip)
+				resp, err := client.app.Test(req, testRequestTimeout)
+				require.NoError(t, err)
+				return resp.StatusCode
+			}
+
+			require.Equal(t, fiber.StatusOK, getAs("203.0.113.1"))
+			require.Equal(t, fiber.StatusTooManyRequests, getAs("203.0.113.2"))
+		})
+	}
 }
 
 func TestUserTextIsEscaped(t *testing.T) {

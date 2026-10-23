@@ -118,28 +118,3 @@ func TestCSPFirebase(t *testing.T) {
 	require.Empty(t, domain, "dev mode signs in locally")
 	require.Empty(t, emulator)
 }
-
-func TestValidateProxyConfig(t *testing.T) {
-	tests := []struct {
-		name    string
-		header  string
-		proxies []string
-		wantErr string
-	}{
-		{name: "no proxy settings"},
-		{name: "header with trusted proxies", header: "X-Forwarded-For", proxies: []string{"10.0.0.1"}},
-		{name: "trusted proxies without header", proxies: []string{"10.0.0.1"}},
-		{name: "header without trusted proxies", header: "X-Forwarded-For", wantErr: "TRUSTED_PROXIES"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := validateProxyConfig(&Config{ProxyHeader: tt.header, TrustedProxies: tt.proxies})
-			if tt.wantErr == "" {
-				require.NoError(t, err)
-				return
-			}
-			require.ErrorContains(t, err, tt.wantErr)
-		})
-	}
-}
