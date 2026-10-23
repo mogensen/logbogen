@@ -8,14 +8,16 @@ import (
 	"github.com/mogensen/logbook/pkg/services"
 )
 
-// AuthRoutes contains all the auth routes. When devMode is true the local
-// dev-login bypass route is registered as well. Every route is rate limited to maxRequests per window and client IP.
+// AuthRoutes contains all the auth routes, plus the local dev-login bypass when devMode is true.
+// Failed requests are rate limited to maxRequests per window and client IP.
 func AuthRoutes(app fiber.Router, authService *services.AuthService, devMode bool, maxRequests int, window time.Duration) {
 	r := app.Group("/auth")
 
 	r.Use(limiter.New(limiter.Config{
 		Max:        maxRequests,
 		Expiration: window,
+		// Only failed requests count, so many users logging in from one shared IP are not locked out
+		SkipSuccessfulRequests: true,
 		LimitReached: func(c *fiber.Ctx) error {
 			return fiber.NewError(fiber.StatusTooManyRequests, "For mange forsøg. Prøv igen senere.")
 		},

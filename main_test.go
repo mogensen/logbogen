@@ -380,14 +380,23 @@ func TestErrorPagesHideInternals(t *testing.T) {
 	})
 }
 
+// failingAuthPath answers 401 inside the auth group, so the limiter sees a failed request
+const failingAuthPath = "/auth/fail"
+
+// addFailingAuthRoute registers failingAuthPath after the auth limiter, which therefore runs before it
+func addFailingAuthRoute(client *TestClient) {
+	client.app.Get(failingAuthPath, func(c *fiber.Ctx) error { return c.SendStatus(fiber.StatusUnauthorized) })
+}
+
 func TestAuthRateLimit(t *testing.T) {
 	client := NewTestClient(t, func(cfg *Config) { cfg.AuthRateLimit = 3 })
+	addFailingAuthRoute(client)
 
 	for range 3 {
-		require.Equal(t, fiber.StatusOK, client.Get("/auth/login").StatusCode)
+		require.Equal(t, fiber.StatusUnauthorized, client.Get(failingAuthPath).StatusCode)
 	}
 
-	resp := client.Get("/auth/login")
+	resp := client.Get(failingAuthPath)
 	require.Equal(t, fiber.StatusTooManyRequests, resp.StatusCode)
 	client.AssertResponseContains(client.GetResponseBody(resp), "For mange forsøg")
 
@@ -396,25 +405,34 @@ func TestAuthRateLimit(t *testing.T) {
 	})
 }
 
+func TestAuthRateLimitIgnoresSuccessfulRequests(t *testing.T) {
+	client := NewTestClient(t, func(cfg *Config) { cfg.AuthRateLimit = 3 })
+
+	for i := range 20 {
+		require.Equal(t, fiber.StatusOK, client.Get("/auth/login").StatusCode, "request %d", i+1)
+	}
+}
+
 func TestAuthRateLimitIsPerClientIP(t *testing.T) {
 	client := NewTestClient(t, func(cfg *Config) {
 		cfg.AuthRateLimit = 1
 		cfg.ProxyHeader = "X-Forwarded-For"
 		cfg.TrustedProxies = []string{"0.0.0.0"}
 	})
+	addFailingAuthRoute(client)
 
 	getAs := func(ip string) int {
-		req := httptest.NewRequest("GET", "/auth/login", nil)
+		req := httptest.NewRequest("GET", failingAuthPath, nil)
 		req.Header.Set("X-Forwarded-For", ip)
 		resp, err := client.app.Test(req, testRequestTimeout)
 		require.NoError(t, err)
 		return resp.StatusCode
 	}
 
-	require.Equal(t, fiber.StatusOK, getAs("203.0.113.1"))
+	require.Equal(t, fiber.StatusUnauthorized, getAs("203.0.113.1"))
 	require.Equal(t, fiber.StatusTooManyRequests, getAs("203.0.113.1"))
 	// A second client behind the same proxy is not locked out
-	require.Equal(t, fiber.StatusOK, getAs("203.0.113.2"))
+	require.Equal(t, fiber.StatusUnauthorized, getAs("203.0.113.2"))
 }
 
 // A spoofed header must not give a client a fresh rate limit, with or without trusted proxies
@@ -426,16 +444,17 @@ func TestAuthRateLimitIgnoresSpoofedHeader(t *testing.T) {
 				cfg.ProxyHeader = "X-Forwarded-For"
 				cfg.TrustedProxies = proxies
 			})
+			addFailingAuthRoute(client)
 
 			getAs := func(ip string) int {
-				req := httptest.NewRequest("GET", "/auth/login", nil)
+				req := httptest.NewRequest("GET", failingAuthPath, nil)
 				req.Header.Set("X-Forwarded-For", ip)
 				resp, err := client.app.Test(req, testRequestTimeout)
 				require.NoError(t, err)
 				return resp.StatusCode
 			}
 
-			require.Equal(t, fiber.StatusOK, getAs("203.0.113.1"))
+			require.Equal(t, fiber.StatusUnauthorized, getAs("203.0.113.1"))
 			require.Equal(t, fiber.StatusTooManyRequests, getAs("203.0.113.2"))
 		})
 	}
@@ -515,7 +534,7 @@ func TestActivitiesSurviveGeocoderFailure(t *testing.T) {
 func TestAuthRateLimitDefaultAndOverride(t *testing.T) {
 	hit := func(client *TestClient, n int) (limitedAt int) {
 		for i := 1; i <= n; i++ {
-			if client.Get("/auth/login").StatusCode == fiber.StatusTooManyRequests {
+			if client.Get(failingAuthPath).StatusCode == fiber.StatusTooManyRequests {
 				return i
 			}
 		}
@@ -527,11 +546,13 @@ func TestAuthRateLimitDefaultAndOverride(t *testing.T) {
 			cfg.AuthRateLimit = config.DefaultAuthRateLimit
 			cfg.AuthRateWindow = config.DefaultAuthRateWindow
 		})
+		addFailingAuthRoute(client)
 		require.Equal(t, config.DefaultAuthRateLimit+1, hit(client, config.DefaultAuthRateLimit+5))
 	})
 
 	t.Run("the test override lifts the limit", func(t *testing.T) {
 		client := NewTestClient(t)
+		addFailingAuthRoute(client)
 		require.Zero(t, hit(client, config.DefaultAuthRateLimit*3))
 	})
 
@@ -540,10 +561,11 @@ func TestAuthRateLimitDefaultAndOverride(t *testing.T) {
 			cfg.AuthRateLimit = 1
 			cfg.AuthRateWindow = time.Second
 		})
-		require.Equal(t, fiber.StatusOK, client.Get("/auth/login").StatusCode)
-		require.Equal(t, fiber.StatusTooManyRequests, client.Get("/auth/login").StatusCode)
+		addFailingAuthRoute(client)
+		require.Equal(t, fiber.StatusUnauthorized, client.Get(failingAuthPath).StatusCode)
+		require.Equal(t, fiber.StatusTooManyRequests, client.Get(failingAuthPath).StatusCode)
 		time.Sleep(1200 * time.Millisecond)
-		require.Equal(t, fiber.StatusOK, client.Get("/auth/login").StatusCode)
+		require.Equal(t, fiber.StatusUnauthorized, client.Get(failingAuthPath).StatusCode)
 	})
 }
 
